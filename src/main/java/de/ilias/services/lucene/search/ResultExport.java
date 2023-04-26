@@ -28,9 +28,8 @@ import org.jdom.Element;
  * XML export interface
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public interface ResultExport {
 
-	public Element addXML();
+  Element addXML();
 }

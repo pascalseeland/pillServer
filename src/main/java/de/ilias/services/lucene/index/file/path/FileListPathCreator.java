@@ -22,133 +22,123 @@
 
 package de.ilias.services.lucene.index.file.path;
 
-import java.io.File;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.LocalSettings;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class FileListPathCreator implements PathCreator {
 
-	protected String basePath = "ilFiles";
-	
-	
-	/**
-	 * Default constructor
-	 */
-	public FileListPathCreator() {
+  private static final Logger logger = LogManager.getLogger(FileListPathCreator.class);
 
-	}
-	
-	/**
-	 * Set bas path
-	 * @param bp
-	 * @return 
-	 */
-	public void setBasePath(String bp) {
-		
-		this.basePath = bp;
-	}
+  protected String basePath = "ilFiles";
 
-	/**
-	 * Get base path of file directory
-	 * ILIAS version <= 4.0 (ilFiles)
-	 * ILIAS version >= 4.1 (ilFile) 
-	 * @return
-	 */
-	public String getBasePath() {
-		
-		return this.basePath;
-	}
-	
-	
-	/**
-	 * @see de.ilias.services.lucene.index.file.path.PathCreator#buildPath(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
-	 */
-	public File buildFile(CommandQueueElement el, ResultSet res)
-			throws PathCreatorException {
+  /**
+   * Default constructor
+   */
+  public FileListPathCreator() {
 
-		
-		
-		StringBuilder fullPath = new StringBuilder();
-		StringBuilder versionPath = new StringBuilder();
-		
-		File file;
-		
-		try {
-			
-			int objId = Integer.parseInt(DBFactory.getInt(res,"file_id"));
+  }
 
-			fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(getBasePath());
-			
-	
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(PathUtils.buildSplittedPathFromId(objId,"file"));
-			
-			versionPath.append(fullPath);
-			versionPath.append(PathUtils.buildVersionDirectory(res.getInt("version")));
-			versionPath.append(System.getProperty("file.separator"));
-			versionPath.append(DBFactory.getString(res,"file_name"));
+  /**
+   * Set base path
+   */
+  public void setBasePath(String bp) {
+    this.basePath = bp;
+  }
 
-			file = new File(versionPath.toString());
-			if(file.exists() && file.canRead()) {
-				return file;
-			}
+  /**
+   * Get base path of file directory
+   * ILIAS version <= 4.0 (ilFiles)
+   * ILIAS version >= 4.1 (ilFile)
+   */
+  public String getBasePath() {
 
-			// Older versions do not store the files in version directories
-			fullPath.append(DBFactory.getString(res, "file_name"));
-			file = new File(fullPath.toString());
-			if(file.exists() && file.canRead()) {
-				return file;
-			}
-			if(!file.exists()) {
-				throw new PathCreatorException("Cannot find file: " + fullPath.toString());
-			}
-			if(!file.canRead()) {
-				throw new PathCreatorException("Cannot read file: " + fullPath.toString());
-			}
-			return null;
-		} 
-		catch (ConfigurationException e) {
-			throw new PathCreatorException(e);
-		}
-		catch (SQLException e) {
-			throw new PathCreatorException(e);
-		}
-		catch (NullPointerException e) {
-			throw new PathCreatorException(e);
-		} 
-	}
+    return this.basePath;
+  }
 
-	@Override
-	public String getExtension(CommandQueueElement el, ResultSet res) {
-		
-		StringBuilder extension = new StringBuilder();
-		try {
-			String fileName = res.getString("file_name");
-	        int dotIndex = fileName.lastIndexOf(".");
-	        if((dotIndex > 0) && (dotIndex < fileName.length())) {
-	            extension.append(fileName.substring(dotIndex + 1, fileName.length()));
-			}
+  /**
+   * @see de.ilias.services.lucene.index.file.path.PathCreator#buildFile(CommandQueueElement, ResultSet)
+   */
+  public File buildFile(CommandQueueElement el, ResultSet res) throws PathCreatorException {
 
-		} catch (SQLException ex) {
-			logger.error(ex.toString());
-		}
-		return extension.toString();
-	}
-	
+    StringBuilder fullPath = new StringBuilder();
+    StringBuilder versionPath = new StringBuilder();
+
+    File file;
+
+    try {
+
+      int objId = Integer.parseInt(DBFactory.getInt(res, "file_id"));
+
+      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(getBasePath());
+
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(PathUtils.buildSplittedPathFromId(objId, "file"));
+
+      versionPath.append(fullPath);
+      versionPath.append(PathUtils.buildVersionDirectory(res.getInt("version")));
+      versionPath.append(System.getProperty("file.separator"));
+      versionPath.append(DBFactory.getString(res, "file_name"));
+
+      file = new File(versionPath.toString());
+      if (file.exists() && file.canRead()) {
+        return file;
+      }
+
+      // Older versions do not store the files in version directories
+      fullPath.append(DBFactory.getString(res, "file_name"));
+      file = new File(fullPath.toString());
+      if (file.exists() && file.canRead()) {
+        return file;
+      }
+      if (!file.exists()) {
+        throw new PathCreatorException("Cannot find file: " + fullPath.toString());
+      }
+      if (!file.canRead()) {
+        throw new PathCreatorException("Cannot read file: " + fullPath.toString());
+      }
+      return null;
+    } catch (ConfigurationException e) {
+      throw new PathCreatorException(e);
+    } catch (SQLException e) {
+      throw new PathCreatorException(e);
+    } catch (NullPointerException e) {
+      throw new PathCreatorException(e);
+    }
+  }
+
+  @Override
+  public String getExtension(CommandQueueElement el, ResultSet res) {
+
+    StringBuilder extension = new StringBuilder();
+    try {
+      String fileName = res.getString("file_name");
+      int dotIndex = fileName.lastIndexOf(".");
+      if ((dotIndex > 0) && (dotIndex < fileName.length())) {
+        extension.append(fileName.substring(dotIndex + 1, fileName.length()));
+      }
+
+    } catch (SQLException ex) {
+      logger.error(ex.toString());
+    }
+    return extension.toString();
+  }
+
 }

@@ -24,81 +24,73 @@ package de.ilias;
 
 import java.util.HashMap;
 
-public class ilServerStatus {
+public class ILServerStatus {
 
-	public static final String RUNNING = "Runnning";
-	public static final String STOPPED = "Stopped";
-	public static final String INDEXING = "Indexing";
+  public static final String RUNNING = "Runnning";
+  public static final String STOPPED = "Stopped";
+  public static final String INDEXING = "Indexing";
 
-	private static HashMap<String, Boolean> indexer = new HashMap<String, Boolean>();
-	private static boolean active = false;
+  private static HashMap<String, Boolean> indexer = new HashMap<String, Boolean>();
+  private static boolean active = false;
 
-	/**
-	 * Check if server is active
-	 * @return
-	 */
-	public static boolean isActive() {
-		return active;
-	}
-	
-	/**
-	 * Set server active
-	 * @param active
-	 */
-	public static void setActive(boolean active) {
-		ilServerStatus.active = active;
-	}
-	
-	/**
-	 * Enable an indexer for a specific client
-	 * @param clientKey
-	 */
-	public static void addIndexer(String clientKey) {
-		
-		indexer.put(clientKey, true);
-		setActive(true);
-	}
-	
-	public static boolean isIndexerActive(String clientKey) {
-		
-		return indexer.containsKey(clientKey);
-	}
-	
-	/**
-	 * Remove indexer for a specific client
-	 * @param clientKey
-	 */
-	public static void removeIndexer(String clientKey) {
-		
-		if(indexer.containsKey(clientKey)) {
-			
-			indexer.remove(clientKey);
-		}
-	}
-	
-	/**
-	 * Get current number of running indexers
-	 * @return
-	 */
-	public static int getCountActiveIndexer() {
-		
-		return indexer.size();
-	}
-	
-	public static String getStatus() {
-		
-		if(getCountActiveIndexer() != 0) {
-			
-			return INDEXING + " (" + getCountActiveIndexer() + ")"; 
-		}
-		if(isActive()) {
-			
-			return RUNNING;
-		}
-		return STOPPED;
-	}
-	
-	
-	
+  /**
+   * Check if server is active
+   */
+  public static boolean isActive() {
+    return active;
+  }
+
+  /**
+   * Set server active
+   */
+  public static void setActive(boolean active) {
+    ILServerStatus.active = active;
+  }
+
+  /**
+   * Enable an indexer for a specific client
+   */
+  public static void addIndexer(String clientKey) {
+
+    indexer.put(clientKey, true);
+    setActive(true);
+  }
+
+  public static boolean isIndexerActive(String clientKey) {
+
+    return indexer.containsKey(clientKey);
+  }
+
+  /**
+   * Remove indexer for a specific client
+   */
+  public static void removeIndexer(String clientKey) {
+
+    if (indexer.containsKey(clientKey)) {
+
+      indexer.remove(clientKey);
+    }
+  }
+
+  /**
+   * Get current number of running indexers
+   */
+  public static int getCountActiveIndexer() {
+
+    return indexer.size();
+  }
+
+  public static String getStatus() {
+
+    if (getCountActiveIndexer() != 0) {
+
+      return INDEXING + " (" + getCountActiveIndexer() + ")";
+    }
+    if (isActive()) {
+
+      return RUNNING;
+    }
+    return STOPPED;
+  }
 
 }

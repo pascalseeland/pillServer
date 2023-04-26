@@ -30,42 +30,34 @@ import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.rtf.RTFEditorKit;
 
 /**
- * 
- * 
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class RTFHandler implements FileHandler {
 
-	/**
-	 * From Lucene in Action
-	 * Use Swing lib
-	 * 
-	 * @seede.ilias.services.lucene.index.file.FileHandler#getContent(java.io.
-	 * InputStream)
-	 */
-	public String getContent(InputStream is) throws FileHandlerException,
-			IOException {
+  /**
+   * From Lucene in Action
+   * Use Swing lib
+   *
+   * @see de.ilias.services.lucene.index.file.FileHandler#getContent(InputStream)
+   */
+  public String getContent(InputStream is) throws FileHandlerException, IOException {
 
-		String bodyText = null;
-		DefaultStyledDocument styledDoc = new DefaultStyledDocument();
+    String bodyText = null;
+    DefaultStyledDocument styledDoc = new DefaultStyledDocument();
 
-		try {
+    try {
 
-			new RTFEditorKit().read(is, styledDoc, 0);
-			bodyText = styledDoc.getText(0, styledDoc.getLength());
-		} 
-		catch (IOException e) {
-			throw new FileHandlerException(
-					"Cannot extract text from a RTF document", e);
+      new RTFEditorKit().read(is, styledDoc, 0);
+      bodyText = styledDoc.getText(0, styledDoc.getLength());
+    } catch (IOException e) {
+      throw new FileHandlerException("Cannot extract text from a RTF document", e);
 
-		} 
-		catch (BadLocationException e) {
-			throw new FileHandlerException(
-					"Cannot extract text from a RTF document", e);
-		}
+    } catch (BadLocationException e) {
+      throw new FileHandlerException("Cannot extract text from a RTF document", e);
+    }
 
-		return bodyText;
-	}
+    return bodyText;
+  }
 
 }

@@ -1,20 +1,20 @@
 package de.ilias.services.lucene.index.file.path;
 
-import java.io.File;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.LocalSettings;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
- * Creates the filesystem path to exercise assignments. 
+ * Creates the filesystem path to exercise assignments.
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
@@ -23,49 +23,44 @@ import de.ilias.services.settings.LocalSettings;
 public class ExerciseAssignmentPathCreator implements PathCreator {
 
   private Logger logger = LogManager.getLogger(ExerciseAssignmentPathCreator.class);
-	
-	
-	public File buildFile(CommandQueueElement el, ResultSet res)
-			throws PathCreatorException {
 
-		int objId = el.getObjId();
-		StringBuilder fullPath = new StringBuilder();
-		
-		File file;
-		
-		try {
-			
-			fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append("ilExercise");
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(PathUtils.buildSplittedPathFromId(objId,"exc"));
-			fullPath.append("ass_" + String.valueOf(DBFactory.getInt(res, "id")));
-			
-			logger.info("Try to read from path: " + fullPath.toString());
-			
-			file = new File(fullPath.toString());
-			if(file.exists() && file.canRead()) {
-				return file;
-			}
-			throw new PathCreatorException("Cannot access directory: " + fullPath.toString());
-		}
-		catch (ConfigurationException e) {
-			throw new PathCreatorException(e);
-		}
-		catch (SQLException e) {
-			throw new PathCreatorException(e);
-		}
-		catch (NullPointerException e) {
-			throw new PathCreatorException(e);
-		} 
-	}
+  public File buildFile(CommandQueueElement el, ResultSet res) throws PathCreatorException {
 
-	@Override
-	public String getExtension(CommandQueueElement el, ResultSet res) {
-		return "";
-	}
+    int objId = el.getObjId();
+    StringBuilder fullPath = new StringBuilder();
+
+    File file;
+
+    try {
+
+      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append("ilExercise");
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(PathUtils.buildSplittedPathFromId(objId, "exc"));
+      fullPath.append("ass_" + String.valueOf(DBFactory.getInt(res, "id")));
+
+      logger.info("Try to read from path: " + fullPath.toString());
+
+      file = new File(fullPath.toString());
+      if (file.exists() && file.canRead()) {
+        return file;
+      }
+      throw new PathCreatorException("Cannot access directory: " + fullPath.toString());
+    } catch (ConfigurationException e) {
+      throw new PathCreatorException(e);
+    } catch (SQLException e) {
+      throw new PathCreatorException(e);
+    } catch (NullPointerException e) {
+      throw new PathCreatorException(e);
+    }
+  }
+
+  @Override
+  public String getExtension(CommandQueueElement el, ResultSet res) {
+    return "";
+  }
 
 }

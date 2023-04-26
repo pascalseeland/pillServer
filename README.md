@@ -80,7 +80,7 @@ orai18n.jar
 **Start the Java-Server including these packages to your CLASSPATH:**
 
 ```
-bash$java -Dfile.encoding=UTF-8 -cp "<PATH_TO_ojdbc.jar>:<PATH_TO_orai18n.jar>:ilServer.jar" de.ilias.ilServer <PATH_TO_SERVER_INI> start &
+bash$java -Dfile.encoding=UTF-8 -cp "<PATH_TO_ojdbc.jar>:<PATH_TO_orai18n.jar>:ilServer.jar" de.ilias.ILServer <PATH_TO_SERVER_INI> start &
 ```
 
 **To stop the server simply type:**

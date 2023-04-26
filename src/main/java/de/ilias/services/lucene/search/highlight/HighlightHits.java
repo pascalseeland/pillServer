@@ -22,90 +22,80 @@
 
 package de.ilias.services.lucene.search.highlight;
 
-import java.util.HashMap;
+import de.ilias.services.lucene.search.ResultExport;
 
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.output.XMLOutputter;
 
-import de.ilias.services.lucene.search.ResultExport;
+import java.util.HashMap;
 
 /**
  * Highlight results (top most xml element)
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class HighlightHits implements ResultExport {
-	
-	private HashMap<Integer, HighlightObject> objects = new HashMap<Integer, HighlightObject>();
-	
-	private double maxScore = 0;
-	
-	/**
-	 * 
-	 */
-	public HighlightHits() {
-	}
 
-	public HighlightObject initObject(int objId) {
-		
-		if(objects.containsKey(objId)) {
-			//logger.debug("Reusing object with id: " + String.valueOf(objId));
-			return objects.get(objId);
-		}
-		//logger.debug("New object with id: " + String.valueOf(objId));
-		objects.put(objId, new HighlightObject(objId));
-		return objects.get(objId);
-	}
-	
-	
-	/**
-	 * @return the objects
-	 */
-	public HashMap<Integer, HighlightObject> getObjects() {
-		return objects;
-	}
-	
-	/**
-	 * Set score
-	 * @param score 
-	 */
-	public void setMaxScore(double score) {
-		maxScore = score;
-	}
-	
-	/**
-	 * Get max score
-	 * @return 
-	 */
-	public double getMaxScore() {
-		return maxScore;
-	}
-	
-	
-	public String toXML() {
-		
-		Document doc = new Document(addXML()); 
-		
-		XMLOutputter outputter = new XMLOutputter();
-		return outputter.outputString(doc);
-		
-	}
+  private HashMap<Integer, HighlightObject> objects = new HashMap<Integer, HighlightObject>();
 
-	/**
-	 * Add xml
-	 * @see de.ilias.services.lucene.search.highlight.HighlightResultExport#addXML(org.jdom.Element)
-	 */
-	public Element addXML() {
+  private double maxScore = 0;
 
-		Element hits = new Element("Hits");
-		hits.setAttribute("maxScore",String.valueOf(getMaxScore()));
-		
-		for(Object obj : objects.values()) {
-			
-			hits.addContent(((ResultExport) obj).addXML());
-		}
-		return hits;
-	}
+  public HighlightObject initObject(int objId) {
+
+    if (objects.containsKey(objId)) {
+      //logger.debug("Reusing object with id: " + String.valueOf(objId));
+      return objects.get(objId);
+    }
+    //logger.debug("New object with id: " + String.valueOf(objId));
+    objects.put(objId, new HighlightObject(objId));
+    return objects.get(objId);
+  }
+
+  /**
+   * @return the objects
+   */
+  public HashMap<Integer, HighlightObject> getObjects() {
+    return objects;
+  }
+
+  /**
+   * Set score
+   */
+  public void setMaxScore(double score) {
+    maxScore = score;
+  }
+
+  /**
+   * Get max score
+   */
+  public double getMaxScore() {
+    return maxScore;
+  }
+
+  public String toXML() {
+
+    Document doc = new Document(addXML());
+
+    XMLOutputter outputter = new XMLOutputter();
+    return outputter.outputString(doc);
+
+  }
+
+  /**
+   * Add xml
+   *
+   * @see ResultExport#addXML()
+   */
+  public Element addXML() {
+
+    Element hits = new Element("Hits");
+    hits.setAttribute("maxScore", String.valueOf(getMaxScore()));
+
+    for (Object obj : objects.values()) {
+
+      hits.addContent(((ResultExport) obj).addXML());
+    }
+    return hits;
+  }
 }

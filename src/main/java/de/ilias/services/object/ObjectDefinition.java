@@ -22,163 +22,146 @@
 
 package de.ilias.services.object;
 
-import java.io.IOException;
-import java.sql.ResultSet;
-import java.util.Vector;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandler;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 import de.ilias.services.lucene.index.DocumentHolder;
 import de.ilias.services.lucene.index.IndexHolder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.util.Vector;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class ObjectDefinition implements DocumentHandler {
 
-	public static final String TYPE_FULL = "full";
-	public static final String TYPE_INCREMENTAL = "incremental";
+  public static final String TYPE_FULL = "full";
+  public static final String TYPE_INCREMENTAL = "incremental";
 
-	private Logger logger = LogManager.getLogger(ObjectDefinition.class);
-	
-	private String type;
-	private String indexType = "full";
-	private Vector<DocumentDefinition> documents = new Vector<DocumentDefinition>();
-	
-	/**
-	 * 
-	 * @param type
-	 * @param indexType
-	 */
-	public ObjectDefinition(String type,String indexType) {
-		
-		this(type);
-		this.setIndexType(indexType);
-	}
-	
-	/**
-	 * 
-	 */
-	public ObjectDefinition(String type) {
-		
-		this();
-		this.setType(type);
-	}
+  private Logger logger = LogManager.getLogger(ObjectDefinition.class);
 
-	/**
-	 * 
-	 */
-	public ObjectDefinition() {
+  private String type;
+  private String indexType = "full";
+  private Vector<DocumentDefinition> documents = new Vector<DocumentDefinition>();
 
-	}
+  public ObjectDefinition(String type, String indexType) {
 
-	/**
-	 * @param type the type to set
-	 */
-	public void setType(String type) {
-		
-		logger.debug("Found new definition for type: " + type);
-		this.type = type;
-	}
+    this(type);
+    this.setIndexType(indexType);
+  }
 
-	/**
-	 * @return the type
-	 */
-	public String getType() {
-		return type;
-	}
+  public ObjectDefinition(String type) {
 
-	/**
-	 * @param indexType the indexType to set
-	 */
-	public void setIndexType(String indexType) {
-		this.indexType = indexType;
-	}
+    this();
+    this.setType(type);
+  }
 
-	/**
-	 * @return the indexType
-	 */
-	public String getIndexType() {
-		return indexType;
-	}
+  public ObjectDefinition() {
 
-	/**
-	 * @return the documents
-	 */
-	public Vector<DocumentDefinition> getDocumentDefinitions() {
-		return documents;
-	}
+  }
 
-	public void addDocumentDefinition(DocumentDefinition doc) {
-		
-		documents.add(doc);
-	}
-	
-	public void removeDocumentDefinition(DocumentDefinition doc) {
-		
-		int index;
-		
-		while((index = documents.indexOf(doc)) != -1) {
-			documents.remove(index);
-		}
-		return;
-	}
+  /**
+   * @param type the type to set
+   */
+  public void setType(String type) {
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
+    logger.debug("Found new definition for type: " + type);
+    this.type = type;
+  }
 
-		StringBuffer out = new StringBuffer();
-		
-		out.append("Object Definition for type = " + getType());
-		out.append("\n");
-		
-		for(Object doc : getDocumentDefinitions()) {
-			
-			out.append(doc);
-			out.append("\n");
-		}
-		return out.toString();
-	}
+  /**
+   * @return the type
+   */
+  public String getType() {
+    return type;
+  }
 
-	/**
-	 * create/write documents for this element.
-	 * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
-	 */
-	public void writeDocument(CommandQueueElement el)
-			throws DocumentHandlerException, IOException {
+  /**
+   * @param indexType the indexType to set
+   */
+  public void setIndexType(String indexType) {
+    this.indexType = indexType;
+  }
 
-		DocumentHolder docs = DocumentHolder.factory();
-		docs.newGlobalDocument();
-		
-		for(DocumentDefinition def : getDocumentDefinitions()) {
-			logger.debug("1. New document definition");
-			((DocumentDefinition) def).writeDocument(el);
-		}
-		
-		IndexHolder writer = IndexHolder.getInstance();
-		writer.addDocument(docs.getGlobalDocument());
-	}
+  /**
+   * @return the indexType
+   */
+  public String getIndexType() {
+    return indexType;
+  }
 
-	/**
-	 * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
-	 */
-	public void writeDocument(CommandQueueElement el, ResultSet res)
-			throws DocumentHandlerException {
-		// TODO Auto-generated method stub
-		
-	}
+  /**
+   * @return the documents
+   */
+  public Vector<DocumentDefinition> getDocumentDefinitions() {
+    return documents;
+  }
 
-	
-	
-	
-	
+  public void addDocumentDefinition(DocumentDefinition doc) {
+
+    documents.add(doc);
+  }
+
+  public void removeDocumentDefinition(DocumentDefinition doc) {
+
+    int index;
+
+    while ((index = documents.indexOf(doc)) != -1) {
+      documents.remove(index);
+    }
+    return;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+
+    StringBuilder out = new StringBuilder();
+
+    out.append("Object Definition for type = " + getType());
+    out.append("\n");
+
+    for (Object doc : getDocumentDefinitions()) {
+
+      out.append(doc);
+      out.append("\n");
+    }
+    return out.toString();
+  }
+
+  /**
+   * create/write documents for this element.
+   *
+   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   */
+  public void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
+
+    DocumentHolder docs = DocumentHolder.factory();
+    docs.newGlobalDocument();
+
+    for (DocumentDefinition def : getDocumentDefinitions()) {
+      logger.debug("1. New document definition");
+      ((DocumentDefinition) def).writeDocument(el);
+    }
+
+    IndexHolder writer = IndexHolder.getInstance();
+    writer.addDocument(docs.getGlobalDocument());
+  }
+
+  /**
+   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
+   */
+  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
+    // TODO Auto-generated method stub
+
+  }
+
 }

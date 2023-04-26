@@ -22,186 +22,165 @@
 
 package de.ilias.services.settings;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 /**
  * Stores general server settings like rpc host and port, global log file and
  * log level.
- * 
+ *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class ServerSettings {
 
-	private static Logger logger = LogManager.getLogger(ServerSettings.class);
-	private static ServerSettings instance = null;
+  private static Logger logger = LogManager.getLogger(ServerSettings.class);
+  private static ServerSettings instance = null;
 
-	public static final long DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024;
+  public static final long DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024;
 
-	private InetAddress host;
-	private String hostString;
-	private int port;
+  private InetAddress host;
+  private String hostString;
+  private int port;
 
-	private File indexPath;
-	private int numThreads = 1;
-	private double RAMSize = 500;
-	private int indexMaxFileSizeMB = 500;
+  private File indexPath;
+  private int numThreads = 1;
+  private double RAMSize = 500;
+  private int indexMaxFileSizeMB = 500;
 
-	private boolean ignoreDocAndXlsFiles = true;
+  private boolean ignoreDocAndXlsFiles = true;
 
+  private ServerSettings() {
 
+  }
 
+  /**
+   * Global singleton for all threads
+   */
+  public static synchronized ServerSettings getInstance() throws ConfigurationException {
 
-	/**
-	 * @param properties
-	 */
-	private ServerSettings() {
+    if (instance == null) {
+      instance = new ServerSettings();
+    }
+    return instance;
+  }
 
-	}
-	
-	/**
-	 * Global singleton for all threads
-	 * @return
-	 * @throws ConfigurationException
-	 */
-	public static synchronized ServerSettings getInstance() throws ConfigurationException {
+  public String getServerUrl() {
 
-		if (instance == null) {
-			instance = new ServerSettings();
-		}
-		return instance;
-	}
-	
-	public String getServerUrl() {
-		
-		StringBuilder builder = new StringBuilder();
-		
-		builder.append("http://");
-		builder.append(getHostString());
-		builder.append(":" + getPort());
-		builder.append("/xmlrpc");
-		
-		logger.info("Using RPC Url: " + builder);
-		return builder.toString();
-	}
+    StringBuilder builder = new StringBuilder();
 
-	/**
-	 * @return the host
-	 */
-	public InetAddress getHost() {
-		return host;
-	}
-	
-	public String getHostString() {
-		return hostString;
-	}
+    builder.append("http://");
+    builder.append(getHostString());
+    builder.append(":" + getPort());
+    builder.append("/xmlrpc");
 
-	/**
-	 * @param host
-	 *            The host to set.
-	 * @throws ConfigurationException
-	 */
-	public void setHost(String host) throws ConfigurationException {
+    logger.info("Using RPC Url: " + builder);
+    return builder.toString();
+  }
 
-		try {
-			this.host = InetAddress.getByName(host);
-			this.hostString = host;
-		} 
-		catch (UnknownHostException e) {
-			logger.fatal("Unknown host given: " + host);
-			throw new ConfigurationException(e);
-		}
-	}
+  /**
+   * @return the host
+   */
+  public InetAddress getHost() {
+    return host;
+  }
 
-	/**
-	 * @return the port
-	 */
-	public int getPort() {
-		return port;
-	}
+  public String getHostString() {
+    return hostString;
+  }
 
-	/**
-	 * @param port
-	 *            the port to set
-	 */
-	public void setPort(String port) {
-		this.port = Integer.parseInt(port);
-	}
+  /**
+   * @param host The host to set.
+   */
+  public void setHost(String host) throws ConfigurationException {
 
-	/**
-	 * @return the indexPath
-	 */
-	public File getIndexPath() {
-		return indexPath;
-	}
+    try {
+      this.host = InetAddress.getByName(host);
+      this.hostString = host;
+    } catch (UnknownHostException e) {
+      logger.fatal("Unknown host given: " + host);
+      throw new ConfigurationException(e);
+    }
+  }
 
-	
-	/**
-	 * @param indexPath
-	 *            the indexPath to set
-	 * @throws ConfigurationException
-	 */
-	public void setIndexPath(String indexPath) throws ConfigurationException {
+  /**
+   * @return the port
+   */
+  public int getPort() {
+    return port;
+  }
 
-		this.indexPath = new File(indexPath);
+  /**
+   * @param port the port to set
+   */
+  public void setPort(String port) {
+    this.port = Integer.parseInt(port);
+  }
 
-		if (!this.indexPath.isAbsolute()) {
-			throw new ConfigurationException("Absolute path required: " + indexPath);
-		}
-		if (!this.indexPath.canWrite()) {
-			throw new ConfigurationException("Path not writable: " + indexPath);
-		}
-		if (!this.indexPath.isDirectory()) {
-			throw new ConfigurationException("Directory name required: " + indexPath);
-		}
-	}
-	
-	/**
-	 * @param purgeString
-	 */
-	public void setThreadNumber(String purgeString) {
+  /**
+   * @return the indexPath
+   */
+  public File getIndexPath() {
+    return indexPath;
+  }
 
-		this.numThreads = Integer.valueOf(purgeString);
-	}
-	
-	public int getNumThreads() {
-		return numThreads;
-	}
+  /**
+   * @param indexPath the indexPath to set
+   */
+  public void setIndexPath(String indexPath) throws ConfigurationException {
 
-	public double getRAMSize() {
-		return RAMSize;
-	}
+    this.indexPath = new File(indexPath);
 
-	public void setRAMSize(String purgedString) {
+    if (!this.indexPath.isAbsolute()) {
+      throw new ConfigurationException("Absolute path required: " + indexPath);
+    }
+    if (!this.indexPath.canWrite()) {
+      throw new ConfigurationException("Path not writable: " + indexPath);
+    }
+    if (!this.indexPath.isDirectory()) {
+      throw new ConfigurationException("Directory name required: " + indexPath);
+    }
+  }
 
-		RAMSize = Double.valueOf(purgedString);
-	}
+  public void setThreadNumber(String purgeString) {
 
-	public int getMaxFileSizeMB()
-	{
-		return indexMaxFileSizeMB;
-	}
+    this.numThreads = Integer.parseInt(purgeString);
+  }
 
-	public long getMaxFileSize()
-	{
-		return (long) indexMaxFileSizeMB * 1024 * 1024;
-	}
+  public int getNumThreads() {
+    return numThreads;
+  }
 
-	public void setMaxFileSizeMB(String mb)
-	{
-		this.indexMaxFileSizeMB = Integer.valueOf(mb);
-	}
+  public double getRAMSize() {
+    return RAMSize;
+  }
 
-	public void setIgnoreDocAndXlsFiles(boolean ignoreDocAndXlsFiles) {
-	  this.ignoreDocAndXlsFiles = ignoreDocAndXlsFiles;
-	}
+  public void setRAMSize(String purgedString) {
 
-	public boolean getIgnoreDocAndXlsFiles() {
-	  return ignoreDocAndXlsFiles;
-	}
+    RAMSize = Double.parseDouble(purgedString);
+  }
+
+  public int getMaxFileSizeMB() {
+    return indexMaxFileSizeMB;
+  }
+
+  public long getMaxFileSize() {
+    return (long) indexMaxFileSizeMB * 1024 * 1024;
+  }
+
+  public void setMaxFileSizeMB(String mb) {
+    this.indexMaxFileSizeMB = Integer.parseInt(mb);
+  }
+
+  public void setIgnoreDocAndXlsFiles(boolean ignoreDocAndXlsFiles) {
+    this.ignoreDocAndXlsFiles = ignoreDocAndXlsFiles;
+  }
+
+  public boolean getIgnoreDocAndXlsFiles() {
+    return ignoreDocAndXlsFiles;
+  }
 }

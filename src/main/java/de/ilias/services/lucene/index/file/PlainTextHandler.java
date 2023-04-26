@@ -35,40 +35,37 @@ import java.io.InputStreamReader;
  */
 public class PlainTextHandler implements FileHandler {
 
-	/**
-	 * 
-	 */
-	public PlainTextHandler() {
-	}
+  /**
+   *
+   */
+  public PlainTextHandler() {
+  }
 
-	/**
-	 * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
-	 */
-	public String getContent(InputStream is) throws FileHandlerException {
+  /**
+   * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
+   */
+  public String getContent(InputStream is) throws FileHandlerException {
 
-		StringBuilder content = new StringBuilder();
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+    StringBuilder content = new StringBuilder();
+    BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
+    try {
+      String line = null;
+      while ((line = br.readLine()) != null) {
+        content.append(' ');
+        content.append(line);
+      }
+      return content.toString();
+    } catch (IOException e) {
+      throw new FileHandlerException("Cannot read plain text file: " + e);
+    } finally {
+      if (br != null) {
         try {
-            String line = null;
-			while((line = br.readLine()) != null) {
-			    content.append(' ');
-				content.append(line);
-			}
-	        return content.toString();
-		} 
-        catch (IOException e) {
-        	throw new FileHandlerException("Cannot read plain text file: " + e);
+          br.close();
+        } catch (IOException e) {
         }
-        finally {
-        	if(br != null) {
-				try {
-					br.close();
-				} 
-				catch (IOException e) {
-				}
-        	}
-        }
-	}
+      }
+    }
+  }
 
 }

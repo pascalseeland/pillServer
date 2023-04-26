@@ -22,121 +22,105 @@
 
 package de.ilias.services.lucene.index.file.path;
 
-import java.io.File;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.LocalSettings;
 
+import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class FileObjectPathCreator implements PathCreator {
-	
-	protected String basePath = "ilFiles";
 
-	/**
-	 * Default constructor
-	 */
-	public FileObjectPathCreator() {
+  protected String basePath = "ilFiles";
 
-	}
-	
-	/**
-	 * Set bas path
-	 * @param bp
-	 * @return 
-	 */
-	public void setBasePath(String bp) {
-		
-		this.basePath = bp;
-	}
-	
+  /**
+   * Set base path
+   */
+  public void setBasePath(String bp) {
 
-	/**
-	 * Get base path
-	 * ILIAS version <= 4.0 (ilFiles)
-	 * ILIAS version >= 4.1 (ilFile) 
-	 * 
-	 * @return String basePath
-	 */
-	public String getBasePath() {
-		
-		return this.basePath;
-	}
-	
-	
-	/**
-	 * @see de.ilias.services.lucene.index.file.path.PathCreator#buildPath(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
-	 */
-	public File buildFile(CommandQueueElement el, ResultSet res)
-			throws PathCreatorException {
+    this.basePath = bp;
+  }
 
-		int objId = el.getObjId();
-		StringBuilder fullPath = new StringBuilder();
-		StringBuilder versionPath = new StringBuilder();
-		
-		File file;
-		
-		try {
-			int versionCode = 1;
-			int resVersion = res.getInt("version");
-			if (resVersion > 0) {
-				versionCode = resVersion;
-			}
+  /**
+   * Get base path
+   * ILIAS version <= 4.0 (ilFiles)
+   * ILIAS version >= 4.1 (ilFile)
+   *
+   * @return String basePath
+   */
+  public String getBasePath() {
 
-			fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(getBasePath());
-			fullPath.append(System.getProperty("file.separator"));
-			fullPath.append(PathUtils.buildSplittedPathFromId(objId,"file"));
-			
-			versionPath.append(fullPath);
-			versionPath.append(PathUtils.buildVersionDirectory(versionCode));
-			versionPath.append(System.getProperty("file.separator"));
-			versionPath.append(DBFactory.getString(res,"file_name"));
+    return this.basePath;
+  }
 
-			file = new File(versionPath.toString());
-			if(file.exists() && file.canRead()) {
-				return file;
-			}
+  /**
+   * @see de.ilias.services.lucene.index.file.path.PathCreator#buildFile(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
+   */
+  public File buildFile(CommandQueueElement el, ResultSet res) throws PathCreatorException {
 
-			// Older versions do not store the files in version directories
-			fullPath.append(DBFactory.getString(res, "file_name"));
-			file = new File(fullPath.toString());
-			if(file.exists() && file.canRead()) {
-				return file;
-			}
-			if(!file.exists()) {
-				throw new PathCreatorException("Cannot find file: " + fullPath.toString());
-			}
-			if(!file.canRead()) {
-				throw new PathCreatorException("Cannot read file: " + fullPath.toString());
-			}
-			return null;
-		} 
-		catch (ConfigurationException e) {
-			throw new PathCreatorException(e);
-		}
-		catch (SQLException e) {
-			throw new PathCreatorException(e);
-		}
-		catch (NullPointerException e) {
-			throw new PathCreatorException(e);
-		} 
-	}
+    int objId = el.getObjId();
+    StringBuilder fullPath = new StringBuilder();
+    StringBuilder versionPath = new StringBuilder();
 
-	@Override
-	public String getExtension(CommandQueueElement el, ResultSet res) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
+    File file;
+
+    try {
+      int versionCode = 1;
+      int resVersion = res.getInt("version");
+      if (resVersion > 0) {
+        versionCode = resVersion;
+      }
+
+      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(getBasePath());
+      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(PathUtils.buildSplittedPathFromId(objId, "file"));
+
+      versionPath.append(fullPath);
+      versionPath.append(PathUtils.buildVersionDirectory(versionCode));
+      versionPath.append(System.getProperty("file.separator"));
+      versionPath.append(DBFactory.getString(res, "file_name"));
+
+      file = new File(versionPath.toString());
+      if (file.exists() && file.canRead()) {
+        return file;
+      }
+
+      // Older versions do not store the files in version directories
+      fullPath.append(DBFactory.getString(res, "file_name"));
+      file = new File(fullPath.toString());
+      if (file.exists() && file.canRead()) {
+        return file;
+      }
+      if (!file.exists()) {
+        throw new PathCreatorException("Cannot find file: " + fullPath.toString());
+      }
+      if (!file.canRead()) {
+        throw new PathCreatorException("Cannot read file: " + fullPath.toString());
+      }
+      return null;
+    } catch (ConfigurationException e) {
+      throw new PathCreatorException(e);
+    } catch (SQLException e) {
+      throw new PathCreatorException(e);
+    } catch (NullPointerException e) {
+      throw new PathCreatorException(e);
+    }
+  }
+
+  @Override
+  public String getExtension(CommandQueueElement el, ResultSet res) {
+    throw new UnsupportedOperationException(
+        "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
 }

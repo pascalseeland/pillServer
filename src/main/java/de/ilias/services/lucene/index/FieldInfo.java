@@ -22,105 +22,95 @@
 
 package de.ilias.services.lucene.index;
 
+import de.ilias.services.settings.LocalSettings;
+
 import java.util.HashMap;
 import java.util.Vector;
 
-import de.ilias.services.settings.LocalSettings;
-
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class FieldInfo {
 
-	private static HashMap<String, FieldInfo> instances = new HashMap<String, FieldInfo>();
-	private Vector<String> fields = new Vector<String>();
-	
-	/**
-	 * 
-	 */
-	protected FieldInfo() {
-		
-		initDefaultFields();
-	}
+  private static HashMap<String, FieldInfo> instances = new HashMap<>();
+  private Vector<String> fields = new Vector<>();
 
+  /**
+   *
+   */
+  protected FieldInfo() {
 
-	/**
-	 * Get singleton instance for a client
-	 * @return FieldInfo 
-	 */
-	protected static FieldInfo getInstance() {
-		
-		return getInstance(LocalSettings.getClientKey());
-	}
+    initDefaultFields();
+  }
 
-	/**
-	 * @param clientKey
-	 * @return
-	 */
-	public static FieldInfo getInstance(String clientKey) {
+  /**
+   * Get singleton instance for a client
+   *
+   * @return FieldInfo
+   */
+  protected static FieldInfo getInstance() {
 
-		if(instances.containsKey(clientKey)) {
-			return instances.get(clientKey);
-		}
-		
-		instances.put(clientKey, new FieldInfo());
-		return instances.get(clientKey);
-	}
-	
-	/**
-	 * Add field (if not already appended)
-	 * @param field
-	 */
-	public void addField(String field) {
-		
-		if(!fields.contains(field)) {
-			fields.add(field);
-		}
-		return;
-	}
-	
-	/**
-	 * Get fields as Vector
-	 * @return Vector fields
-	 */
-	public Vector<String> getFields() {
-		return fields;
-	}
-	
-	/**
-	 * Return fields as string array
-	 * @return
-	 */
-	public String[] getFieldsAsStringArray() {
-		return fields.toArray(new String[0]);
-	}
+    return getInstance(LocalSettings.getClientKey());
+  }
 
-	/**
-	 * @return
-	 */
-	public int getFieldSize() {
+  public static FieldInfo getInstance(String clientKey) {
 
-		return fields.size();
-	}
-	
-	/**
-	 * Load default fields 
-	 */
-	protected void initDefaultFields() {
+    if (instances.containsKey(clientKey)) {
+      return instances.get(clientKey);
+    }
 
-		addField("title");
-		addField("description");
-		addField("lomKeyword");
-		addField("metaData");
-		addField("tag");
-		addField("propertyHigh");
-		addField("propertyMedium");
-		addField("propertyLow");
-		addField("content");
-		
-	}
-	
+    instances.put(clientKey, new FieldInfo());
+    return instances.get(clientKey);
+  }
+
+  /**
+   * Add field (if not already appended)
+   */
+  public void addField(String field) {
+
+    if (!fields.contains(field)) {
+      fields.add(field);
+    }
+    return;
+  }
+
+  /**
+   * Get fields as Vector
+   *
+   * @return Vector fields
+   */
+  public Vector<String> getFields() {
+    return fields;
+  }
+
+  /**
+   * Return fields as string array
+   */
+  public String[] getFieldsAsStringArray() {
+    return fields.toArray(new String[0]);
+  }
+
+  public int getFieldSize() {
+
+    return fields.size();
+  }
+
+  /**
+   * Load default fields
+   */
+  protected void initDefaultFields() {
+
+    addField("title");
+    addField("description");
+    addField("lomKeyword");
+    addField("metaData");
+    addField("tag");
+    addField("propertyHigh");
+    addField("propertyMedium");
+    addField("propertyLow");
+    addField("content");
+
+  }
+
 }

@@ -32,13 +32,12 @@ import java.util.regex.Pattern;
  */
 public class QuotingSanitizer implements ContentTransformer {
 
-	/**
-	 * 
-	 * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.io.InputStream)
-	 */
-	public String transform(String content) {
+  /**
+   * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(String)
+   */
+  public String transform(String content) {
 
-		return Pattern.compile("\\[quote\\].*?\\[/quote\\]",Pattern.DOTALL).matcher(content).replaceAll("");
-	}
+    return Pattern.compile("\\[quote\\].*?\\[/quote\\]", Pattern.DOTALL).matcher(content).replaceAll("");
+  }
 
 }

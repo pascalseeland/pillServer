@@ -22,6 +22,12 @@
 
 package de.ilias.services.lucene.index.transform;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -29,58 +35,46 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class ContentObjectTransformer implements ContentTransformer {
 
   private Logger logger = LogManager.getLogger(ContentObjectTransformer.class);
-	
-	
 
-	/**
-	 * Extract text from page_objects
-	 * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.lang.String)
-	 */
-	public String transform(String content) {
+  /**
+   * Extract text from page_objects
+   *
+   * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.lang.String)
+   */
+  public String transform(String content) {
 
-		XMLReader reader = null;
-		PageObjectHandler handler = null;
-		StringReader stringReader = new StringReader(content);
-		
-		try {
-		  SAXParserFactory spf = SAXParserFactory.newInstance();
-		  spf.setNamespaceAware(true);
-		  SAXParser saxParser = spf.newSAXParser();
-		  reader = saxParser.getXMLReader();
-		  handler = new PageObjectHandler();
-			
-			reader.setContentHandler(handler);
-			reader.parse(new InputSource(stringReader));
-			
-			return handler.getContent();
-			
-		} 
-		catch (SAXException e) {
-			logger.warn("Cannot parse page_object content.", e);
-		} 
-		catch (IOException e) {
-			logger.warn("Found invalid content.", e);
-		} catch (ParserConfigurationException e) {
-		  logger.error("Cannot crate xml parser", e);
+    XMLReader reader = null;
+    PageObjectHandler handler = null;
+    StringReader stringReader = new StringReader(content);
+
+    try {
+      SAXParserFactory spf = SAXParserFactory.newInstance();
+      spf.setNamespaceAware(true);
+      SAXParser saxParser = spf.newSAXParser();
+      reader = saxParser.getXMLReader();
+      handler = new PageObjectHandler();
+
+      reader.setContentHandler(handler);
+      reader.parse(new InputSource(stringReader));
+
+      return handler.getContent();
+
+    } catch (SAXException e) {
+      logger.warn("Cannot parse page_object content.", e);
+    } catch (IOException e) {
+      logger.warn("Found invalid content.", e);
+    } catch (ParserConfigurationException e) {
+      logger.error("Cannot crate xml parser", e);
     }
-		
-		return "";
-	}
 
+    return "";
+  }
 
 }

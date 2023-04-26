@@ -22,114 +22,100 @@
 
 package de.ilias.services.lucene.search.highlight;
 
+import de.ilias.services.lucene.search.ResultExport;
+
+import org.jdom.Element;
 
 import java.util.Comparator;
 import java.util.TreeMap;
 
-import org.jdom.Element;
-
-import de.ilias.services.lucene.search.ResultExport;
-
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class HighlightObject implements ResultExport, Comparator<Integer> {
-	private TreeMap<Integer, HighlightItem> items = new TreeMap<Integer, HighlightItem>();
-	private TreeMap<Integer, HighlightItem> sortedItems = new TreeMap<Integer, HighlightItem>();
-	
-	private int objId;
-	/**
-	 * 
-	 */
-	public HighlightObject() {
+  private TreeMap<Integer, HighlightItem> items = new TreeMap<Integer, HighlightItem>();
 
-	}
+  private int objId;
 
-	/**
-	 * @param objId
-	 */
-	public HighlightObject(int objId) {
-		
-		this.setObjId(objId);
-	}
+  public HighlightObject(int objId) {
 
-	public HighlightItem addItem(int subId) {
+    this.setObjId(objId);
+  }
 
-		if(items.containsKey(subId)) {
-			return items.get(subId);
-		}
-		items.put(subId, new HighlightItem(subId));
-		return items.get(subId);
-	}
-	/**
-	 * @return the items
-	 */
-	public TreeMap<Integer, HighlightItem> getItems() {
-		return items;
-	}
+  public HighlightItem addItem(int subId) {
 
-	/**
-	 * @param objId the objId to set
-	 */
-	public void setObjId(int objId) {
-		this.objId = objId;
-	}
+    if (items.containsKey(subId)) {
+      return items.get(subId);
+    }
+    items.put(subId, new HighlightItem(subId));
+    return items.get(subId);
+  }
 
-	/**
-	 * @return the objId
-	 */
-	public int getObjId() {
-		return objId;
-	}
+  /**
+   * @return the items
+   */
+  public TreeMap<Integer, HighlightItem> getItems() {
+    return items;
+  }
 
-	/**
-	 * Add xml
-	 * @see de.ilias.services.lucene.search.highlight.HighlightResultExport#addXML(org.jdom.Element)
-	 */
-	public Element addXML() {
+  /**
+   * @param objId the objId to set
+   */
+  public void setObjId(int objId) {
+    this.objId = objId;
+  }
 
-		Element obj = new Element("Object");
-		obj.setAttribute("id",String.valueOf(getObjId()));
-		
-		sortedItems = new TreeMap<Integer, HighlightItem>(this);
-		sortedItems.putAll(items);
-		
-		for(ResultExport item : sortedItems.values()) {
-			
-			obj.addContent(item.addXML());
-		}
-		return obj;
-	}
+  /**
+   * @return the objId
+   */
+  public int getObjId() {
+    return objId;
+  }
 
-	/**
-	 * Compare items by absolute score
-	 * @param o1
-	 * @param o2
-	 * @return 
-	 */
-	public int compare(Integer o1, Integer o2) {
-		
-		int index1 = o1;
-		int index2 = o2;
+  /**
+   * Add xml
+   *
+   * @see ResultExport#addXML()
+   */
+  public Element addXML() {
 
-		if(items.get(index1).getAbsoluteScore() < items.get(index2).getAbsoluteScore()) {
-			return 1;
-		}
-		if(items.get(index1).getAbsoluteScore() > items.get(index2).getAbsoluteScore()) {
-			return -1;
-		}
-		// returning zero, does not add a new element to TreeMap since its assumed to be equal
-		//return 0;
-		// ... sort by subitem
-		if(items.get(index1).getSubId() < items.get(index2).getSubId())  {
-			return 1;
-		}
-		if(items.get(index1).getSubId() > items.get(index2).getSubId())  {
-			return -1;
-		}
-		return 0;
-	}
+    Element obj = new Element("Object");
+    obj.setAttribute("id", String.valueOf(getObjId()));
+
+    TreeMap<Integer, HighlightItem> sortedItems = new TreeMap<Integer, HighlightItem>(this);
+    sortedItems.putAll(items);
+
+    for (ResultExport item : sortedItems.values()) {
+
+      obj.addContent(item.addXML());
+    }
+    return obj;
+  }
+
+  /**
+   * Compare items by absolute score
+   */
+  public int compare(Integer o1, Integer o2) {
+
+    int index1 = o1;
+    int index2 = o2;
+
+    if (items.get(index1).getAbsoluteScore() < items.get(index2).getAbsoluteScore()) {
+      return 1;
+    }
+    if (items.get(index1).getAbsoluteScore() > items.get(index2).getAbsoluteScore()) {
+      return -1;
+    }
+    // returning zero, does not add a new element to TreeMap since its assumed to be equal
+    //return 0;
+    // ... sort by subitem
+    if (items.get(index1).getSubId() < items.get(index2).getSubId()) {
+      return 1;
+    }
+    if (items.get(index1).getSubId() > items.get(index2).getSubId()) {
+      return -1;
+    }
+    return 0;
+  }
 }

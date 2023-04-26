@@ -23,46 +23,42 @@
 package de.ilias.services.object;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class TransformerDefinition {
 
-	private String name;
-	
-	/**
-	 * 
-	 */
-	public TransformerDefinition(String name) {
-		
-		this.name = name;
-	}
+  private String name;
 
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+  /**
+   *
+   */
+  public TransformerDefinition(String name) {
 
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
+    this.name = name;
+  }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
+  /**
+   * @param name the name to set
+   */
+  public void setName(String name) {
+    this.name = name;
+  }
 
-		return this.getName();
-	}
+  /**
+   * @return the name
+   */
+  public String getName() {
+    return name;
+  }
 
-	
-	
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+
+    return this.getName();
+  }
+
 }

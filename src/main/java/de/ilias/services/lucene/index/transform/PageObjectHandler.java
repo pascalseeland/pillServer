@@ -29,97 +29,76 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class PageObjectHandler extends DefaultHandler {
 
   private Logger logger = LogManager.getLogger(PageObjectHandler.class);
-	
-	private StringBuffer buffer = new StringBuffer();
-	private boolean isContent = false;
-	
-	public void endDocument() {
-		
-	}
-    
-	/**
-	 * 
-	 */
-    public void startElement (String uri, String localName, String qName, Attributes attributes)
-	throws SAXException
-	{
-    	if(localName.equalsIgnoreCase("Paragraph")) {
-    		isContent = true;
-    	}
-    	/*
-    	if(localName.equalsIgnoreCase("Strong")) {
-    	}
-    	if(localName.equalsIgnoreCase("Comment")) {
-    		
-    	}
-    	if(localName.equalsIgnoreCase("Emph")) {
-    		
-    	}
-    	if(localName.equalsIgnoreCase("Footnote")) {
-    		
-    	}
-    	if(localName.equalsIgnoreCase("Quotation")) {
-    		
-    	}
-    	if(localName.equalsIgnoreCase("Code")) {
-    		
-    	}
-    	*/
-	}
 
-	/**
-	 * 
-	 */
-	public void endElement (String uri, String localName, String qName)
-	throws SAXException
-    {
-		if(localName.equalsIgnoreCase("Paragraph")) {
-			isContent = false;
-		}
+  private StringBuffer buffer = new StringBuffer();
+  private boolean isContent = false;
+
+  public void endDocument() {
+
+  }
+
+  public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    if (localName.equalsIgnoreCase("Paragraph")) {
+      isContent = true;
+    }
+    /*
+    if(localName.equalsIgnoreCase("Strong")) {
+    }
+    if(localName.equalsIgnoreCase("Comment")) {
+
+    }
+    if(localName.equalsIgnoreCase("Emph")) {
+
+    }
+    if(localName.equalsIgnoreCase("Footnote")) {
+
+    }
+    if(localName.equalsIgnoreCase("Quotation")) {
+
+    }
+    if(localName.equalsIgnoreCase("Code")) {
+
+    }
+    */
+  }
+
+  public void endElement(String uri, String localName, String qName) throws SAXException {
+    if (localName.equalsIgnoreCase("Paragraph")) {
+      isContent = false;
+    }
+  }
+
+  public void characters(char[] ch, int start, int length) throws SAXException {
+    if (!isContent) {
+      return;
     }
 
-	/**
-	 * 
-	 */
-    public void characters (char ch[], int start, int length)
-	throws SAXException
-    {
-    	if(!isContent) {
-    		return;
-    	}
-    	
-    	for(int i = start; i < start + length; i++) {
-    		
-    		switch(ch[i]) {
-    		
-    		case '\\':
-    		case '"':
-    		case '\r':
-    		case '\n':
-    		case '\t':
-    			break;
-    		default:
-    			buffer.append(ch[i]);
-    		}
-    	}
-    	buffer.append(' ');
+    for (int i = start; i < start + length; i++) {
+
+      switch (ch[i]) {
+
+        case '\\':
+        case '"':
+        case '\r':
+        case '\n':
+        case '\t':
+          break;
+        default:
+          buffer.append(ch[i]);
+      }
     }
+    buffer.append(' ');
+  }
 
-	/**
-	 * @return
-	 */
-	public String getContent() {
+  public String getContent() {
 
-		logger.debug("Parsed content:" + buffer.toString());
-		return buffer.toString();
-	}
+    logger.debug("Parsed content:" + buffer.toString());
+    return buffer.toString();
+  }
 
 }

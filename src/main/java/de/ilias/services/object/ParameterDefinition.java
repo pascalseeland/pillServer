@@ -22,226 +22,180 @@
 
 package de.ilias.services.object;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class ParameterDefinition {
 
-	public static final int FORMAT_LIST = 1;
-	
-	public static final int TYPE_INT = 1;
-	public static final int TYPE_STRING = 2;
+  public static final int FORMAT_LIST = 1;
 
-	private Logger logger = LogManager.getLogger(ParameterDefinition.class);
-	
-	private int format;
-	private int type;
-	private String value;
-	
-	
-	/**
-	 * 
-	 */
-	public ParameterDefinition(int format,int type,String value) {
-		
-		this.format = format;
-		this.type = type;
-		this.value = value;
-	}
-	
-	/**
-	 * 
-	 * @param format
-	 * @param type
-	 * @param value
-	 */
-	public ParameterDefinition(String format,String type, String value) {
-		
-		if(format.equals("format")) {
-			this.format = FORMAT_LIST;
-		}
-		if(type.equals("int")) {
-			this.type = TYPE_INT;
-		}
-		if(type.equals("string")) {
-			this.type = TYPE_STRING;
-		}
-		this.value = value;
-	}
-	
-	/**
-	 * @return the format
-	 */
-	public int getFormat() {
-		return format;
-	}
+  public static final int TYPE_INT = 1;
+  public static final int TYPE_STRING = 2;
 
+  private Logger logger = LogManager.getLogger(ParameterDefinition.class);
 
-	/**
-	 * @param format the format to set
-	 */
-	public void setFormat(int format) {
-		this.format = format;
-	}
+  private int format;
+  private int type;
+  private String value;
 
+  public ParameterDefinition(int format, int type, String value) {
 
-	/**
-	 * @return the type
-	 */
-	public int getType() {
-		return type;
-	}
+    this.format = format;
+    this.type = type;
+    this.value = value;
+  }
 
+  public ParameterDefinition(String format, String type, String value) {
 
-	/**
-	 * @param type the type to set
-	 */
-	public void setType(int type) {
-		this.type = type;
-	}
+    if (format.equals("format")) {
+      this.format = FORMAT_LIST;
+    }
+    if (type.equals("int")) {
+      this.type = TYPE_INT;
+    }
+    if (type.equals("string")) {
+      this.type = TYPE_STRING;
+    }
+    this.value = value;
+  }
 
+  /**
+   * @return the format
+   */
+  public int getFormat() {
+    return format;
+  }
 
-	/**
-	 * @return the value
-	 */
-	public String getValue() {
-		return value;
-	}
+  /**
+   * @param format the format to set
+   */
+  public void setFormat(int format) {
+    this.format = format;
+  }
 
+  /**
+   * @return the type
+   */
+  public int getType() {
+    return type;
+  }
 
-	/**
-	 * @param value the value to set
-	 */
-	public void setValue(String value) {
-		this.value = value;
-	}
+  /**
+   * @param type the type to set
+   */
+  public void setType(int type) {
+    this.type = type;
+  }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
+  /**
+   * @return the value
+   */
+  public String getValue() {
+    return value;
+  }
 
-		StringBuffer out = new StringBuffer();
-		
-		out.append("Parameter " + format + " " + type + " " + value);
-		out.append("\n");
-		return out.toString();
-	}
+  /**
+   * @param value the value to set
+   */
+  public void setValue(String value) {
+    this.value = value;
+  }
 
-	/**
-	 * @param pst
-	 * @param el
-	 * @param parentResult 
-	 * @throws SQLException 
-	 * @throws DocumentHandlerException 
-	 */
-	public void writeParameter(PreparedStatement pst, int index, CommandQueueElement el, ResultSet parentResult) 
-		throws SQLException, DocumentHandlerException {
+  @Override
+  public String toString() {
+    String out = "Parameter " + format + " " + type + " " + value + "\n";
+    return out;
+  }
 
-		switch(getType()) {
-		case TYPE_INT:
-			logger.trace("ID: " + getParameterValue(el,parentResult));
-			pst.setInt(index,getParameterValue(el,parentResult));
-			break;
-			
-		case TYPE_STRING:
-			logger.trace("ID: " + getParameterValue(el, parentResult));
-			pst.setString(index, getParameterString(el,parentResult));
-			break;
-		
-		default:
-			throw new DocumentHandlerException("Invalid parameter type given. Type " + getType());
-		}
-	}
+  public void writeParameter(PreparedStatement pst, int index, CommandQueueElement el, ResultSet parentResult)
+          throws SQLException, DocumentHandlerException {
 
-	/**
-	 * @param el
-	 * @param parentResult 
-	 * @return
-	 * @throws SQLException 
-	 */
-	private int getParameterValue(CommandQueueElement el, ResultSet parentResult) throws SQLException {
-		
-		// Check for parent result (e.g. pg,st)
-		if(parentResult != null) {
+    switch (getType()) {
+      case TYPE_INT:
+        logger.trace("ID: " + getParameterValue(el, parentResult));
+        pst.setInt(index, getParameterValue(el, parentResult));
+        break;
 
-			logger.trace("Trying to read parameter from parent result set...");
-			try {
-				logger.trace(parentResult.getInt(getValue()));
-				return parentResult.getInt(getValue());
-			}
-			catch(SQLException e) {
-				// ignoring this error
-				// and trying to fetch objId and metaObjId
-			}
-			
-		}
+      case TYPE_STRING:
+        logger.trace("ID: " + getParameterValue(el, parentResult));
+        pst.setString(index, getParameterString(el, parentResult));
+        break;
 
-		if(getValue().equals("objId")) {
-			logger.trace(el.getObjId());
-			return el.getObjId();
-		}
-		
-		if(getValue().equals("metaObjId")) {
-			logger.trace(el.getObjId());
-			return el.getObjId();
-		}
-		
-		if(getValue().equals("metaRbacId")) {
-			logger.trace(el.getObjId());
-			return el.getObjId();
-		}
-		
-		return 0;
-	}
-	
-	/**
-	 * @param el
-	 * @param parentResult 
-	 * @return
-	 * @throws SQLException 
-	 */
-	private String getParameterString(CommandQueueElement el, ResultSet parentResult) throws SQLException {
-		
-		if(parentResult != null) {
-			logger.debug("Trying to read parameter from parent result set...");
-			
-			try {
-				logger.debug(parentResult.getString(getValue()).trim());
-				return DBFactory.getString(parentResult, getValue());
-			}
-			catch (SQLException e) {
-				// ignoring this error
-				// and trying to fetch objId and metaObjId
-			}
-		}
+      default:
+        throw new DocumentHandlerException("Invalid parameter type given. Type " + getType());
+    }
+  }
 
-		if(getValue().equals("objType")) {
-			logger.trace(el.getObjType());
-			return el.getObjType();
-		}
-		
-		if(getValue().equals("metaType")) {
-			logger.trace(el.getObjType());
-			return el.getObjType();
-		}
-		return "";
-	}
-	
+  private int getParameterValue(CommandQueueElement el, ResultSet parentResult) throws SQLException {
+
+    // Check for parent result (e.g. pg,st)
+    if (parentResult != null) {
+
+      logger.trace("Trying to read parameter from parent result set...");
+      try {
+        logger.trace(parentResult.getInt(getValue()));
+        return parentResult.getInt(getValue());
+      } catch (SQLException e) {
+        // ignoring this error
+        // and trying to fetch objId and metaObjId
+      }
+
+    }
+
+    if (getValue().equals("objId")) {
+      logger.trace(el.getObjId());
+      return el.getObjId();
+    }
+
+    if (getValue().equals("metaObjId")) {
+      logger.trace(el.getObjId());
+      return el.getObjId();
+    }
+
+    if (getValue().equals("metaRbacId")) {
+      logger.trace(el.getObjId());
+      return el.getObjId();
+    }
+
+    return 0;
+  }
+
+  private String getParameterString(CommandQueueElement el, ResultSet parentResult) throws SQLException {
+
+    if (parentResult != null) {
+      logger.debug("Trying to read parameter from parent result set...");
+
+      try {
+        logger.debug(parentResult.getString(getValue()).trim());
+        return DBFactory.getString(parentResult, getValue());
+      } catch (SQLException e) {
+        // ignoring this error
+        // and trying to fetch objId and metaObjId
+      }
+    }
+
+    if (getValue().equals("objType")) {
+      logger.trace(el.getObjType());
+      return el.getObjType();
+    }
+
+    if (getValue().equals("metaType")) {
+      logger.trace(el.getObjType());
+      return el.getObjType();
+    }
+    return "";
+  }
 
 }

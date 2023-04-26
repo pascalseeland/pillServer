@@ -22,7 +22,7 @@
 
 package de.ilias.services.lucene.search;
 
-import java.io.IOException;
+import de.ilias.services.settings.ConfigurationException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,98 +32,82 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.jdom.output.XMLOutputter;
 
-import de.ilias.services.settings.ConfigurationException;
+import java.io.IOException;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class SearchResultWriter {
 
   private Logger logger = LogManager.getLogger(SearchResultWriter.class);
-	
-	private IndexSearcher searcher = null;
-	private ScoreDoc[] hits = null;
-	private SearchHits result = null;
-	private int offset = 0;
 
-	/**
-	 * @param hits
-	 * @throws ConfigurationException 
-	 * @throws IOException 
-	 */
-	public SearchResultWriter(ScoreDoc[] hits) throws IOException, ConfigurationException {
-		
-		this.hits = hits;
-		
-		searcher = SearchHolder.getInstance().getSearcher();
-		result = new SearchHits();
-	}
+  private IndexSearcher searcher = null;
+  private ScoreDoc[] hits = null;
+  private SearchHits result = null;
+  private int offset = 0;
 
-	/**
-	 * @throws IOException 
-	 * @throws CorruptIndexException 
-	 * 
-	 */
-	public void write() throws CorruptIndexException, IOException {
+  public SearchResultWriter(ScoreDoc[] hits) throws IOException, ConfigurationException {
 
-		result.setTotalHits(hits.length);
-		logger.info("Found " + result.getTotalHits() + " hits!");
-		result.setLimit(SearchHolder.SEARCH_LIMIT);
+    this.hits = hits;
 
-		SearchObject object;
-		Document hitDoc;
-		for(int i = 0; i < hits.length;i++) {
-			// Set max score
-			if(i == 0) {
-				result.setMaxScore(hits[i].score);
-			}
-			if(i < getOffset()) {
-				continue;
-			}
-			if(i >= (getOffset() + SearchHolder.SEARCH_LIMIT)) {
-				logger.debug("Reached result limit. Aborting!");
-				break;
-			}
-			try {
-				logger.debug("Added object");
-				object = new SearchObject();
-				hitDoc = searcher.doc(hits[i].doc);
-				object.setId(Integer.parseInt(hitDoc.get("objId")));
-				object.setAbsoluteScore(hits[i].score);
-				result.addObject(object);
-			}
-			catch (NumberFormatException e) {
-				logger.warn("Found invalid document (missing objId) with document id: " + hits[i].doc);
-			}
-		}
-	}
+    searcher = SearchHolder.getInstance().getSearcher();
+    result = new SearchHits();
+  }
 
-	/**
-	 * @return
-	 */
-	public String toXML() {
+  public void write() throws IOException {
 
-		org.jdom.Document doc = new org.jdom.Document(result.addXML());
-		XMLOutputter outputter = new XMLOutputter();
-		return outputter.outputString(doc);
-		
-	}
+    result.setTotalHits(hits.length);
+    logger.info("Found " + result.getTotalHits() + " hits!");
+    result.setLimit(SearchHolder.SEARCH_LIMIT);
 
-	/**
-	 * @param offset the offset to set
-	 */
-	public void setOffset(int offset) {
-		this.offset = offset;
-	}
+    SearchObject object;
+    Document hitDoc;
+    for (int i = 0; i < hits.length; i++) {
+      // Set max score
+      if (i == 0) {
+        result.setMaxScore(hits[i].score);
+      }
+      if (i < getOffset()) {
+        continue;
+      }
+      if (i >= (getOffset() + SearchHolder.SEARCH_LIMIT)) {
+        logger.debug("Reached result limit. Aborting!");
+        break;
+      }
+      try {
+        logger.debug("Added object");
+        object = new SearchObject();
+        hitDoc = searcher.doc(hits[i].doc);
+        object.setId(Integer.parseInt(hitDoc.get("objId")));
+        object.setAbsoluteScore(hits[i].score);
+        result.addObject(object);
+      } catch (NumberFormatException e) {
+        logger.warn("Found invalid document (missing objId) with document id: " + hits[i].doc);
+      }
+    }
+  }
 
-	/**
-	 * @return the offset
-	 */
-	public int getOffset() {
-		return offset;
-	}
+  public String toXML() {
+
+    org.jdom.Document doc = new org.jdom.Document(result.addXML());
+    XMLOutputter outputter = new XMLOutputter();
+    return outputter.outputString(doc);
+
+  }
+
+  /**
+   * @param offset the offset to set
+   */
+  public void setOffset(int offset) {
+    this.offset = offset;
+  }
+
+  /**
+   * @return the offset
+   */
+  public int getOffset() {
+    return offset;
+  }
 
 }

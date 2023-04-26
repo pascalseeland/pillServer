@@ -22,22 +22,20 @@
 
 package de.ilias.services.object;
 
-import java.io.IOException;
-import java.sql.ResultSet;
-import java.util.Vector;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandler;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 import de.ilias.services.lucene.index.DocumentHolder;
 import de.ilias.services.lucene.index.IndexHolder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.util.Vector;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
@@ -45,115 +43,101 @@ public class DocumentDefinition implements DocumentHandler {
 
   private Logger logger = LogManager.getLogger(DocumentDefinition.class);
 
-	private String type;
-	private Vector<DataSource> dataSource = new Vector<DataSource>();
-	
-	/**
-	 * 
-	 */
-	public DocumentDefinition(String type) {
-		this.type = type;
-	}
+  private String type;
+  private Vector<DataSource> dataSource = new Vector<>();
 
-	/**
-	 * @param type the type to set
-	 */
-	public void setType(String type) {
-		this.type = type;
-	}
+  /**
+   *
+   */
+  public DocumentDefinition(String type) {
+    this.type = type;
+  }
 
-	/**
-	 * @return the type
-	 */
-	public String getType() {
-		return type;
-	}
+  /**
+   * @param type the type to set
+   */
+  public void setType(String type) {
+    this.type = type;
+  }
 
-	/**
-	 * @return the dataSource
-	 */
-	public Vector<DataSource> getDataSource() {
-		return dataSource;
-	}
+  /**
+   * @return the type
+   */
+  public String getType() {
+    return type;
+  }
 
-	/**
-	 * @param dataSource the dataSource to set
-	 */
-	public void setDataSource(Vector<DataSource> dataSource) {
-		this.dataSource = dataSource;
-	}
-	
-	/**
-	 * 
-	 * @param source
-	 */
-	public void addDataSource(DataSource source) {
-		this.dataSource.add(source);
-	}
+  /**
+   * @return the dataSource
+   */
+  public Vector<DataSource> getDataSource() {
+    return dataSource;
+  }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		
-		StringBuffer out = new StringBuffer();
-		
-		out.append("Document of type = " + getType());
-		out.append("\n");
-		
-		for(Object doc : getDataSource()) {
-			
-			out.append(doc.toString());
-			out.append("\n");
-		}
-		return out.toString();
-	}
-	
-	/**
-	 * 
-	 * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
-	 */
-	public void writeDocument(CommandQueueElement el)
-			throws DocumentHandlerException, IOException {
+  /**
+   * @param dataSource the dataSource to set
+   */
+  public void setDataSource(Vector<DataSource> dataSource) {
+    this.dataSource = dataSource;
+  }
 
-		writeDocument(el,null);
-	}
+  public void addDataSource(DataSource source) {
+    this.dataSource.add(source);
+  }
 
-	/**
-	 * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
-	 */
-	public void writeDocument(CommandQueueElement el, ResultSet res)
-			throws DocumentHandlerException {
+  @Override
+  public String toString() {
 
-		DocumentHolder doc = DocumentHolder.factory();
-		doc.newDocument();
+    StringBuilder out = new StringBuilder();
 
-		for(int i = 0; i < getDataSource().size();i++) {
-			
-			try {
-				getDataSource().get(i).writeDocument(el);
-			}
-			catch(IOException e) {
-				logger.warn("Cannot parse data source: " + e);
-			}
-			catch( DocumentHandlerException e) {
-				logger.warn(e);
-			}
-		}
-		
-		IndexHolder writer;
-		try {
-			writer = IndexHolder.getInstance();
-			if(doc.getDocument() == null) {
-				logger.warn("Found empty document.");
-			}
-			else {
-				writer.addDocument(doc.getDocument());
-			}
-		}
-		catch (IOException e) {
-			logger.warn(e);
-		}
-	}
+    out.append("Document of type = " + getType());
+    out.append("\n");
+
+    for (Object doc : getDataSource()) {
+
+      out.append(doc.toString());
+      out.append("\n");
+    }
+    return out.toString();
+  }
+
+  /**
+   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   */
+  public void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
+
+    writeDocument(el, null);
+  }
+
+  /**
+   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
+   */
+  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
+
+    DocumentHolder doc = DocumentHolder.factory();
+    doc.newDocument();
+
+    for (int i = 0; i < getDataSource().size(); i++) {
+
+      try {
+        getDataSource().get(i).writeDocument(el);
+      } catch (IOException e) {
+        logger.warn("Cannot parse data source: " + e);
+      } catch (DocumentHandlerException e) {
+        logger.warn(e);
+      }
+    }
+
+    IndexHolder writer;
+    try {
+      writer = IndexHolder.getInstance();
+      if (doc.getDocument() == null) {
+        logger.warn("Found empty document.");
+      } else {
+        writer.addDocument(doc.getDocument());
+      }
+    } catch (IOException e) {
+      logger.warn(e);
+    }
+  }
 }

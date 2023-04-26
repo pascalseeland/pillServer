@@ -25,68 +25,65 @@ package de.ilias.services.lucene.search;
 import org.jdom.Element;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class SearchObject implements ResultExport {
 
-	private double absoluteScore = 0;
-	private String relativeScore = "100%";
-	private int id;
-	
-	
-	/**
-	 * @param absoluteScore the absoluteScore to set
-	 */
-	public void setAbsoluteScore(double absoluteScore) {
-		this.absoluteScore = absoluteScore;
-	}
+  private double absoluteScore = 0;
+  private String relativeScore = "100%";
+  private int id;
 
-	/**
-	 * @return the absoluteScore
-	 */
-	public double getAbsoluteScore() {
-		return absoluteScore;
-	}
+  /**
+   * @param absoluteScore the absoluteScore to set
+   */
+  public void setAbsoluteScore(double absoluteScore) {
+    this.absoluteScore = absoluteScore;
+  }
 
-	/**
-	 * @param relativeScore the relativeScore to set
-	 */
-	public void setRelativeScore(String relativeScore) {
-		this.relativeScore = relativeScore;
-	}
+  /**
+   * @return the absoluteScore
+   */
+  public double getAbsoluteScore() {
+    return absoluteScore;
+  }
 
-	/**
-	 * @return the relativeScore
-	 */
-	public String getRelativeScore() {
-		return relativeScore;
-	}
+  /**
+   * @param relativeScore the relativeScore to set
+   */
+  public void setRelativeScore(String relativeScore) {
+    this.relativeScore = relativeScore;
+  }
 
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(int id) {
-		this.id = id;
-	}
+  /**
+   * @return the relativeScore
+   */
+  public String getRelativeScore() {
+    return relativeScore;
+  }
 
-	/**
-	 * @return the id
-	 */
-	public int getId() {
-		return id;
-	}
+  /**
+   * @param id the id to set
+   */
+  public void setId(int id) {
+    this.id = id;
+  }
 
-	/**
-	 * @see de.ilias.services.lucene.search.ResultExport#addXML()
-	 */
-	public Element addXML() {
-		
-		Element object = new Element("Object");
-		object.setAttribute("id", String.valueOf(getId()));
-		object.setAttribute("absoluteScore", String.valueOf(getAbsoluteScore()));
-		return object;
-	}
+  /**
+   * @return the id
+   */
+  public int getId() {
+    return id;
+  }
+
+  /**
+   * @see de.ilias.services.lucene.search.ResultExport#addXML()
+   */
+  public Element addXML() {
+
+    Element object = new Element("Object");
+    object.setAttribute("id", String.valueOf(getId()));
+    object.setAttribute("absoluteScore", String.valueOf(getAbsoluteScore()));
+    return object;
+  }
 }

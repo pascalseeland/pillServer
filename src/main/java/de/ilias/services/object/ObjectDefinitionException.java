@@ -23,48 +23,36 @@
 package de.ilias.services.object;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class ObjectDefinitionException extends Exception {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3677597719277646726L;
+  /**
+   *
+   */
+  private static final long serialVersionUID = 3677597719277646726L;
 
-	/**
-	 * 
-	 */
-	public ObjectDefinitionException() {
-		// TODO Auto-generated constructor stub
-	}
+  /**
+   *
+   */
+  public ObjectDefinitionException() {
+    // TODO Auto-generated constructor stub
+  }
 
-	/**
-	 * @param message
-	 */
-	public ObjectDefinitionException(String message) {
-		super(message);
-		// TODO Auto-generated constructor stub
-	}
+  public ObjectDefinitionException(String message) {
+    super(message);
+    // TODO Auto-generated constructor stub
+  }
 
-	/**
-	 * @param cause
-	 */
-	public ObjectDefinitionException(Throwable cause) {
-		super(cause);
-		// TODO Auto-generated constructor stub
-	}
+  public ObjectDefinitionException(Throwable cause) {
+    super(cause);
+    // TODO Auto-generated constructor stub
+  }
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public ObjectDefinitionException(String message, Throwable cause) {
-		super(message, cause);
-		// TODO Auto-generated constructor stub
-	}
+  public ObjectDefinitionException(String message, Throwable cause) {
+    super(message, cause);
+    // TODO Auto-generated constructor stub
+  }
 
 }

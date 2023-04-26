@@ -25,40 +25,38 @@ package de.ilias.services.lucene.index.file.path;
 import de.ilias.services.object.ObjectDefinitionException;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class PathCreatorFactory {
 
-	public static PathCreator factory(String name) throws ObjectDefinitionException {
-		
-		if(name.equalsIgnoreCase("FileObjectPathCreator")) {
-			return new FileObjectPathCreator();
-		}
-		if(name.equalsIgnoreCase("FileListPathCreator")) {
-			return  new FileListPathCreator();
-		}
-		if(name.equalsIgnoreCase("FileObjectPathCreator41")) {
-			return  new FileObjectPathCreator41();
-		}
-		if(name.equalsIgnoreCase("FileListPathCreator41")) {
-			return  new FileListPathCreator41();
-		}
-		if(name.equalsIgnoreCase("HTLMObjectPathCreator")) {
-			return  new HTLMObjectPathCreator();
-		}
-		if(name.equalsIgnoreCase("ExerciseAssignmentPathCreator")) {
-			return new ExerciseAssignmentPathCreator();
-		}
-		if(name.equalsIgnoreCase("MailAttachmentPathCreator")) {
-			return new MailAttachmentPathCreator();
-		}
-		if(name.equalsIgnoreCase("FileObjectPathCreator7")) {
-			return  new FileObjectPathCreator7();
-		}
-		
-		throw new ObjectDefinitionException("Invalid path creator name given: " + name);
-	}
+  public static PathCreator factory(String name) throws ObjectDefinitionException {
+
+    if (name.equalsIgnoreCase("FileObjectPathCreator")) {
+      return new FileObjectPathCreator();
+    }
+    if (name.equalsIgnoreCase("FileListPathCreator")) {
+      return new FileListPathCreator();
+    }
+    if (name.equalsIgnoreCase("FileObjectPathCreator41")) {
+      return new FileObjectPathCreator41();
+    }
+    if (name.equalsIgnoreCase("FileListPathCreator41")) {
+      return new FileListPathCreator41();
+    }
+    if (name.equalsIgnoreCase("HTLMObjectPathCreator")) {
+      return new HTLMObjectPathCreator();
+    }
+    if (name.equalsIgnoreCase("ExerciseAssignmentPathCreator")) {
+      return new ExerciseAssignmentPathCreator();
+    }
+    if (name.equalsIgnoreCase("MailAttachmentPathCreator")) {
+      return new MailAttachmentPathCreator();
+    }
+    if (name.equalsIgnoreCase("FileObjectPathCreator7")) {
+      return new FileObjectPathCreator7();
+    }
+
+    throw new ObjectDefinitionException("Invalid path creator name given: " + name);
+  }
 }

@@ -31,108 +31,108 @@ package de.ilias.services.lucene.index;
  */
 public class CommandQueueElement {
 
-	public static final String RESET = "reset";
-	public static final String RESET_ALL = "reset_all";
-	public static final String UPDATE = "update";
-	public static final String CREATE = "create";
-	public static final String DELETE = "delete";
+  public static final String RESET = "reset";
+  public static final String RESET_ALL = "reset_all";
+  public static final String UPDATE = "update";
+  public static final String CREATE = "create";
+  public static final String DELETE = "delete";
 
-	private int objId;
-	private String objType;
-	private int subId;
-	private String subType;
+  private int objId;
+  private String objType;
+  private int subId;
+  private String subType;
 
-	private String command;
-	private boolean finished;
-	
-	/**
-	 * 
-	 */
-	public CommandQueueElement() {
+  private String command;
+  private boolean finished;
 
-	}
+  /**
+   *
+   */
+  public CommandQueueElement() {
 
-	/**
-	 * @return the objId
-	 */
-	public int getObjId() {
-		return objId;
-	}
+  }
 
-	/**
-	 * @param objId the objId to set
-	 */
-	public void setObjId(int objId) {
-		this.objId = objId;
-	}
+  /**
+   * @return the objId
+   */
+  public int getObjId() {
+    return objId;
+  }
 
-	/**
-	 * @return the objType
-	 */
-	public String getObjType() {
-		return objType;
-	}
+  /**
+   * @param objId the objId to set
+   */
+  public void setObjId(int objId) {
+    this.objId = objId;
+  }
 
-	/**
-	 * @param objType the objType to set
-	 */
-	public void setObjType(String objType) {
-		this.objType = objType;
-	}
+  /**
+   * @return the objType
+   */
+  public String getObjType() {
+    return objType;
+  }
 
-	/**
-	 * @return the subId
-	 */
-	public int getSubId() {
-		return subId;
-	}
+  /**
+   * @param objType the objType to set
+   */
+  public void setObjType(String objType) {
+    this.objType = objType;
+  }
 
-	/**
-	 * @param subId the subId to set
-	 */
-	public void setSubId(int subId) {
-		this.subId = subId;
-	}
+  /**
+   * @return the subId
+   */
+  public int getSubId() {
+    return subId;
+  }
 
-	/**
-	 * @return the subType
-	 */
-	public String getSubType() {
-		return subType;
-	}
+  /**
+   * @param subId the subId to set
+   */
+  public void setSubId(int subId) {
+    this.subId = subId;
+  }
 
-	/**
-	 * @param subType the subType to set
-	 */
-	public void setSubType(String subType) {
-		this.subType = subType;
-	}
+  /**
+   * @return the subType
+   */
+  public String getSubType() {
+    return subType;
+  }
 
-	/**
-	 * @return the command
-	 */
-	public String getCommand() {
-		return command;
-	}
+  /**
+   * @param subType the subType to set
+   */
+  public void setSubType(String subType) {
+    this.subType = subType;
+  }
 
-	/**
-	 * @param command the command to set
-	 */
-	public void setCommand(String command) {
-		this.command = command;
-	}
+  /**
+   * @return the command
+   */
+  public String getCommand() {
+    return command;
+  }
 
-	/**
-	 * @return the finished
-	 */
-	public boolean isFinished() {
-		return finished;
-	}
+  /**
+   * @param command the command to set
+   */
+  public void setCommand(String command) {
+    this.command = command;
+  }
 
-	/**
-	 * @param finished the finished to set
-	 */
-	public void setFinished(boolean finished) {
-		this.finished = finished;
-	}
+  /**
+   * @return the finished
+   */
+  public boolean isFinished() {
+    return finished;
+  }
+
+  /**
+   * @param finished the finished to set
+   */
+  public void setFinished(boolean finished) {
+    this.finished = finished;
+  }
 }

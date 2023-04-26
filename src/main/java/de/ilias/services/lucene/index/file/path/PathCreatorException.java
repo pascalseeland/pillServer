@@ -23,48 +23,36 @@
 package de.ilias.services.lucene.index.file.path;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class PathCreatorException extends Exception {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+  /**
+   *
+   */
+  private static final long serialVersionUID = 1L;
 
-	/**
-	 * 
-	 */
-	public PathCreatorException() {
-		// TODO Auto-generated constructor stub
-	}
+  /**
+   *
+   */
+  public PathCreatorException() {
+    // TODO Auto-generated constructor stub
+  }
 
-	/**
-	 * @param message
-	 */
-	public PathCreatorException(String message) {
-		super(message);
-		// TODO Auto-generated constructor stub
-	}
+  public PathCreatorException(String message) {
+    super(message);
+    // TODO Auto-generated constructor stub
+  }
 
-	/**
-	 * @param cause
-	 */
-	public PathCreatorException(Throwable cause) {
-		super(cause);
-		// TODO Auto-generated constructor stub
-	}
+  public PathCreatorException(Throwable cause) {
+    super(cause);
+    // TODO Auto-generated constructor stub
+  }
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public PathCreatorException(String message, Throwable cause) {
-		super(message, cause);
-		// TODO Auto-generated constructor stub
-	}
+  public PathCreatorException(String message, Throwable cause) {
+    super(message, cause);
+    // TODO Auto-generated constructor stub
+  }
 
 }

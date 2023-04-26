@@ -22,7 +22,8 @@
 
 package de.ilias.services.rpc;
 
-import java.net.InetAddress;
+import de.ilias.services.lucene.index.RPCIndexHandler;
+import de.ilias.services.settings.ConfigurationException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,182 +33,159 @@ import org.apache.xmlrpc.server.XmlRpcServer;
 import org.apache.xmlrpc.server.XmlRpcServerConfigImpl;
 import org.apache.xmlrpc.webserver.WebServer;
 
-import de.ilias.services.lucene.index.RPCIndexHandler;
-import de.ilias.services.settings.ConfigurationException;
-
+import java.net.InetAddress;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class RPCServer {
-	
-	private static RPCServer instance = null;
-	private static Logger logger = LogManager.getLogger(RPCServer.class);
 
-	private WebServer server;
-	private InetAddress host = null;
-	private int port = 0;
-	private boolean alive = false;
-	
+  private static RPCServer instance = null;
+  private static Logger logger = LogManager.getLogger(RPCServer.class);
 
-	private RPCServer(InetAddress host, int port) throws XmlRpcException {
-		
-		logger.info("New RPCServer construct.");
-		setHost(host);
-		setPort(port);
-		initServer();
-	}
+  private WebServer server;
+  private InetAddress host = null;
+  private int port = 0;
+  private boolean alive = false;
 
-	private RPCServer() {
-		
-	}
-	
-	public static RPCServer getInstance(InetAddress host, int port) throws XmlRpcException {
-		
-		if(RPCServer.instance == null) {
-			return RPCServer.instance = new RPCServer(host,port);
-		}
-		return instance;
-	}
-	
-	public static RPCServer getInstance() {
-		
-		return RPCServer.instance;
-	}
-	
-	/**
-	 * @return the host
-	 */
-	public InetAddress getHost() {
-		return host;
-	}
+  private RPCServer(InetAddress host, int port) throws XmlRpcException {
 
-	/**
-	 * @param host the host to set
-	 */
-	public void setHost(InetAddress host) {
-		this.host = host;
-	}
+    logger.info("New RPCServer construct.");
+    setHost(host);
+    setPort(port);
+    initServer();
+  }
 
-	/**
-	 * @return the port
-	 */
-	public int getPort() {
-		return port;
-	}
+  private RPCServer() {
 
-	/**
-	 * @param port the port to set
-	 */
-	public void setPort(int port) {
-		this.port = port;
-	}
+  }
 
-	/**
-	 * @return the alive
-	 */
-	public boolean isAlive() {
-		return alive;
-	}
+  public static RPCServer getInstance(InetAddress host, int port) throws XmlRpcException {
 
-	/**
-	 * @param alive the alive to set
-	 */
-	public void setAlive(boolean alive) {
-		this.alive = alive;
-	}
-	
-	
-	/**
-	 * Init WebServer
-	 * @throws XmlRpcException 
-	 */
-	private void initServer() throws XmlRpcException {
-		
-		XmlRpcServer rpcServer;
-		XmlRpcServerConfigImpl config;
-		
-		logger.info("Init Webserver...");
-		
-		server = new WebServer(getPort(),getHost());
-		rpcServer = server.getXmlRpcServer();
-		rpcServer.setHandlerMapping(addHandlers());
-		
-		config = (XmlRpcServerConfigImpl) rpcServer.getConfig();
-		config.setKeepAliveEnabled(true);
-		config.setEncoding("UTF8");
-		// nothing to do in the moment.
-		
-		return;
-	}
-	
-	/**
-	 * Start Webserver 
-	 * @throws ConfigurationException 
-	 */
-	public void start() throws ConfigurationException {
+    if (RPCServer.instance == null) {
+      return RPCServer.instance = new RPCServer(host, port);
+    }
+    return instance;
+  }
 
-		try {
-			logger.info("Starting ILIAS RPC-Server...");
-			server.start();
-			logger.debug("Using host :" + getHost().toString());
-			logger.debug("Using port :" + getPort());
-			logger.info("Waiting for connections...");
-			alive = true;
-		}
-		catch(RuntimeException e)
-		{
-			logger.error("Cannot bind to host: " + getHost() + ", port: " + port + " " + e);
-			throw new ConfigurationException(e.getMessage());
-		}
-		catch(Exception e) {
-			logger.error("Cannot bind to host: " + getHost() + ", port: " + port + " " + e);
-			throw new ConfigurationException(e.getMessage());
-		}
-		catch(Throwable e) {
-			logger.error(e);
-			throw new ConfigurationException(e.getMessage());
-		}
-	}
-	
-	/**
-	 * Stop Webserver 
-	 */
-	public void shutdown() {
+  public static RPCServer getInstance() {
 
-		logger.debug("Stopping Webserver...");
-		server.shutdown();
-		alive = false;
-	}
+    return RPCServer.instance;
+  }
 
+  /**
+   * @return the host
+   */
+  public InetAddress getHost() {
+    return host;
+  }
 
-	/**
-	 * @return 
-	 * @throws XmlRpcException 
-	 * 
-	 */
-	private PropertyHandlerMapping addHandlers() throws XmlRpcException {
+  /**
+   * @param host the host to set
+   */
+  public void setHost(InetAddress host) {
+    this.host = host;
+  }
 
-		PropertyHandlerMapping mapping;
-		
-		mapping = new PropertyHandlerMapping();
-		mapping.addHandler("RPCDebug", de.ilias.services.rpc.RPCDebug.class);
-		mapping.addHandler("RPCAdministration", de.ilias.services.rpc.RPCAdministration.class);
-		mapping.addHandler("RPCIndexHandler", RPCIndexHandler.class);
-		mapping.addHandler("RPCSearchHandler", de.ilias.services.lucene.search.RPCSearchHandler.class);
-		mapping.addHandler("RPCTransformationHandler", de.ilias.services.transformation.RPCTransformationHandler.class);
-		
-		logger.info("Added RPC-Handlers");
-		String[] methods = mapping.getListMethods();
-		for(int i = 0; i < methods.length;i++)
-		{
-			logger.info(methods[i]);
-		}
-		
-		
-		return mapping;
-	}
+  /**
+   * @return the port
+   */
+  public int getPort() {
+    return port;
+  }
+
+  /**
+   * @param port the port to set
+   */
+  public void setPort(int port) {
+    this.port = port;
+  }
+
+  /**
+   * @return the alive
+   */
+  public boolean isAlive() {
+    return alive;
+  }
+
+  /**
+   * @param alive the alive to set
+   */
+  public void setAlive(boolean alive) {
+    this.alive = alive;
+  }
+
+  /**
+   * Init WebServer
+   */
+  private void initServer() throws XmlRpcException {
+
+    XmlRpcServer rpcServer;
+    XmlRpcServerConfigImpl config;
+
+    logger.info("Init Webserver...");
+
+    server = new WebServer(getPort(), getHost());
+    rpcServer = server.getXmlRpcServer();
+    rpcServer.setHandlerMapping(addHandlers());
+
+    config = (XmlRpcServerConfigImpl) rpcServer.getConfig();
+    config.setKeepAliveEnabled(true);
+    config.setEncoding("UTF8");
+    // nothing to do in the moment.
+
+    return;
+  }
+
+  /**
+   * Start Webserver
+   */
+  public void start() throws ConfigurationException {
+
+    try {
+      logger.info("Starting ILIAS RPC-Server...");
+      server.start();
+      logger.debug("Using host :" + getHost().toString());
+      logger.debug("Using port :" + getPort());
+      logger.info("Waiting for connections...");
+      alive = true;
+    } catch (Exception e) {
+      logger.error("Cannot bind to host: " + getHost() + ", port: " + port + " " + e);
+      throw new ConfigurationException(e.getMessage());
+    } catch (Throwable e) {
+      logger.error(e);
+      throw new ConfigurationException(e.getMessage());
+    }
+  }
+
+  /**
+   * Stop Webserver
+   */
+  public void shutdown() {
+
+    logger.debug("Stopping Webserver...");
+    server.shutdown();
+    alive = false;
+  }
+
+  private PropertyHandlerMapping addHandlers() throws XmlRpcException {
+
+    PropertyHandlerMapping mapping;
+
+    mapping = new PropertyHandlerMapping();
+    mapping.addHandler("RPCDebug", de.ilias.services.rpc.RPCDebug.class);
+    mapping.addHandler("RPCAdministration", de.ilias.services.rpc.RPCAdministration.class);
+    mapping.addHandler("RPCIndexHandler", RPCIndexHandler.class);
+    mapping.addHandler("RPCSearchHandler", de.ilias.services.lucene.search.RPCSearchHandler.class);
+    mapping.addHandler("RPCTransformationHandler", de.ilias.services.transformation.RPCTransformationHandler.class);
+
+    logger.info("Added RPC-Handlers");
+    String[] methods = mapping.getListMethods();
+    for (String method : methods) {
+      logger.info(method);
+    }
+
+    return mapping;
+  }
 }

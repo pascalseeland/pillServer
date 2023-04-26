@@ -159,7 +159,6 @@
         <configuration>
           <release>${java.release}</release>
           <encoding>UTF-8</encoding>
-          <compilerArgument>${compilerArgument}</compilerArgument>
         </configuration>
       </plugin>
       <plugin>
@@ -189,7 +188,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Main-Class>de.ilias.ilServer</Main-Class>
+              <Main-Class>de.ilias.ILServer</Main-Class>
               <Build-Number>5.4.1</Build-Number>
               <Multi-Release>true</Multi-Release>
             </manifestEntries>
@@ -223,6 +222,41 @@
                 </transformer>
               </transformers>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Ensure that the source code matches the style rules -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.1.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>8.36.2</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <configLocation>${basedir}/docs/checkstyle.xml</configLocation>
+    <!--      <headerLocation>${basedir}/docs/checkstyle/opencast-header.txt</headerLocation>
+          <suppressionsLocation>${basedir}/docs/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>-->
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <consoleOutput>true</consoleOutput>
+          <logViolationsToConsole>true</logViolationsToConsole>
+          <sourceDirectories>
+            <sourceDirectory>src</sourceDirectory>
+          </sourceDirectories>
+          <excludes>**/package-info.java,**/generated-sources/**/*,**/org/apache/commons/**</excludes>
+          <failOnViolation>true</failOnViolation>
+          <failsOnError>true</failsOnError>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

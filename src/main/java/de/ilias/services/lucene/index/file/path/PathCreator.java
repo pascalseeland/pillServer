@@ -22,39 +22,20 @@
 
 package de.ilias.services.lucene.index.file.path;
 
+import de.ilias.services.lucene.index.CommandQueueElement;
+
 import java.io.File;
 import java.sql.ResultSet;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import de.ilias.services.lucene.index.CommandQueueElement;
-
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public interface PathCreator {
 
-	public static Logger logger = LogManager.getLogger(PathCreator.class);
-	
-	
-	/**
-	 * Build absolute file path
-	 * @param el
-	 * @param res
-	 * @return
-	 * @throws PathCreatorException
-	 */
-	public File buildFile(CommandQueueElement el, ResultSet res) throws PathCreatorException;
-	
-	/**
-	 * 
-	 * @param el
-	 * @param res
-	 * @return String
-	 */
-	public String getExtension(CommandQueueElement el, ResultSet res) throws PathCreatorException;
+  /**
+   * Build absolute file path
+   */
+  File buildFile(CommandQueueElement el, ResultSet res) throws PathCreatorException;
+
+  String getExtension(CommandQueueElement el, ResultSet res) throws PathCreatorException;
 }

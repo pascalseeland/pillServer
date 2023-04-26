@@ -23,35 +23,16 @@
 package de.ilias.services.rpc;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public final class RPCDebug {
 
-	/**
-	 * 
-	 */
-	public RPCDebug() {
-	}
-	
-	/**
-	 * 
-	 */
-	public void ping() {
+  public RPCDebug() {
+  }
 
-		return;
-	}
+  public String echo(String text) {
 
-	/**
-	 * @return 
-	 * 
-	 */
-	public String echo(String text) {
+    return text;
+  }
 
-		return text;
-	}
-
-	
 }

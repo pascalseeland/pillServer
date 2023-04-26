@@ -22,24 +22,15 @@
 
 package de.ilias.services.lucene.index.transform;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 /**
  * Interface for all transformer classes.
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public interface ContentTransformer {
 
-	public static Logger logger = LogManager.getLogger(ContentTransformer.class);
-	
-	/**
-	 * String which will be filtered
-	 * 
-	 * @param content
-	 * @return
-	 */
-	public String transform(String content);
+  /**
+   * String which will be filtered
+   */
+  String transform(String content);
 }

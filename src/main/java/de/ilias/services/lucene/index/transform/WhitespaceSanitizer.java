@@ -25,19 +25,17 @@ package de.ilias.services.lucene.index.transform;
 import java.util.regex.Pattern;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class WhitespaceSanitizer implements ContentTransformer {
-	
-	/**
-	 * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.lang.String)
-	 */
-	public String transform(String content) {
 
-		return Pattern.compile("\\s{2,}",Pattern.DOTALL).matcher(content).replaceAll(" ");
-	}
+  /**
+   * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.lang.String)
+   */
+  public String transform(String content) {
+
+    return Pattern.compile("\\s{2,}", Pattern.DOTALL).matcher(content).replaceAll(" ");
+  }
 
 }

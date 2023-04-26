@@ -22,103 +22,83 @@
 
 package de.ilias.services.lucene.search.highlight;
 
-import java.util.Vector;
+import de.ilias.services.lucene.search.ResultExport;
 
 import org.jdom.Element;
 
-import de.ilias.services.lucene.search.ResultExport;
+import java.util.Vector;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class HighlightItem implements ResultExport {
   private int subId;
-	private double absoluteScore = 0;
-	private Vector<HighlightField> fields = new Vector<HighlightField>();
-	
+  private double absoluteScore = 0;
+  private Vector<HighlightField> fields = new Vector<HighlightField>();
 
-	/**
-	 * 
-	 */
-	public HighlightItem() {
+  public HighlightItem(int subId) {
 
-	
-	}
+    this.setSubId(subId);
+  }
 
-	/**
-	 * @param subId
-	 */
-	public HighlightItem(int subId) {
-		
-		this.setSubId(subId);
-	}
+  /**
+   * @param subId the subId to set
+   */
+  public void setSubId(int subId) {
+    this.subId = subId;
+  }
 
-	/**
-	 * @param subId the subId to set
-	 */
-	public void setSubId(int subId) {
-		this.subId = subId;
-	}
+  /**
+   * @return the subId
+   */
+  public int getSubId() {
+    return subId;
+  }
 
-	/**
-	 * @return the subId
-	 */
-	public int getSubId() {
-		return subId;
-	}
-	
-	/**
-	 * Score
-	 * @param score 
-	 */
-	public void setAbsoluteScore(double score) {
-		this.absoluteScore = score;
-	}
-	
-	/**
-	 * Get absolute score
-	 * @return 
-	 */
-	public double getAbsoluteScore() {
-		return absoluteScore;
-	}
+  /**
+   * Score
+   */
+  public void setAbsoluteScore(double score) {
+    this.absoluteScore = score;
+  }
 
-	/**
-	 * 
-	 * @param field
-	 * @return
-	 */
-	public HighlightField addField(HighlightField field) {
-		
-		fields.add(field);
-		return field;
-	}
-	
-	/**
-	 * @return the fields
-	 */
-	public Vector<HighlightField> getFields() {
-		return fields;
-	}
+  /**
+   * Get absolute score
+   */
+  public double getAbsoluteScore() {
+    return absoluteScore;
+  }
 
-	/**
-	 * Add xml
-	 * @see de.ilias.services.lucene.search.highlight.HighlightResultExport#addXML(org.jdom.Element)
-	 */
-	public Element addXML() {
+  public HighlightField addField(HighlightField field) {
 
-		Element item = new Element("Item").setAttribute("id", String.valueOf(getSubId()));
-		item.setAttribute("id",String.valueOf(getSubId()));
-		item.setAttribute("absoluteScore",String.valueOf(getAbsoluteScore()));
-		
-		for(Object field : fields) {
-			
-			item.addContent(((ResultExport) field).addXML());
-		}
-		return item;
-	}
+    fields.add(field);
+    return field;
+  }
+
+  /**
+   * @return the fields
+   */
+  public Vector<HighlightField> getFields() {
+    return fields;
+  }
+
+  /**
+   * Add xml
+   *
+   * @see ResultExport#addXML()
+   */
+  public Element addXML() {
+
+    Element item = new Element("Item").setAttribute("id", String.valueOf(getSubId()));
+    item.setAttribute("id", String.valueOf(getSubId()));
+    item.setAttribute("absoluteScore", String.valueOf(getAbsoluteScore()));
+
+    for (Object field : fields) {
+
+      item.addContent(((ResultExport) field).addXML());
+    }
+    return item;
+  }
 
 }

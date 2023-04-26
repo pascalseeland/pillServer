@@ -22,113 +22,108 @@
 
 package de.ilias.services.lucene.index.file;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.tidy.Tidy;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+
 /**
- * 
- * 
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class JTidyHTMLHandler implements FileHandler {
 
-	private Tidy tidy;
+  private Tidy tidy;
 
-	/**
-	 * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
-	 */
-	public String getContent(InputStream is) throws FileHandlerException,
-			IOException {
+  /**
+   * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
+   */
+  public String getContent(InputStream is) throws FileHandlerException, IOException {
 
-		StringBuilder builder = new StringBuilder();
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    StringBuilder builder = new StringBuilder();
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
-		tidy = new Tidy();
-		tidy.setErrout(new PrintWriter(new ByteArrayOutputStream()));
-		tidy.setQuiet(true);
-		tidy.setShowWarnings(false);
+    tidy = new Tidy();
+    tidy.setErrout(new PrintWriter(new ByteArrayOutputStream()));
+    tidy.setQuiet(true);
+    tidy.setShowWarnings(false);
 
-		org.w3c.dom.Document root = tidy.parseDOM(is, bout);
-		Element rawDoc = root.getDocumentElement();
+    org.w3c.dom.Document root = tidy.parseDOM(is, bout);
+    Element rawDoc = root.getDocumentElement();
 
-		String title = getTitle(rawDoc);
-		String body = getBody(rawDoc);
+    String title = getTitle(rawDoc);
+    String body = getBody(rawDoc);
 
-		if (title != null && !title.equals("")) {
-			builder.append(title);
-		}
-		if (body != null && !body.equals("")) {
-			builder.append(body);
-		}
-		
-		if(bout != null) {
-			try {
-				bout.close();
-			}
-			catch(IOException e) {
-				// Nothing
-			}
-		}
-		
-		
-		return builder.toString();
+    if (title != null && !title.equals("")) {
+      builder.append(title);
+    }
+    if (body != null && !body.equals("")) {
+      builder.append(body);
+    }
 
-	}
+    if (bout != null) {
+      try {
+        bout.close();
+      } catch (IOException e) {
+        // Nothing
+      }
+    }
 
-	private String getTitle(Element rawDoc) {
-		if (rawDoc == null) {
-			return null;
-		}
+    return builder.toString();
 
-		String title = "";
-		NodeList children = rawDoc.getElementsByTagName("title");
-		if (children.getLength() > 0) {
-			Element titleElement = (Element) children.item(0);
-			Text text = (Text) titleElement.getFirstChild();
-			if (text != null) {
-				title = text.getData();
-			}
-		}
-		return title;
-	}
+  }
 
-	private String getBody(Element rawDoc) {
-		if (rawDoc == null) {
-			return null;
-		}
-		String body = "";
-		NodeList children = rawDoc.getElementsByTagName("body");
-		if (children.getLength() > 0) {
-			body = getText(children.item(0));
-		}
-		return body;
-	}
+  private String getTitle(Element rawDoc) {
+    if (rawDoc == null) {
+      return null;
+    }
 
-	private String getText(Node node) {
-		NodeList children = node.getChildNodes();
-		StringBuilder sb = new StringBuilder();
+    String title = "";
+    NodeList children = rawDoc.getElementsByTagName("title");
+    if (children.getLength() > 0) {
+      Element titleElement = (Element) children.item(0);
+      Text text = (Text) titleElement.getFirstChild();
+      if (text != null) {
+        title = text.getData();
+      }
+    }
+    return title;
+  }
 
-		for (int i = 0; i < children.getLength(); i++) {
-			Node child = children.item(i);
-			switch (child.getNodeType()) {
-			case Node.ELEMENT_NODE:
-				sb.append(getText(child));
-				sb.append(" ");
-				break;
-			case Node.TEXT_NODE:
-				sb.append(((Text) child).getData());
-				break;
-			}
-		}
-		return sb.toString();
-	}
+  private String getBody(Element rawDoc) {
+    if (rawDoc == null) {
+      return null;
+    }
+    String body = "";
+    NodeList children = rawDoc.getElementsByTagName("body");
+    if (children.getLength() > 0) {
+      body = getText(children.item(0));
+    }
+    return body;
+  }
+
+  private String getText(Node node) {
+    NodeList children = node.getChildNodes();
+    StringBuilder sb = new StringBuilder();
+
+    for (int i = 0; i < children.getLength(); i++) {
+      Node child = children.item(i);
+      switch (child.getNodeType()) {
+        case Node.ELEMENT_NODE:
+          sb.append(getText(child));
+          sb.append(" ");
+          break;
+        case Node.TEXT_NODE:
+          sb.append(((Text) child).getData());
+          break;
+      }
+    }
+    return sb.toString();
+  }
 }

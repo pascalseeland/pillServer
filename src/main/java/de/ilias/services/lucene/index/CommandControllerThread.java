@@ -22,79 +22,73 @@
 
 package de.ilias.services.lucene.index;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.settings.LocalSettings;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class CommandControllerThread extends Thread {
 
   private Logger logger = LogManager.getLogger(CommandControllerThread.class);
-	protected String clientKey = null;
-	
-	protected CommandController controller = null;
-	
-	/**
-	 * Constructor
-	 */
-	public CommandControllerThread(String ck, CommandController con) {
-		
-		clientKey = ck;
-		controller = con;
-		
-		this.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+  protected String clientKey = null;
 
-			/**
-			 * Overwrite uncuaght exception handler
-			 */
-			public void uncaughtException(Thread t, Throwable e) {
-				
-				logger.error("Caught uncaught error: " + e);
+  protected CommandController controller = null;
 
-				try {
-					
-					CommandControllerThread nt = new CommandControllerThread(clientKey,controller);
-					nt.start();
-					nt.join();
-				}
-				catch(Exception ex) {
-					logger.error("New error " + ex);
-				}
-			}
-		});
-		
-		
-	}
-	
-	/**
-	 * Initialize the thread 
-	 */
-	public void run() {
-	
-		logger.info("Started new indexer thread...");
-		
-		// Initialize thread local settings
-		LocalSettings.setClientKey(clientKey);
-		DBFactory.init();
-		
-		try {
-			controller.start();
-		} 
-		catch (Exception e) {
-			logger.error("Cannot start indexer thread: " + e, e);
-			e.printStackTrace();
-			this.interrupt();
-		}
-		finally {
-			DBFactory.closeAll();
-		}
-	}
-			
+  /**
+   * Constructor
+   */
+  public CommandControllerThread(String ck, CommandController con) {
+
+    clientKey = ck;
+    controller = con;
+
+    this.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+
+      /**
+       * Overwrite uncuaght exception handler
+       */
+      public void uncaughtException(Thread t, Throwable e) {
+
+        logger.error("Caught uncaught error: " + e);
+
+        try {
+
+          CommandControllerThread nt = new CommandControllerThread(clientKey, controller);
+          nt.start();
+          nt.join();
+        } catch (Exception ex) {
+          logger.error("New error " + ex);
+        }
+      }
+    });
+
+  }
+
+  /**
+   * Initialize the thread
+   */
+  public void run() {
+
+    logger.info("Started new indexer thread...");
+
+    // Initialize thread local settings
+    LocalSettings.setClientKey(clientKey);
+    DBFactory.init();
+
+    try {
+      controller.start();
+    } catch (Exception e) {
+      logger.error("Cannot start indexer thread: " + e, e);
+      e.printStackTrace();
+      this.interrupt();
+    } finally {
+      DBFactory.closeAll();
+    }
+  }
+
 }

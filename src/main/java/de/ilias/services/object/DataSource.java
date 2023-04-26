@@ -22,143 +22,123 @@
 
 package de.ilias.services.object;
 
-import java.io.IOException;
-import java.util.Vector;
-
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandler;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 
+import java.io.IOException;
+import java.util.Vector;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public abstract class DataSource implements DocumentHandler {
-	
-	public static final int TYPE_JDBC = 1;
-	public static final int TYPE_FILE = 2;
-	public static final int TYPE_DIRECTORY = 3;
-	
-	public static final String ACTION_APPEND = "append";
-	public static final String ACTION_CREATE = "create";
 
-	private int type;
-	private String action;
-	Vector<FieldDefinition> fields = new Vector<FieldDefinition>();
-	Vector<DataSource> ds = new Vector<DataSource>();
-	
+  public static final int TYPE_JDBC = 1;
+  public static final int TYPE_FILE = 2;
+  public static final int TYPE_DIRECTORY = 3;
 
-	/**
-	 * 
-	 */
-	public DataSource(int type) {
+  public static final String ACTION_APPEND = "append";
+  public static final String ACTION_CREATE = "create";
 
-		this.type = type;
-	}
-	
-	
-	/**
-	 * @return the type
-	 */
-	public int getType() {
-		return type;
-	}
+  private int type;
+  private String action;
+  Vector<FieldDefinition> fields = new Vector<>();
+  Vector<DataSource> ds = new Vector<>();
 
-	/**
-	 * @param type the type to set
-	 */
-	public void setType(int type) {
-		this.type = type;
-	}
-	
-	/**
-	 * @param action the action to set
-	 */
-	public void setAction(String action) {
-		this.action = action;
-	}
+  public DataSource(int type) {
 
+    this.type = type;
+  }
 
-	/**
-	 * @return the action
-	 */
-	public String getAction() {
-		return action;
-	}
+  /**
+   * @return the type
+   */
+  public int getType() {
+    return type;
+  }
 
-	/**
-	 * @return the fields
-	 */
-	public Vector<FieldDefinition> getFields() {
-		return fields;
-	}
+  /**
+   * @param type the type to set
+   */
+  public void setType(int type) {
+    this.type = type;
+  }
 
-	/**
-	 * @param fields the fields to set
-	 */
-	public void setFields(Vector<FieldDefinition> fields) {
-		this.fields = fields;
-	}
-	
-	/**
-	 * 
-	 * @param field
-	 */
-	public void addField(FieldDefinition field) {
-		this.fields.add(field);
-	}
-	
-	/**
-	 * return nested data sources 
-	 * @return the data sources
-	 */
-	public Vector<DataSource> getDataSources() {
-		return ds;
-	}
-	
-	/**
-	 * Set DataSource elements
-	 * @param ds
-	 */
-	public void setDataSources(Vector<DataSource> ds) {
-		this.ds = ds;
-	}
-	
-	/**
-	 * Add DataSource element to vector
-	 * @param ds
-	 */
-	public void addDataSource(DataSource ds) {
-		this.getDataSources().add(ds);
-	}
-	
-	
-	
-	/**
-	 * 
-	 * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
-	 */
-	abstract public void writeDocument(CommandQueueElement el)
-			throws DocumentHandlerException, IOException;
+  /**
+   * @param action the action to set
+   */
+  public void setAction(String action) {
+    this.action = action;
+  }
 
-	/**
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		
-		StringBuffer out = new StringBuffer();
+  /**
+   * @return the action
+   */
+  public String getAction() {
+    return action;
+  }
 
-		for(Object field : getFields()) {
-			
-			out.append(field.toString());
-		}
-	
-		return out.toString();
-	}
+  /**
+   * @return the fields
+   */
+  public Vector<FieldDefinition> getFields() {
+    return fields;
+  }
 
+  /**
+   * @param fields the fields to set
+   */
+  public void setFields(Vector<FieldDefinition> fields) {
+    this.fields = fields;
+  }
+
+  public void addField(FieldDefinition field) {
+    this.fields.add(field);
+  }
+
+  /**
+   * return nested data sources
+   *
+   * @return the data sources
+   */
+  public Vector<DataSource> getDataSources() {
+    return ds;
+  }
+
+  /**
+   * Set DataSource elements
+   */
+  public void setDataSources(Vector<DataSource> ds) {
+    this.ds = ds;
+  }
+
+  /**
+   * Add DataSource element to vector
+   */
+  public void addDataSource(DataSource ds) {
+    this.getDataSources().add(ds);
+  }
+
+  /**
+   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   */
+  public abstract  void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException;
+
+  /**
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+
+    StringBuilder out = new StringBuilder();
+
+    for (Object field : getFields()) {
+
+      out.append(field.toString());
+    }
+
+    return out.toString();
+  }
 
 }

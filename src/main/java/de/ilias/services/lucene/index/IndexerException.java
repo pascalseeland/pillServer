@@ -23,48 +23,25 @@
 package de.ilias.services.lucene.index;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class IndexerException extends Exception {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	/**
-	 * 
-	 */
-	public IndexerException() {
-		// TODO Auto-generated constructor stub
-	}
+  public IndexerException() {
+  }
 
-	/**
-	 * @param message
-	 */
-	public IndexerException(String message) {
-		super(message);
-		// TODO Auto-generated constructor stub
-	}
+  public IndexerException(String message) {
+    super(message);
+  }
 
-	/**
-	 * @param cause
-	 */
-	public IndexerException(Throwable cause) {
-		super(cause);
-		// TODO Auto-generated constructor stub
-	}
+  public IndexerException(Throwable cause) {
+    super(cause);
+  }
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public IndexerException(String message, Throwable cause) {
-		super(message, cause);
-		// TODO Auto-generated constructor stub
-	}
+  public IndexerException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }

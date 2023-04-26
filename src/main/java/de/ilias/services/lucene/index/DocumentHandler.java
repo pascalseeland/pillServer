@@ -22,19 +22,15 @@
 
 package de.ilias.services.lucene.index;
 
-
 import java.io.IOException;
 import java.sql.ResultSet;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public interface DocumentHandler {
-	
-	void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException;
-	
-	void writeDocument(CommandQueueElement el,ResultSet res) throws DocumentHandlerException;
+
+  void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException;
+
+  void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException;
 }

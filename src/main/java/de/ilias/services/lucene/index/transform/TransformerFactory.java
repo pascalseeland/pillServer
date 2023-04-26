@@ -22,10 +22,10 @@
 
 package de.ilias.services.lucene.index.transform;
 
-import java.util.HashMap;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.HashMap;
 
 /**
  * A caching transformer factory
@@ -35,46 +35,47 @@ import org.apache.logging.log4j.Logger;
  */
 public class TransformerFactory {
 
-	private static Logger logger = LogManager.getLogger(TransformerFactory.class);
-	
-	private static HashMap<String, ContentTransformer> map = new HashMap<String, ContentTransformer>();
-	
-	public static ContentTransformer factory(String name) {
-		
-		if(map.containsKey(name))
-			return map.get(name);
-		
-		if(name.equalsIgnoreCase("QuotingSanitizer")) {
-			map.put(name,new QuotingSanitizer());
-			return map.get(name);
-		}
-		if(name.equalsIgnoreCase("ContentObjectTransformer")) {
-			map.put(name, new ContentObjectTransformer());
-			return map.get(name);
-		}
-		if(name.equalsIgnoreCase("LinefeedSanitizer")) {
-			map.put(name, new LinefeedSanitizer());
-			return map.get(name);
-		}
-		if(name.equalsIgnoreCase("WhitespaceSanitizer")) {
-			map.put(name, new WhitespaceSanitizer());
-			return map.get(name);
-		}
-		if(name.equalsIgnoreCase("FilenameExtractor")) {
-			map.put(name, new FilnameExtractor());
-			return map.get(name);
-		}
-		if(name.equalsIgnoreCase("TagSanitizer")) {
-			map.put(name, new TagSanitizer());
-			return map.get(name);
-		}
-		if(name.equalsIgnoreCase("MimeTypeExtractor")) {
-			map.put(name, new MimeTypeExtractor());
-			return map.get(name);
-		}
-		
-		logger.error("Cannot find transformer with name: " + name);
-		return null;
-	}
-	
+  private static Logger logger = LogManager.getLogger(TransformerFactory.class);
+
+  private static HashMap<String, ContentTransformer> map = new HashMap<String, ContentTransformer>();
+
+  public static ContentTransformer factory(String name) {
+
+    if (map.containsKey(name)) {
+      return map.get(name);
+    }
+
+    if (name.equalsIgnoreCase("QuotingSanitizer")) {
+      map.put(name, new QuotingSanitizer());
+      return map.get(name);
+    }
+    if (name.equalsIgnoreCase("ContentObjectTransformer")) {
+      map.put(name, new ContentObjectTransformer());
+      return map.get(name);
+    }
+    if (name.equalsIgnoreCase("LinefeedSanitizer")) {
+      map.put(name, new LinefeedSanitizer());
+      return map.get(name);
+    }
+    if (name.equalsIgnoreCase("WhitespaceSanitizer")) {
+      map.put(name, new WhitespaceSanitizer());
+      return map.get(name);
+    }
+    if (name.equalsIgnoreCase("FilenameExtractor")) {
+      map.put(name, new FilnameExtractor());
+      return map.get(name);
+    }
+    if (name.equalsIgnoreCase("TagSanitizer")) {
+      map.put(name, new TagSanitizer());
+      return map.get(name);
+    }
+    if (name.equalsIgnoreCase("MimeTypeExtractor")) {
+      map.put(name, new MimeTypeExtractor());
+      return map.get(name);
+    }
+
+    logger.error("Cannot find transformer with name: " + name);
+    return null;
+  }
+
 }

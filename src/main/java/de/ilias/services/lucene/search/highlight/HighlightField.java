@@ -22,71 +22,70 @@
 
 package de.ilias.services.lucene.search.highlight;
 
-import org.jdom.Element;
-
 import de.ilias.services.lucene.search.ResultExport;
 import de.ilias.services.xml.XMLUtils;
 
+import org.jdom.Element;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class HighlightField implements ResultExport {
-	
-	private String name;
-	private String highlight;
-	
-	/**
-	 * 
-	 */
-	public HighlightField(String name, String highlight) {
-		
-		setName(name);
-		setHighlight(highlight);
-	}
 
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+  private String name;
+  private String highlight;
 
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
+  /**
+   *
+   */
+  public HighlightField(String name, String highlight) {
 
-	/**
-	 * @param highlight the highlight to set
-	 */
-	public void setHighlight(String highlight) {
-		this.highlight = highlight;
-	}
+    setName(name);
+    setHighlight(highlight);
+  }
 
-	/**
-	 * @return the highlight
-	 */
-	public String getHighlight() {
-		return highlight;
-	}
+  /**
+   * @param name the name to set
+   */
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	/**
-	 * Add xml
-	 * @see de.ilias.services.lucene.search.highlight.HighlightResultExport#addXML(org.jdom.Element)
-	 */
-	public Element addXML() {
+  /**
+   * @return the name
+   */
+  public String getName() {
+    return name;
+  }
 
-		Element field = new Element("Field");
-		field.setAttribute("name", getName());
-		//field.addContent(getHighlight());
-		field.setText(XMLUtils.stripNonValidXMLCharacters(getHighlight()));
-		
-		return field;
-	}
+  /**
+   * @param highlight the highlight to set
+   */
+  public void setHighlight(String highlight) {
+    this.highlight = highlight;
+  }
+
+  /**
+   * @return the highlight
+   */
+  public String getHighlight() {
+    return highlight;
+  }
+
+  /**
+   * Add xml
+   *
+   * @see ResultExport#addXML()
+   */
+  public Element addXML() {
+
+    Element field = new Element("Field");
+    field.setAttribute("name", getName());
+    //field.addContent(getHighlight());
+    field.setText(XMLUtils.stripNonValidXMLCharacters(getHighlight()));
+
+    return field;
+  }
 
 }

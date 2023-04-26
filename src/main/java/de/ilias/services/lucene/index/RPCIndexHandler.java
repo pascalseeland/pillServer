@@ -22,12 +22,7 @@
 
 package de.ilias.services.lucene.index;
 
-import java.util.Vector;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import de.ilias.ilServerStatus;
+import de.ilias.ILServerStatus;
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.object.ObjectDefinitionParser;
 import de.ilias.services.object.ObjectDefinitionReader;
@@ -35,179 +30,168 @@ import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.LocalSettings;
 import de.ilias.services.settings.ServerSettings;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.Vector;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class RPCIndexHandler {
 
   private static Logger logger = LogManager.getLogger(RPCIndexHandler.class);
-	
-	
-	
-	/**
-	 * Update index for a vector of obj ids
-	 * @param clientKey
-	 * @param objIds
-	 * @return 
-	 */
-	public boolean indexObjects(String clientKey, Vector<Integer> objIds) {
-		
-		// Set client key
-		LocalSettings.setClientKey(clientKey);
-		DBFactory.init();
-		ClientSettings client;
-		ServerSettings server;
-		ObjectDefinitionReader properties;
-		ObjectDefinitionParser parser;
-		
-		CommandController controller;
-		
-		try {
-			long s_start = new java.util.Date().getTime();
-			
-			logger.info("Checking if indexer is running for client: " + clientKey);
-			// Return if indexer is already running for this clientKey
-			if(ilServerStatus.isIndexerActive(clientKey)) {
-				logger.error("An Indexer is already running for this client. Aborting!");
-				return false;
-			}
-			
-			// Set status
-			//ilServerStatus.addIndexer(clientKey);
 
-			client = ClientSettings.getInstance(LocalSettings.getClientKey());
-			server = ServerSettings.getInstance();
-			
-			properties = ObjectDefinitionReader.getInstance(client.getAbsolutePath());
-			parser = new ObjectDefinitionParser(properties.getObjectPropertyFiles());
-			parser.parse();
-			
-			//controller = CommandController.getInstance();
-			controller = new CommandController();
-			controller.initObjects(objIds);
+  /**
+   * Update index for a vector of obj ids
+   */
+  public boolean indexObjects(String clientKey, Vector<Integer> objIds) {
 
-			// Start threads
-			Vector<CommandControllerThread> threads = new Vector<CommandControllerThread>();
-			for(int i = 0; i < server.getNumThreads(); i++) {
-				
-				CommandControllerThread t = new CommandControllerThread(clientKey,controller);
-				t.start();
-				threads.add(t);
-			}
-			// Join threads
-			for(int i = 0; i < server.getNumThreads();i++) {
-				threads.get(i).join();
-			}
-			controller.writeToIndex();
-			controller.closeIndex();
-			
-			long s_end = new java.util.Date().getTime();
-			logger.info("Index time: " + ((s_end - s_start)/(1000))+ " seconds");
-			logger.debug(client.getIndexPath());
-			return true;
+    // Set client key
+    LocalSettings.setClientKey(clientKey);
+    DBFactory.init();
+    ClientSettings client;
+    ServerSettings server;
+    ObjectDefinitionReader properties;
+    ObjectDefinitionParser parser;
 
-		} 
-		catch (Exception e) {
-			logger.error("Unknown error",e);
-		}
-		finally {
-			// Purge resources
-			DBFactory.closeAll();
-		}
-		
-		return false;
-	}
+    CommandController controller;
 
-	/**
-	 * Refresh index
-	 * @param clientKey
-	 * @return
-	 */
-	public boolean index(String clientKey, boolean incremental) {
-		
-		Boolean doPurge = true;
-		
-		// Set client key
-		LocalSettings.setClientKey(clientKey);
-		DBFactory.init();
-		ClientSettings client;
-		ServerSettings server;
-		ObjectDefinitionReader properties;
-		ObjectDefinitionParser parser;
-		
-		CommandController controller;
-		
-		try {
-			long s_start = new java.util.Date().getTime();
-			
-			logger.info("Checking if indexer is running for client: " + clientKey);
-			// Return if indexer is already running for this clientKey
-			if(ilServerStatus.isIndexerActive(clientKey)) {
-				logger.error("An Indexer is already running for this client. Aborting!");
-				System.err.println("An Indexer is already running for this client. Aborting!");
-				doPurge = false;
-				return false;
-			}
-			
-			// Set status
-			ilServerStatus.addIndexer(clientKey);
+    try {
+      long s_start = new java.util.Date().getTime();
 
-			client = ClientSettings.getInstance(LocalSettings.getClientKey());
-			server = ServerSettings.getInstance();
-			
-			if(!incremental) {
-				IndexHolder.deleteIndex();
-			}
-			
-			properties = ObjectDefinitionReader.getInstance(client.getAbsolutePath());
-			parser = new ObjectDefinitionParser(properties.getObjectPropertyFiles());
-			parser.parse();
-			
-			//controller = CommandController.getInstance();
-			controller = new CommandController();
-			if(incremental) {
-				controller.initRefresh();
-			}
-			else {
-				controller.initCreate();
-			}
-			// Start threads
-			Vector<CommandControllerThread> threads = new Vector<CommandControllerThread>();
-			for(int i = 0; i < server.getNumThreads(); i++) {
-				
-				CommandControllerThread t = new CommandControllerThread(clientKey,controller);
-				t.start();
-				threads.add(t);
-			}
-			// Join threads
-			for(int i = 0; i < server.getNumThreads();i++) {
-				threads.get(i).join();
-			}
-			controller.writeToIndex();
-			controller.closeIndex();
-			
-			long s_end = new java.util.Date().getTime();
-			logger.info("Index time: " + ((s_end - s_start)/(1000))+ " seconds");
-			logger.debug(client.getIndexPath());
-			return true;
+      logger.info("Checking if indexer is running for client: " + clientKey);
+      // Return if indexer is already running for this clientKey
+      if (ILServerStatus.isIndexerActive(clientKey)) {
+        logger.error("An Indexer is already running for this client. Aborting!");
+        return false;
+      }
 
-		} 
-		catch (Exception e) {
-			logger.error("Unknown error",e);
-		}
-		finally {
-			// Purge resources
-			if(doPurge) {
-				ilServerStatus.removeIndexer(clientKey);
-				DBFactory.closeAll();
-			}
-		}
-		
-		return false;
-	}
+      // Set status
+      //ilServerStatus.addIndexer(clientKey);
 
+      client = ClientSettings.getInstance(LocalSettings.getClientKey());
+      server = ServerSettings.getInstance();
+
+      properties = ObjectDefinitionReader.getInstance(client.getAbsolutePath());
+      parser = new ObjectDefinitionParser(properties.getObjectPropertyFiles());
+      parser.parse();
+
+      //controller = CommandController.getInstance();
+      controller = new CommandController();
+      controller.initObjects(objIds);
+
+      // Start threads
+      Vector<CommandControllerThread> threads = new Vector<CommandControllerThread>();
+      for (int i = 0; i < server.getNumThreads(); i++) {
+
+        CommandControllerThread t = new CommandControllerThread(clientKey, controller);
+        t.start();
+        threads.add(t);
+      }
+      // Join threads
+      for (int i = 0; i < server.getNumThreads(); i++) {
+        threads.get(i).join();
+      }
+      controller.writeToIndex();
+      controller.closeIndex();
+
+      long s_end = new java.util.Date().getTime();
+      logger.info("Index time: " + ((s_end - s_start) / (1000)) + " seconds");
+      logger.debug(client.getIndexPath());
+      return true;
+
+    } catch (Exception e) {
+      logger.error("Unknown error", e);
+    } finally {
+      // Purge resources
+      DBFactory.closeAll();
+    }
+
+    return false;
+  }
+
+  /**
+   * Refresh index
+   */
+  public boolean index(String clientKey, boolean incremental) {
+
+    Boolean doPurge = true;
+
+    // Set client key
+    LocalSettings.setClientKey(clientKey);
+    DBFactory.init();
+    ClientSettings client;
+    ServerSettings server;
+    ObjectDefinitionReader properties;
+    ObjectDefinitionParser parser;
+
+    CommandController controller;
+
+    try {
+      long s_start = new java.util.Date().getTime();
+
+      logger.info("Checking if indexer is running for client: " + clientKey);
+      // Return if indexer is already running for this clientKey
+      if (ILServerStatus.isIndexerActive(clientKey)) {
+        logger.error("An Indexer is already running for this client. Aborting!");
+        doPurge = false;
+        return false;
+      }
+
+      // Set status
+      ILServerStatus.addIndexer(clientKey);
+
+      client = ClientSettings.getInstance(LocalSettings.getClientKey());
+      server = ServerSettings.getInstance();
+
+      if (!incremental) {
+        IndexHolder.deleteIndex();
+      }
+
+      properties = ObjectDefinitionReader.getInstance(client.getAbsolutePath());
+      parser = new ObjectDefinitionParser(properties.getObjectPropertyFiles());
+      parser.parse();
+
+      //controller = CommandController.getInstance();
+      controller = new CommandController();
+      if (incremental) {
+        controller.initRefresh();
+      } else {
+        controller.initCreate();
+      }
+      // Start threads
+      Vector<CommandControllerThread> threads = new Vector<CommandControllerThread>();
+      for (int i = 0; i < server.getNumThreads(); i++) {
+
+        CommandControllerThread t = new CommandControllerThread(clientKey, controller);
+        t.start();
+        threads.add(t);
+      }
+      // Join threads
+      for (int i = 0; i < server.getNumThreads(); i++) {
+        threads.get(i).join();
+      }
+      controller.writeToIndex();
+      controller.closeIndex();
+
+      long s_end = new java.util.Date().getTime();
+      logger.info("Index time: " + ((s_end - s_start) / (1000)) + " seconds");
+      logger.debug(client.getIndexPath());
+      return true;
+
+    } catch (Exception e) {
+      logger.error("Unknown error", e);
+    } finally {
+      // Purge resources
+      if (doPurge) {
+        ILServerStatus.removeIndexer(clientKey);
+        DBFactory.closeAll();
+      }
+    }
+
+    return false;
+  }
 
 }

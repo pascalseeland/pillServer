@@ -23,48 +23,22 @@
 package de.ilias.services.lucene.index;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class DocumentHandlerException extends Exception {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	/**
-	 * 
-	 */
-	public DocumentHandlerException() {
-		// TODO Auto-generated constructor stub
-	}
+  public DocumentHandlerException(String message) {
+    super(message);
+  }
 
-	/**
-	 * @param message
-	 */
-	public DocumentHandlerException(String message) {
-		super(message);
-		// TODO Auto-generated constructor stub
-	}
+  public DocumentHandlerException(Throwable cause) {
+    super(cause);
+  }
 
-	/**
-	 * @param cause
-	 */
-	public DocumentHandlerException(Throwable cause) {
-		super(cause);
-		// TODO Auto-generated constructor stub
-	}
-
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public DocumentHandlerException(String message, Throwable cause) {
-		super(message, cause);
-		// TODO Auto-generated constructor stub
-	}
+  public DocumentHandlerException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }

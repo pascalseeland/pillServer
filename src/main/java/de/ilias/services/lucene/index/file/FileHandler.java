@@ -26,20 +26,13 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
-public interface FileHandler {
+interface FileHandler {
 
-	/**
-	 * get file content
-	 * @param is
-	 * @return
-	 * @throws FileHandlerException
-	 * @throws IOException 
-	 */
-	public String getContent(InputStream is) throws FileHandlerException, IOException;
+  /**
+   * get file content
+   */
+  String getContent(InputStream is) throws FileHandlerException, IOException;
 
 }

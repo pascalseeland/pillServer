@@ -22,23 +22,21 @@
 
 package de.ilias.services.object;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.sql.ResultSet;
-import java.util.Vector;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 import de.ilias.services.lucene.index.file.ExtensionFileHandler;
 import de.ilias.services.lucene.index.file.FileHandlerException;
 import de.ilias.services.lucene.index.file.path.PathCreatorException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.sql.ResultSet;
+import java.util.Vector;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
@@ -46,102 +44,89 @@ public class DirectoryDataSource extends FileDataSource {
 
   private static Logger logger = LogManager.getLogger(DirectoryDataSource.class);
 
-	/**
-	 * @param type
-	 */
-	public DirectoryDataSource(int type) {
-		super(type);
-		
-	}
+  public DirectoryDataSource(int type) {
+    super(type);
 
-	
-	/**
-	 * write Document
-	 */
-	public void writeDocument(CommandQueueElement el, ResultSet res) 
-		throws DocumentHandlerException {
-		
-		File start;
-		ExtensionFileHandler handler = new ExtensionFileHandler();
-		StringBuilder content = new StringBuilder();
-		
-		Vector<File> files;
+  }
 
-		logger.info("Start scanning directory...");
-		
-		try {
-			if(getPathCreator() == null) {
-				logger.info("No path creator defined");
-				return;
-			}
-			start = getPathCreator().buildFile(el,res);
+  /**
+   * write Document
+   */
+  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
 
-			FileReader reader = new FileReader();
-			reader.traverse(start);
-			files = reader.getFiles();
-			
-			logger.info("Found " + files.size() + " new files.");
-			
-			for(int i = 0; i < files.size(); i++) {
-				// Analyze encoding (transfer encoding), parse file extension
-				// and finally read content
-				try {
-					content.append(" " + handler.getContent(files.get(i), ""));
-				} 
-				catch (FileHandlerException e) {
-					logger.warn("Cannot parse file " + files.get(i).getAbsolutePath());
-				}
-			}
-			
-			
-			// Write content
-			for(Object field : getFields()) {
-				((FieldDefinition) field).writeDocument(content.toString());
-			}
-			logger.debug("Content is : " + content.toString());
-		}
-		catch (PathCreatorException e) {
-			throw new DocumentHandlerException(e);
-		}
-	}
-	
-	/**
-	 * Read all files in a directory 
-	 */
-	class FileReader
-	{
-		Vector<File> files = new Vector<File>();
-		
-		public Vector<File> getFiles() {
-			return files;
-		}
-		
-		public void traverse(File dir) {
-			
-			File[] entries = dir.listFiles(
-					new FileFilter()
-					{
-						public boolean accept(File path) {
-							
-							if(path.isDirectory()) {
-								if(!path.getName().equals(".svn")) {
-									return true;
-								}
-								return false;
-							}
-							else
-							{
-								//getCandidates().add(path);
-								files.add(path);
-								return false;
-							}
-						}
-					});
-			
-			for(int i = 0; i < entries.length; i++) {
-				// there are only directories
-				traverse(entries[i]);
-			}
-		}
-	}
+    File start;
+    ExtensionFileHandler handler = new ExtensionFileHandler();
+    StringBuilder content = new StringBuilder();
+
+    Vector<File> files;
+
+    logger.info("Start scanning directory...");
+
+    try {
+      if (getPathCreator() == null) {
+        logger.info("No path creator defined");
+        return;
+      }
+      start = getPathCreator().buildFile(el, res);
+
+      FileReader reader = new FileReader();
+      reader.traverse(start);
+      files = reader.getFiles();
+
+      logger.info("Found " + files.size() + " new files.");
+
+      for (File file : files) {
+        // Analyze encoding (transfer encoding), parse file extension
+        // and finally read content
+        try {
+          content.append(" " + handler.getContent(file, ""));
+        } catch (FileHandlerException e) {
+          logger.warn("Cannot parse file " + file.getAbsolutePath());
+        }
+      }
+
+      // Write content
+      for (Object field : getFields()) {
+        ((FieldDefinition) field).writeDocument(content.toString());
+      }
+      logger.debug("Content is : " + content.toString());
+    } catch (PathCreatorException e) {
+      throw new DocumentHandlerException(e);
+    }
+  }
+
+  /**
+   * Read all files in a directory
+   */
+  class FileReader {
+    Vector<File> files = new Vector<>();
+
+    public Vector<File> getFiles() {
+      return files;
+    }
+
+    public void traverse(File dir) {
+
+      File[] entries = dir.listFiles(new FileFilter() {
+        public boolean accept(File path) {
+
+          if (path.isDirectory()) {
+            if (!path.getName().equals(".svn")) {
+              return true;
+            }
+            return false;
+          } else {
+            //getCandidates().add(path);
+            files.add(path);
+            return false;
+          }
+        }
+      });
+
+      for (File entry : entries) {
+        // there are only directories
+        traverse(entry);
+      }
+    }
+  }
 }

@@ -22,8 +22,10 @@
 
 package de.ilias.services.lucene.search;
 
-import java.io.IOException;
-import java.util.HashMap;
+import de.ilias.services.lucene.index.IndexDirectoryFactory;
+import de.ilias.services.settings.ClientSettings;
+import de.ilias.services.settings.ConfigurationException;
+import de.ilias.services.settings.LocalSettings;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -31,106 +33,70 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
-import de.ilias.services.lucene.index.IndexDirectoryFactory;
-import de.ilias.services.settings.ClientSettings;
-import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class SearchHolder {
 
-	public static int SEARCH_LIMIT = 100;
+  public static int SEARCH_LIMIT = 100;
 
-	private static HashMap<String, SearchHolder> instances = new HashMap<String, SearchHolder>();
-	
-	private IndexSearcher searcher = null;
+  private static HashMap<String, SearchHolder> instances = new HashMap<String, SearchHolder>();
 
-	
-	/**
-	 * @param indexPath
-	 * @param indexType
-	 * @throws ConfigurationException 
-	 * @throws IOException 
-	 * @throws IOException 
-	 */
-	private SearchHolder() throws ConfigurationException, IOException {
-		
-		init();
+  private IndexSearcher searcher = null;
 
-	}
+  private SearchHolder() throws ConfigurationException, IOException {
 
-	/**
-	 * Init searcher
-	 * 
-	 * @throws ConfigurationException 
-	 * @throws IOException 
-	 * 
-	 */
-	public void init() throws ConfigurationException, IOException {
+    init();
 
-		ClientSettings client = ClientSettings.getInstance(LocalSettings.getClientKey());
-		FSDirectory directory = IndexDirectoryFactory.getDirectory(client.getIndexPath());
-		IndexReader reader = DirectoryReader.open(directory);
-		searcher = new IndexSearcher(reader);
-	}
-	
-	
-	/**
-	 * Reinit searcher with new indexReader to load new index entries.
-	 * Normally called after Index write
-	 * We use DirectoryReader.open(IndexWriter) in this case
-	 * @throws ConfigurationException
-	 * @throws IOException 
-	 */
-	public void reInit(IndexWriter writer) throws ConfigurationException, IOException {
-		
-		IndexReader reader = DirectoryReader.open(writer);
-		searcher = new IndexSearcher(reader);
-	}
+  }
 
-	/**
-	 * 
-	 * @param clientKey
-	 * @return
-	 * @throws IOException
-	 * @throws ConfigurationException 
-	 */
-	public static synchronized SearchHolder getInstance(String clientKey) throws 
-		IOException, ConfigurationException { 
-		
-		String hash = clientKey;
-		
-		if(instances.containsKey(hash)) {
-			return instances.get(hash);
-		}
-		instances.put(hash,new SearchHolder());
-		return instances.get(hash);
-	}
-	
-	/**
-	 * 
-	 * @param indexType
-	 * @return
-	 * @throws IOException 
-	 * @throws IOException
-	 * @throws ConfigurationException 
-	 */
-	public static synchronized SearchHolder getInstance() throws IOException, ConfigurationException {
-		
-		return getInstance(LocalSettings.getClientKey());
-	}
+  /**
+   * Init searcher
+   */
+  public void init() throws ConfigurationException, IOException {
 
-	/**
-	 * @return the searcher
-	 */
-	public IndexSearcher getSearcher() {
-		return searcher;
-	}
+    ClientSettings client = ClientSettings.getInstance(LocalSettings.getClientKey());
+    FSDirectory directory = IndexDirectoryFactory.getDirectory(client.getIndexPath());
+    IndexReader reader = DirectoryReader.open(directory);
+    searcher = new IndexSearcher(reader);
+  }
 
+  /**
+   * Reinit searcher with new indexReader to load new index entries.
+   * Normally called after Index write
+   * We use DirectoryReader.open(IndexWriter) in this case
+   */
+  public void reInit(IndexWriter writer) throws ConfigurationException, IOException {
+
+    IndexReader reader = DirectoryReader.open(writer);
+    searcher = new IndexSearcher(reader);
+  }
+
+  public static synchronized SearchHolder getInstance(String clientKey) throws IOException, ConfigurationException {
+
+    String hash = clientKey;
+
+    if (instances.containsKey(hash)) {
+      return instances.get(hash);
+    }
+    instances.put(hash, new SearchHolder());
+    return instances.get(hash);
+  }
+
+  public static synchronized SearchHolder getInstance() throws IOException, ConfigurationException {
+
+    return getInstance(LocalSettings.getClientKey());
+  }
+
+  /**
+   * @return the searcher
+   */
+  public IndexSearcher getSearcher() {
+    return searcher;
+  }
 
 }

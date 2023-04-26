@@ -22,33 +22,31 @@
 
 package de.ilias.services.lucene.index.transform;
 
-import java.util.regex.Pattern;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.regex.Pattern;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class LinefeedSanitizer implements ContentTransformer {
 
   private Logger logger = LogManager.getLogger(LinefeedSanitizer.class);
-	
-	/**
-	 * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.lang.String)
-	 */
-	public String transform(String content) {
 
-		content = Pattern.compile("\\r\\n",Pattern.DOTALL).matcher(content).replaceAll(" ");
-		content = Pattern.compile("\\r",Pattern.DOTALL).matcher(content).replaceAll(" ");
-		content = Pattern.compile("\\n",Pattern.DOTALL).matcher(content).replaceAll(" ");
-		
-		logger.debug("Content is: " + content);
-		
-		return content;
-	}
+  /**
+   * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.lang.String)
+   */
+  public String transform(String content) {
+
+    content = Pattern.compile("\\r\\n", Pattern.DOTALL).matcher(content).replaceAll(" ");
+    content = Pattern.compile("\\r", Pattern.DOTALL).matcher(content).replaceAll(" ");
+    content = Pattern.compile("\\n", Pattern.DOTALL).matcher(content).replaceAll(" ");
+
+    logger.debug("Content is: " + content);
+
+    return content;
+  }
 
 }

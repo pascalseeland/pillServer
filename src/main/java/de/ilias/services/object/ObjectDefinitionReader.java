@@ -22,150 +22,125 @@
 
 package de.ilias.services.object;
 
+import de.ilias.services.settings.ConfigurationException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.util.HashMap;
 import java.util.Vector;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import de.ilias.services.settings.ConfigurationException;
-
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class ObjectDefinitionReader {
 
-	
-	private static Logger logger = LogManager.getLogger(ObjectDefinitionReader.class);
-	private static HashMap<File, ObjectDefinitionReader> instances = new HashMap<File, ObjectDefinitionReader>();
-	
-	public static final String objectPropertyName = "LuceneObjectDefinition.xml";
-	public static final String pluginPath = "Customizing/global/plugins";
+  private static Logger logger = LogManager.getLogger(ObjectDefinitionReader.class);
+  private static HashMap<File, ObjectDefinitionReader> instances = new HashMap<File, ObjectDefinitionReader>();
 
+  public static final String objectPropertyName = "LuceneObjectDefinition.xml";
+  public static final String pluginPath = "Customizing/global/plugins";
 
-	private Vector<File> objectPropertyFiles = new Vector<File>();
-	
+  private Vector<File> objectPropertyFiles = new Vector<File>();
 
-	File absolutePath;
-	
-	/**
-	 * Singleton constructor 
-	 * @throws ConfigurationException 
-	 */
-	private ObjectDefinitionReader(File absolutePath) throws ConfigurationException {
-		this.absolutePath = absolutePath;
-		read();
-	}
-	
-	/**
-	 * 
-	 * @param absolutePath
-	 * @return
-	 * @throws ConfigurationException 
-	 */
-	public static ObjectDefinitionReader getInstance(File absolutePath) throws ConfigurationException {
-		
-		if(instances.containsKey(absolutePath)) {
-			logger.debug("Using cached properties.");
-			return instances.get(absolutePath);
-		}
-		instances.put(absolutePath, new ObjectDefinitionReader(absolutePath));
-		return instances.get(absolutePath);
-	}
-	
-	/**
-	 * @return the absolutePath
-	 */
-	public File getAbsolutePath() {
-		return absolutePath;
-	}
+  File absolutePath;
 
+  private ObjectDefinitionReader(File absolutePath) throws ConfigurationException {
+    this.absolutePath = absolutePath;
+    read();
+  }
 
-	/**
-	 * @param absolutePath the absolutePath to set
-	 */
-	public void setAbsolutePath(File absolutePath) {
-		this.absolutePath = absolutePath;
-	}
-	
-	/**
-	 * @return the objectPropertyFiles
-	 */
-	public Vector<File> getObjectPropertyFiles() {
-		return objectPropertyFiles;
-	}
+  public static ObjectDefinitionReader getInstance(File absolutePath) throws ConfigurationException {
 
-	/**
-	 * 
-	 * @throws ConfigurationException
-	 */
-	private void read() throws ConfigurationException  {
-		
-		logger.debug("Start reading search index definitions...");
-		if(!absolutePath.isDirectory()) {
-			throw new ConfigurationException("Absolute path required. Path: " + absolutePath.getAbsolutePath());
-		}
-		
-		// Traverse through Modules
-		File start = new File(absolutePath.getAbsoluteFile() + System.getProperty("file.separator") + "Modules");
-		logger.debug("Start path is : " + start.getAbsoluteFile());
-		traverse(start);
+    if (instances.containsKey(absolutePath)) {
+      logger.debug("Using cached properties.");
+      return instances.get(absolutePath);
+    }
+    instances.put(absolutePath, new ObjectDefinitionReader(absolutePath));
+    return instances.get(absolutePath);
+  }
 
-		// Traverse through Modules
-		File services = new File(absolutePath.getAbsoluteFile() + System.getProperty("file.separator") + "Services");
-		logger.debug("Start path is : " + start.getAbsoluteFile());
-		traverse(services);
+  /**
+   * @return the absolutePath
+   */
+  public File getAbsolutePath() {
+    return absolutePath;
+  }
 
-		// Traverse through Plugins
-		File plugin = new File(absolutePath.getAbsoluteFile() + System.getProperty("file.separator") + ObjectDefinitionReader.pluginPath);
-		logger.debug("Start path is : " + plugin.getAbsoluteFile());
-		traverse(plugin);
-	}
-	
-	/**
-	 * 
-	 * @param dir
-	 */
-	private void traverse(File dir) {
-		
-		if(dir == null) {
-			return;
-		}
-		logger.debug("Start path is : " + dir.getAbsoluteFile());
+  /**
+   * @param absolutePath the absolutePath to set
+   */
+  public void setAbsolutePath(File absolutePath) {
+    this.absolutePath = absolutePath;
+  }
 
-		File[] entries = dir.listFiles(
-				new FileFilter()
-				{
-					public boolean accept(File path) {
-						
-						if(path.isDirectory()) {
-							if(!path.getName().equals(".git")) {
-								//logger.debug("Found new directory: " + path.getAbsolutePath());
-								return true;
-							}
-							return false;
-						}
-						//logger.debug(path.getName() + " <-> " + objectPropertyName);
-						if(path.getName().equalsIgnoreCase(objectPropertyName)) {
-							logger.info("Found: " + path.getAbsolutePath());
-							objectPropertyFiles.add(path);
-						}
-						return false;
-					}
-				});
+  /**
+   * @return the objectPropertyFiles
+   */
+  public Vector<File> getObjectPropertyFiles() {
+    return objectPropertyFiles;
+  }
 
-		if(entries == null) {
-			return;
-		}
-		for(int i = 0; i < entries.length; i++) {
-			// there are only directories
-			traverse(entries[i]);
-		}
-	}
+  private void read() throws ConfigurationException {
+
+    logger.debug("Start reading search index definitions...");
+    if (!absolutePath.isDirectory()) {
+      throw new ConfigurationException("Absolute path required. Path: " + absolutePath.getAbsolutePath());
+    }
+
+    // Traverse through Modules
+    File start = new File(absolutePath.getAbsoluteFile() + System.getProperty("file.separator") + "Modules");
+    logger.debug("Start path is : " + start.getAbsoluteFile());
+    traverse(start);
+
+    // Traverse through Modules
+    File services = new File(absolutePath.getAbsoluteFile() + System.getProperty("file.separator") + "Services");
+    logger.debug("Start path is : " + start.getAbsoluteFile());
+    traverse(services);
+
+    // Traverse through Plugins
+    File plugin = new File(
+        absolutePath.getAbsoluteFile() + System.getProperty("file.separator") + ObjectDefinitionReader.pluginPath);
+    logger.debug("Start path is : " + plugin.getAbsoluteFile());
+    traverse(plugin);
+  }
+
+  private void traverse(File dir) {
+
+    if (dir == null) {
+      return;
+    }
+    logger.debug("Start path is : " + dir.getAbsoluteFile());
+
+    File[] entries = dir.listFiles(new FileFilter() {
+      public boolean accept(File path) {
+
+        if (path.isDirectory()) {
+          if (!path.getName().equals(".git")) {
+            //logger.debug("Found new directory: " + path.getAbsolutePath());
+            return true;
+          }
+          return false;
+        }
+        //logger.debug(path.getName() + " <-> " + objectPropertyName);
+        if (path.getName().equalsIgnoreCase(objectPropertyName)) {
+          logger.info("Found: " + path.getAbsolutePath());
+          objectPropertyFiles.add(path);
+        }
+        return false;
+      }
+    });
+
+    if (entries == null) {
+      return;
+    }
+    for (File entry : entries) {
+      // there are only directories
+      traverse(entry);
+    }
+  }
 
 }

@@ -22,67 +22,57 @@
 
 package de.ilias.services.lucene.index.file;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class PDFBoxPDFHandler implements FileHandler {
 
   private Logger logger = LogManager.getLogger(PDFBoxPDFHandler.class);
-	
-	
-	/**
-	 * @throws IOException 
-	 * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
-	 */
-	public String getContent(InputStream is) throws FileHandlerException {
 
-		PDDocument pddo = null;
-		PDFTextStripper stripper = null;
-		String str = new String("");
-		
-		try {
+  /**
+   * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
+   */
+  public String getContent(InputStream is) throws FileHandlerException {
 
-			pddo = PDDocument.load(is);
+    PDDocument pddo = null;
+    PDFTextStripper stripper = null;
+    String str = new String("");
 
-			if(pddo.isEncrypted()) {
-				logger.warn("PDF Document is encrypted. Trying empty password...");
-				return "";
-			}
-			stripper = new PDFTextStripper();
-			str = stripper.getText(pddo);
-		}
-		catch (NumberFormatException e) {
-			logger.warn("Invalid PDF version number given. Aborting");
-		}
-		catch (IOException e) {
-			logger.warn(e.getMessage());
-			throw new FileHandlerException(e);
-		}
-		catch (Exception e) {
-			logger.error(e.getMessage());
-			throw new FileHandlerException(e);			
-		}
-		finally {
-			try {
-				if(pddo != null)
-					pddo.close();
-			}
-			catch (IOException e) {
-				;
-			}
-		}
-		return str;
-	}
+    try {
+
+      pddo = PDDocument.load(is);
+
+      if (pddo.isEncrypted()) {
+        logger.warn("PDF Document is encrypted. Trying empty password...");
+        return "";
+      }
+      stripper = new PDFTextStripper();
+      str = stripper.getText(pddo);
+    } catch (NumberFormatException e) {
+      logger.warn("Invalid PDF version number given. Aborting");
+    } catch (IOException e) {
+      logger.warn(e.getMessage());
+      throw new FileHandlerException(e);
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+      throw new FileHandlerException(e);
+    } finally {
+      try {
+        if (pddo != null) {
+          pddo.close();
+        }
+      } catch (IOException e) {
+      }
+    }
+    return str;
+  }
 
 }

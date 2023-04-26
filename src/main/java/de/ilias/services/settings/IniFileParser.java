@@ -22,6 +22,11 @@
 
 package de.ilias.services.settings;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.ini4j.Ini;
+import org.ini4j.IniPreferences;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,207 +36,165 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.prefs.Preferences;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.ini4j.Ini;
-import org.ini4j.IniPreferences;
-
 /**
  * Parser for ini files.
  * Stores ini values in ServerSettings and ClientSettings
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class IniFileParser {
 
-	private static Logger logger = LogManager.getLogger(IniFileParser.class);
-	
-	/**
-	 * 
-	 */
-	public IniFileParser() {
+  private static Logger logger = LogManager.getLogger(IniFileParser.class);
 
-	}
+  public void parseServerSettings(String path, boolean parseClientSettings) throws ConfigurationException {
 
-	/**
-	 * 
-	 * @param path
-	 * @throws ConfigurationException
-	 */
-	public void parseServerSettings(String path, boolean parseClientSettings) throws ConfigurationException {
-		
-		Ini prefs;
-		ServerSettings serverSettings = ServerSettings.getInstance();
-		ClientSettings clientSettings;
-		try {
+    Ini prefs;
+    ServerSettings serverSettings = ServerSettings.getInstance();
+    ClientSettings clientSettings;
+    try {
 
-			prefs = new Ini(new FileReader(path));
-			for(Ini.Section section : prefs.values()) {
-				
-				if(section.getName().equals("Server")) {
-					if(section.containsKey("IpAddress"))
-						serverSettings.setHost(purgeString(section.get("IpAddress")));
-					if(section.containsKey("Port"))
-						serverSettings.setPort(purgeString(section.get("Port")));
-					if(section.containsKey("IndexPath"))
-						serverSettings.setIndexPath(purgeString(section.get("IndexPath")));
-					if(section.containsKey("NumThreads"))
-						serverSettings.setThreadNumber(purgeString(section.get("NumThreads")));
-					if(section.containsKey("RAMBufferSize"))
-						serverSettings.setRAMSize(purgeString(section.get("RAMBufferSize")));
-					if(section.containsKey("IndexMaxFileSizeMB"))
-						serverSettings.setMaxFileSizeMB(purgeString(section.get("IndexMaxFileSizeMB")));
-					if(section.containsKey("IgnoreDocAndXlsFiles")) {
-					  serverSettings.setIgnoreDocAndXlsFiles(Boolean.parseBoolean(section.get("IgnoreDocAndXlsFiles")));
-					}
-				}
-				if(section.getName().startsWith("Client") && parseClientSettings) {
-					if(section.containsKey("ClientId")) {
-						String client = purgeString(section.get("ClientId"));
-						String nic;
-						if(section.containsKey("NicId")) 
-							nic = purgeString(section.get("NicId"));
-						else
-							nic = "0"; 
-						clientSettings = ClientSettings.getInstance(client, nic);
-						if(section.containsKey("IliasIniPath")) {
-							clientSettings.setIliasIniFile(purgeString(section.get("IliasIniPath")));
-							
-							// Now parse the ilias.ini file
-							parseClientData(clientSettings);
-						}
-					}
-					else {
-						logger.error("No ClientId given for section: " + section.getName());
-						throw new ConfigurationException("No ClientId given for section: " + section.getName());
-					}
-				}
-			}
+      prefs = new Ini(new FileReader(path));
+      for (Ini.Section section : prefs.values()) {
 
-		} 
-		catch (ConfigurationException e) {
-			logger.error("Cannot parse server settings: " + e.getMessage());
-			throw new ConfigurationException(e);
-		} 
-		catch (IOException e) {
-			logger.error("Cannot parse server settings: " + e.getMessage());
-			throw new ConfigurationException(e);
-		}
-	}
-	
-	/**
-	 * @param clientSettings
-	 * @throws ConfigurationException 
-	 */
-	public void parseClientData(ClientSettings clientSettings) throws ConfigurationException {
+        if (section.getName().equals("Server")) {
+          if (section.containsKey("IpAddress")) {
+            serverSettings.setHost(purgeString(section.get("IpAddress")));
+          }
+          if (section.containsKey("Port")) {
+            serverSettings.setPort(purgeString(section.get("Port")));
+          }
+          if (section.containsKey("IndexPath")) {
+            serverSettings.setIndexPath(purgeString(section.get("IndexPath")));
+          }
+          if (section.containsKey("NumThreads")) {
+            serverSettings.setThreadNumber(purgeString(section.get("NumThreads")));
+          }
+          if (section.containsKey("RAMBufferSize")) {
+            serverSettings.setRAMSize(purgeString(section.get("RAMBufferSize")));
+          }
+          if (section.containsKey("IndexMaxFileSizeMB")) {
+            serverSettings.setMaxFileSizeMB(purgeString(section.get("IndexMaxFileSizeMB")));
+          }
+          if (section.containsKey("IgnoreDocAndXlsFiles")) {
+            serverSettings.setIgnoreDocAndXlsFiles(Boolean.parseBoolean(section.get("IgnoreDocAndXlsFiles")));
+          }
+        }
+        if (section.getName().startsWith("Client") && parseClientSettings) {
+          if (section.containsKey("ClientId")) {
+            String client = purgeString(section.get("ClientId"));
+            String nic;
+            if (section.containsKey("NicId")) {
+              nic = purgeString(section.get("NicId"));
+            } else {
+              nic = "0";
+            }
+            clientSettings = ClientSettings.getInstance(client, nic);
+            if (section.containsKey("IliasIniPath")) {
+              clientSettings.setIliasIniFile(purgeString(section.get("IliasIniPath")));
 
-		Preferences prefs;
-		try {
-			// parse ilias.ini.php
-			prefs = new IniPreferences(convertIniFile(clientSettings.getIliasIniFile()));
-			clientSettings.setDataDirectory(purgeString(prefs.node("clients").get("datadir",""),true));
-			clientSettings.setAbsolutePath(purgeString(prefs.node("server").get("absolute_path",""),true));
-			
-			String dataName = purgeString(prefs.node("clients").get("path", ""),true);
-			String iniFileName = purgeString(prefs.node("clients").get("inifile",""),true);
-			
-			clientSettings.setClientIniFile(clientSettings.getAbsolutePath().getCanonicalPath() + 
-					System.getProperty("file.separator") +
-					dataName + System.getProperty("file.separator") +
-					clientSettings.getClient() + System.getProperty("file.separator") +
-					iniFileName);
-			clientSettings.setIndexPath(ServerSettings.getInstance().getIndexPath() +
-					System.getProperty("file.separator") +
-					clientSettings.getClientKey());
-			// now parse client.ini.php
-			prefs = new IniPreferences(convertIniFile(clientSettings.getClientIniFile()));
-			
-			clientSettings.setDbType(purgeString(prefs.node("db").get("type",""),true));
-			clientSettings.setDbHost(purgeString(prefs.node("db").get("host",""),true));
-			clientSettings.setDbPort(purgeString(prefs.node("db").get("port",""),true));
-			clientSettings.setDbUser(purgeString(prefs.node("db").get("user",""),true));
-			clientSettings.setDbPass(purgeString(prefs.node("db").get("pass",""),true));
-			clientSettings.setDbName(purgeString(prefs.node("db").get("name",""),true));
-			
-			logger.debug("Client ID: " + clientSettings.getClient());
-			logger.debug("DB Type: " + clientSettings.getDbType());
-			logger.debug("DB Host: " +clientSettings.getDbHost());
-			logger.debug("DB Port: " + clientSettings.getDbPort());
-			logger.debug("DB Name: " +clientSettings.getDbName());
-			logger.debug("DB User: " +clientSettings.getDbUser());
-			logger.debug("DB Pass: " +clientSettings.getDbPass());
-			
-		} 
-		catch (IOException e) {
-			logger.error("Caught IOException when trying to parse client data: " + e.getMessage());
-			throw new ConfigurationException(e);
-		} 
-		catch (ConfigurationException e) {
-			logger.error("Caught ConfigurationException when trying to parse client data.");
-			throw e;
-		}
-		
-	}
+              // Now parse the ilias.ini file
+              parseClientData(clientSettings);
+            }
+          } else {
+            logger.error("No ClientId given for section: " + section.getName());
+            throw new ConfigurationException("No ClientId given for section: " + section.getName());
+          }
+        }
+      }
 
-	/**
-	 * 
-	 * @param dirty
-	 * @param replaceQuotes
-	 * @return
-	 */
-	public String purgeString(String dirty,boolean replaceQuotes) {
-		
-		if(replaceQuotes) {
-			return dirty.replace('"',' ').trim();
-		}
-		else {
-			return dirty.trim();
-		}
-	}
-	
-	/**
-	 * 
-	 * @param dirty
-	 * @return
-	 */
-	public String purgeString(String dirty) {
-		
-		return purgeString(dirty,false);
-	}
-	
-	/**
-	 * 
-	 * @return
-	 * @throws ConfigurationException 
-	 */
-	private StringReader convertIniFile(File iniFile) throws ConfigurationException {
-		
-		try {
-			String output;
-			InputStreamReader reader = new InputStreamReader(new FileInputStream(iniFile));
-			
-			int c;
-			StringBuilder builder = new StringBuilder();
-			
-			while((c = reader.read())!=-1){
-				builder.append((char)c);
-		    }
-			reader.close();
-			output = builder.toString();
-			output = output.replaceFirst("<\\?php /\\*","");
-			output = output.replaceFirst("\\*/ \\?>","");
-			return new StringReader(output);
-		} 
-		catch (FileNotFoundException e) {
-			logger.fatal("Cannot find ini file: " + e.getMessage());
-			throw new ConfigurationException(e);
-		} 
-		catch (IOException e) {
-			logger.error("Caught IOException when trying to convert ini file: " + e.getMessage());
-			throw new ConfigurationException(e);
-		}
-	}
-	
-	
+    } catch (ConfigurationException e) {
+      logger.error("Cannot parse server settings: " + e.getMessage());
+      throw new ConfigurationException(e);
+    } catch (IOException e) {
+      logger.error("Cannot parse server settings: " + e.getMessage());
+      throw new ConfigurationException(e);
+    }
+  }
+
+  public void parseClientData(ClientSettings clientSettings) throws ConfigurationException {
+
+    Preferences prefs;
+    try {
+      // parse ilias.ini.php
+      prefs = new IniPreferences(convertIniFile(clientSettings.getIliasIniFile()));
+      clientSettings.setDataDirectory(purgeString(prefs.node("clients").get("datadir", ""), true));
+      clientSettings.setAbsolutePath(purgeString(prefs.node("server").get("absolute_path", ""), true));
+
+      String dataName = purgeString(prefs.node("clients").get("path", ""), true);
+      String iniFileName = purgeString(prefs.node("clients").get("inifile", ""), true);
+
+      clientSettings.setClientIniFile(
+          clientSettings.getAbsolutePath().getCanonicalPath() + System.getProperty("file.separator") + dataName
+              + System.getProperty("file.separator") + clientSettings.getClient() + System.getProperty("file.separator")
+              + iniFileName);
+      clientSettings.setIndexPath(ServerSettings.getInstance().getIndexPath() + System.getProperty("file.separator")
+          + clientSettings.getClientKey());
+      // now parse client.ini.php
+      prefs = new IniPreferences(convertIniFile(clientSettings.getClientIniFile()));
+
+      clientSettings.setDbType(purgeString(prefs.node("db").get("type", ""), true));
+      clientSettings.setDbHost(purgeString(prefs.node("db").get("host", ""), true));
+      clientSettings.setDbPort(purgeString(prefs.node("db").get("port", ""), true));
+      clientSettings.setDbUser(purgeString(prefs.node("db").get("user", ""), true));
+      clientSettings.setDbPass(purgeString(prefs.node("db").get("pass", ""), true));
+      clientSettings.setDbName(purgeString(prefs.node("db").get("name", ""), true));
+
+      logger.debug("Client ID: " + clientSettings.getClient());
+      logger.debug("DB Type: " + clientSettings.getDbType());
+      logger.debug("DB Host: " + clientSettings.getDbHost());
+      logger.debug("DB Port: " + clientSettings.getDbPort());
+      logger.debug("DB Name: " + clientSettings.getDbName());
+      logger.debug("DB User: " + clientSettings.getDbUser());
+      logger.debug("DB Pass: " + clientSettings.getDbPass());
+
+    } catch (IOException e) {
+      logger.error("Caught IOException when trying to parse client data: " + e.getMessage());
+      throw new ConfigurationException(e);
+    } catch (ConfigurationException e) {
+      logger.error("Caught ConfigurationException when trying to parse client data.");
+      throw e;
+    }
+
+  }
+
+  public String purgeString(String dirty, boolean replaceQuotes) {
+
+    if (replaceQuotes) {
+      return dirty.replace('"', ' ').trim();
+    } else {
+      return dirty.trim();
+    }
+  }
+
+  public String purgeString(String dirty) {
+
+    return purgeString(dirty, false);
+  }
+
+  private StringReader convertIniFile(File iniFile) throws ConfigurationException {
+
+    try {
+      String output;
+      InputStreamReader reader = new InputStreamReader(new FileInputStream(iniFile));
+
+      int c;
+      StringBuilder builder = new StringBuilder();
+
+      while ((c = reader.read()) != -1) {
+        builder.append((char) c);
+      }
+      reader.close();
+      output = builder.toString();
+      output = output.replaceFirst("<\\?php /\\*", "");
+      output = output.replaceFirst("\\*/ \\?>", "");
+      return new StringReader(output);
+    } catch (FileNotFoundException e) {
+      logger.fatal("Cannot find ini file: " + e.getMessage());
+      throw new ConfigurationException(e);
+    } catch (IOException e) {
+      logger.error("Caught IOException when trying to convert ini file: " + e.getMessage());
+      throw new ConfigurationException(e);
+    }
+  }
+
 }

@@ -27,37 +27,23 @@ package de.ilias.services.settings;
  * E.g the clientKey
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
-public class LocalSettings {
+public final class LocalSettings {
 
+  private static ThreadLocal<String> clientKey = new ThreadLocal<String>() {
+    public String initialValue() {
+      return "";
+    }
+  };
 
-	private static ThreadLocal<String> clientKey = new ThreadLocal<String>() {
-		public String initialValue() {
-			return "";
-		}
-	};
-	
+  private LocalSettings() {
+  }
 
-	/**
-	 * 
-	 */
-	public LocalSettings() {
-	}
+  public static void setClientKey(String ck) {
+    clientKey.set(ck);
+  }
 
-	/**
-	 * 
-	 * @param ck
-	 */
-	public static void setClientKey(String ck) {
-		clientKey.set(ck);
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public static String getClientKey() {
-		return (String) clientKey.get();
-	}
+  public static String getClientKey() {
+    return (String) clientKey.get();
+  }
 }

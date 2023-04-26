@@ -22,9 +22,10 @@
 
 package de.ilias.services.lucene.index;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
+import de.ilias.services.settings.ClientSettings;
+import de.ilias.services.settings.ConfigurationException;
+import de.ilias.services.settings.LocalSettings;
+import de.ilias.services.settings.ServerSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,10 +36,9 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 
-import de.ilias.services.settings.ClientSettings;
-import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
-import de.ilias.services.settings.ServerSettings;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Capsulates the interaction between IndexReader and IndexWriter
@@ -49,171 +49,135 @@ import de.ilias.services.settings.ServerSettings;
  * @version $Id$
  */
 public class IndexHolder implements AutoCloseable {
-	
-	private static Logger logger = LogManager.getLogger(IndexHolder.class);
-	
-	private static final int MAX_NUM_SEGMENTS = 100;
-	
-	private static HashMap<String, IndexHolder> instances = new HashMap<String, IndexHolder>();
-	private ClientSettings settings;
-	private IndexWriter writer;
-	
-	
 
-	/**
-	 * @param indexPath
-	 * @param indexType
-	 * @throws IOException 
-	 */
-	private IndexHolder(String clientKey) throws IOException {
+  private static Logger logger = LogManager.getLogger(IndexHolder.class);
 
-		try {
-			settings = ClientSettings.getInstance(clientKey);
-		}
-		catch (ConfigurationException e) {
-			throw new IOException("Caught configuration exception: " + e.getMessage());
-		}
+  private static final int MAX_NUM_SEGMENTS = 100;
 
-	}
+  private static HashMap<String, IndexHolder> instances = new HashMap<String, IndexHolder>();
+  private ClientSettings settings;
+  private IndexWriter writer;
 
-	/**
-	 * 
-	 * @param clientKey
-	 * @return
-	 * @throws IOException
-	 */
-	public static synchronized IndexHolder getInstance(String clientKey) throws 
-		IOException { 
-		
-		String hash = clientKey;
-		
-		if(instances.containsKey(hash)) {
-			return instances.get(hash);
-		}
-		instances.put(hash,new IndexHolder(clientKey));
-		return instances.get(hash);
-	}
-	
-	/**
-	 * 
-	 * @param indexType
-	 * @return
-	 * @throws IOException
-	 */
-	public static synchronized IndexHolder getInstance() throws IOException  {
-		
-		return getInstance(LocalSettings.getClientKey());
-	}
-	
-	public static void deleteIndex() throws ConfigurationException
-	{
-		File indexPath = ClientSettings.getInstance(LocalSettings.getClientKey()).getIndexPath();
+  private IndexHolder(String clientKey) throws IOException {
 
-		deleteTree(indexPath);
-		logger.info("Deleted index directory: " + indexPath.getAbsoluteFile());
-	}
-	
-	/**
-	 * Delete directory recursive
-	 * @param path
-	 * @return
-	 */
-	private static boolean deleteTree(File path) {
-		
-		if(!path.exists() || !path.isDirectory())
-		{
-			return false;
-		}
-		for(File del : path.listFiles()) {
-			
-			if(del.isDirectory()) {
-				deleteTree(del);
-			}
-			else {
-				del.delete();
-			}
-		}
-		path.delete();
-		return true;
-	}
+    try {
+      settings = ClientSettings.getInstance(clientKey);
+    } catch (ConfigurationException e) {
+      throw new IOException("Caught configuration exception: " + e.getMessage());
+    }
 
-	/**
-	 * Close all writers
-	 */
-	public static synchronized void closeAllWriters() {
-		
-		logger.info("Closing document writers...");
-		
-		for(Object key : instances.keySet()) {
-			try {
-				logger.info("Closing writer: " + (String) key);
-				IndexHolder holder = instances.get((String) key);
-				IndexDirectoryFactory.getDirectory(ClientSettings.getInstance((String) key).getIndexPath()).close();
-				holder.close();
-			}
-			catch (ConfigurationException | IOException ex)
-			{
-				logger.error("Cannot close fs directory: " + ex.getMessage());
-			}
+  }
 
-		}
-		
-		logger.info("Index writers closed.");
-	}
-	
-	/**
-	 * @todo obtain lock for index writer
-	 * @throws IOException
-	 */
-	public void init() throws IOException, ConfigurationException {
-		
-		try {
-			logger.debug("Adding new separated index for " + LocalSettings.getClientKey());
-			
-			IndexWriterConfig writerConfig = new IndexWriterConfig(
-				new StandardAnalyzer()
-			);
-			writerConfig.
-				setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND).
-				setRAMBufferSizeMB(ServerSettings.getInstance().getRAMSize());
-			writer = new IndexWriter(
-				IndexDirectoryFactory.getDirectory(settings.getIndexPath()),
-				writerConfig
-			);
-		}
-		catch(IOException | ConfigurationException e) {
-			throw e;
-		}
-		
-	}
-	
-	public void addDocument(Document document) throws IOException {
-	  writer.addDocument(document);
-	}
+  public static synchronized IndexHolder getInstance(String clientKey) throws IOException {
 
-	public void deleteDocument(String documentId) throws IOException {
-	  writer.deleteDocuments(new Term("objId",documentId));
-	}
+    String hash = clientKey;
 
-	public void commitAndForceMerge() throws IOException {
-	  writer.commit();
-	  writer.forceMerge(IndexHolder.MAX_NUM_SEGMENTS);
-	}
+    if (instances.containsKey(hash)) {
+      return instances.get(hash);
+    }
+    instances.put(hash, new IndexHolder(clientKey));
+    return instances.get(hash);
+  }
 
-	/**
-	 * Close writer 
-	 */
-	public void close() {
-		
-		try {
-			writer.close();
-			IndexDirectoryFactory.getDirectory(settings.getIndexPath()).close();
+  public static synchronized IndexHolder getInstance() throws IOException {
 
-		} catch (CorruptIndexException e) {
-			logger.fatal("Index corrupted." + e);
-		} catch (IOException e) {
-			logger.fatal("Error closing writer." + e);
-		}
-	}
+    return getInstance(LocalSettings.getClientKey());
+  }
+
+  public static void deleteIndex() throws ConfigurationException {
+    File indexPath = ClientSettings.getInstance(LocalSettings.getClientKey()).getIndexPath();
+
+    deleteTree(indexPath);
+    logger.info("Deleted index directory: " + indexPath.getAbsoluteFile());
+  }
+
+  /**
+   * Delete directory recursive
+   */
+  private static boolean deleteTree(File path) {
+
+    if (!path.exists() || !path.isDirectory()) {
+      return false;
+    }
+    for (File del : path.listFiles()) {
+
+      if (del.isDirectory()) {
+        deleteTree(del);
+      } else {
+        del.delete();
+      }
+    }
+    path.delete();
+    return true;
+  }
+
+  /**
+   * Close all writers
+   */
+  public static synchronized void closeAllWriters() {
+
+    logger.info("Closing document writers...");
+
+    for (Object key : instances.keySet()) {
+      try {
+        logger.info("Closing writer: " + (String) key);
+        IndexHolder holder = instances.get((String) key);
+        IndexDirectoryFactory.getDirectory(ClientSettings.getInstance((String) key).getIndexPath()).close();
+        holder.close();
+      } catch (ConfigurationException | IOException ex) {
+        logger.error("Cannot close fs directory: " + ex.getMessage());
+      }
+
+    }
+
+    logger.info("Index writers closed.");
+  }
+
+  /**
+   * TODO obtain lock for index writer
+   */
+  public void init() throws IOException, ConfigurationException {
+
+    try {
+      logger.debug("Adding new separated index for " + LocalSettings.getClientKey());
+
+      IndexWriterConfig writerConfig = new IndexWriterConfig(new StandardAnalyzer());
+      writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
+          .setRAMBufferSizeMB(ServerSettings.getInstance().getRAMSize());
+      writer = new IndexWriter(IndexDirectoryFactory.getDirectory(settings.getIndexPath()), writerConfig);
+    } catch (IOException | ConfigurationException e) {
+      throw e;
+    }
+
+  }
+
+  public void addDocument(Document document) throws IOException {
+    writer.addDocument(document);
+  }
+
+  public void deleteDocument(String documentId) throws IOException {
+    writer.deleteDocuments(new Term("objId", documentId));
+  }
+
+  public void commitAndForceMerge() throws IOException {
+    writer.commit();
+    writer.forceMerge(IndexHolder.MAX_NUM_SEGMENTS);
+  }
+
+  /**
+   * Close writer
+   */
+  public void close() {
+
+    try {
+      writer.close();
+      IndexDirectoryFactory.getDirectory(settings.getIndexPath()).close();
+
+    } catch (CorruptIndexException e) {
+      logger.fatal("Index corrupted." + e);
+    } catch (IOException e) {
+      logger.fatal("Error closing writer." + e);
+    }
+  }
 
 }

@@ -22,6 +22,13 @@
 
 package de.ilias.services.lucene.index.file;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+import org.jdom.xpath.XPath;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,99 +38,83 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
-import org.jdom.xpath.XPath;
-
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public abstract class ZipBasedOfficeHandler {
 
   private static Logger logger = LogManager.getLogger(ZipBasedOfficeHandler.class);
-	protected static final int BUFFER = 2048;
-	
-	/**
-	 * get name of content file 
-	 * E.g content.xml for .odt files
-	 * @return
-	 */
-	abstract protected String getContentFileName();
-	abstract protected String getXPath();
-	
-	protected InputStream extractContentStream(InputStream is) throws FileHandlerException	{
-	
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		try {
-			ZipInputStream zip = new ZipInputStream(is);
-			ZipEntry entry;
-			
-			while((entry = zip.getNextEntry()) != null) {
-				
-				if(entry.getName().equalsIgnoreCase(getContentFileName())) {
-					int count;
-					byte data[] = new byte[BUFFER];
-					while((count = zip.read(data,0,BUFFER)) != -1) {
-						bout.write(data, 0, count);
-					}
-					break;
-				}
-			}
-			is.close();
-			return new ByteArrayInputStream(bout.toByteArray());
-		} 
-		catch(ZipException e) {
-			logger.info("Cannot extract " + getContentFileName() + " " + e.getMessage());
-			throw new FileHandlerException(e);
-		}
-		catch (IOException e) {
-			logger.info("Cannot extract " + getContentFileName() + " " + e.getMessage());
-			throw new FileHandlerException(e);
-		}
-		finally {
-			try {
-				bout.close();
-			} 
-			catch (IOException e) {
-				// Yepp
-			}
-		}
-	}
-	
-	public String extractContent(InputStream is) {
-		
-		SAXBuilder builder = new SAXBuilder();
-		StringBuilder content = new StringBuilder();
-		
-		try {
-			org.jdom.Document doc = builder.build(is);
-			XPath xpath = XPath.newInstance(getXPath());
-			List res = xpath.selectNodes(doc);
-			
-			for(Object element : res) {
-				Element el = (Element) element;
-				content.append(" ");
-				content.append(el.getTextTrim());
-			}
-			return content.toString();
+  protected static final int BUFFER = 2048;
 
-		}
-		catch (NullPointerException e) {
-			logger.warn("Caught NullPointerException: " + e);
-		}
-		catch (JDOMException e) {
-			logger.info("Cannot parse OO content: " + e);
-		} 
-		catch (IOException e) {
-			logger.info("Cannot parse OO content: " + e);
-		}
-		return "";
-	}
-	
+  /**
+   * get name of content file
+   * E.g content.xml for .odt files
+   */
+  protected abstract String getContentFileName();
+
+  protected abstract String getXPath();
+
+  protected InputStream extractContentStream(InputStream is) throws FileHandlerException {
+
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    try {
+      ZipInputStream zip = new ZipInputStream(is);
+      ZipEntry entry;
+
+      while ((entry = zip.getNextEntry()) != null) {
+
+        if (entry.getName().equalsIgnoreCase(getContentFileName())) {
+          int count;
+          byte[] data = new byte[BUFFER];
+          while ((count = zip.read(data, 0, BUFFER)) != -1) {
+            bout.write(data, 0, count);
+          }
+          break;
+        }
+      }
+      is.close();
+      return new ByteArrayInputStream(bout.toByteArray());
+    } catch (ZipException e) {
+      logger.info("Cannot extract " + getContentFileName() + " " + e.getMessage());
+      throw new FileHandlerException(e);
+    } catch (IOException e) {
+      logger.info("Cannot extract " + getContentFileName() + " " + e.getMessage());
+      throw new FileHandlerException(e);
+    } finally {
+      try {
+        bout.close();
+      } catch (IOException e) {
+        // Yepp
+      }
+    }
+  }
+
+  public String extractContent(InputStream is) {
+
+    SAXBuilder builder = new SAXBuilder();
+    StringBuilder content = new StringBuilder();
+
+    try {
+      org.jdom.Document doc = builder.build(is);
+      XPath xpath = XPath.newInstance(getXPath());
+      List res = xpath.selectNodes(doc);
+
+      for (Object element : res) {
+        Element el = (Element) element;
+        content.append(" ");
+        content.append(el.getTextTrim());
+      }
+      return content.toString();
+
+    } catch (NullPointerException e) {
+      logger.warn("Caught NullPointerException: " + e);
+    } catch (JDOMException e) {
+      logger.info("Cannot parse OO content: " + e);
+    } catch (IOException e) {
+      logger.info("Cannot parse OO content: " + e);
+    }
+    return "";
+  }
+
 }

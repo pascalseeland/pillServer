@@ -22,42 +22,38 @@
 
 package de.ilias.services.transformation;
 
-
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class RPCTransformationHandler {
 
   private static Logger logger = LogManager.getLogger(RPCTransformationHandler.class);
-	
-    public RPCTransformationHandler() {
-        
 
-    }
-    
-    public boolean ping() {
-        
-        return true;
-    }
-    
-    public byte[] ilFO2PDF(String foString) { 
-        
-	FO2PDF fo = null;
+  public RPCTransformationHandler() {
 
-    	try {
-		
-		fo = new FO2PDF();
-		fo.clearCache();
-		fo.setFoString(foString);
-		fo.transform();
-		
-		return fo.getPdf();
-		} 
-		catch (TransformationException e) {
-			
-			logger.warn("Transformation failed:",e);
-		}
-        return null;
+  }
+
+  public boolean ping() {
+
+    return true;
+  }
+
+  public byte[] ilFO2PDF(String foString) {
+
+    FO2PDF fo = null;
+
+    try {
+
+      fo = new FO2PDF();
+      fo.clearCache();
+      fo.setFoString(foString);
+      fo.transform();
+
+      return fo.getPdf();
+    } catch (TransformationException e) {
+
+      logger.warn("Transformation failed:", e);
     }
+    return null;
+  }
 }

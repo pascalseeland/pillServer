@@ -27,108 +27,93 @@ import java.util.HashMap;
 import java.util.Vector;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class ObjectDefinitions {
 
-	private static HashMap<File, ObjectDefinitions> instances = new HashMap<File, ObjectDefinitions>();
-	
-	private File absolutePath;
-	private Vector<ObjectDefinition> definitions = new Vector<ObjectDefinition>();
-	
-	/**
-	 * Singleton
-	 * 
-	 */
-	public ObjectDefinitions(File absolutePath) {
-		
-		this.setAbsolutePath(absolutePath);
-	}
+  private static HashMap<File, ObjectDefinitions> instances = new HashMap<>();
 
-	/**
-	 * 
-	 * @param absolutePath
-	 * @return
-	 */
-	public static synchronized ObjectDefinitions getInstance(File absolutePath) {
-		
-		if(instances.containsKey(absolutePath)) {
-			return instances.get(absolutePath);
-		}
-		instances.put(absolutePath, new ObjectDefinitions(absolutePath));
-		return instances.get(absolutePath);
-	}
-	
-	/**
-	 * reset object definitons
-	 */
-	public void reset() {
-		
-		this.definitions = new Vector<ObjectDefinition>(); 
-	}
-	
-	/**
-	 * @param absolutePath the absolutePath to set
-	 */
-	public void setAbsolutePath(File absolutePath) {
-		this.absolutePath = absolutePath;
-	}
+  private File absolutePath;
+  private Vector<ObjectDefinition> definitions = new Vector<ObjectDefinition>();
 
-	/**
-	 * @return the absolutePath
-	 */
-	public File getAbsolutePath() {
-		return absolutePath;
-	}
+  /**
+   * Singleton
+   */
+  public ObjectDefinitions(File absolutePath) {
 
-	/**
-	 * @return the definitions
-	 */
-	public Vector<ObjectDefinition> getDefinitions() {
-		return definitions;
-	}
-	
-	/**
-	 * 
-	 * @param def
-	 */
-	public void addDefinition(ObjectDefinition def) {
-		definitions.add(def);
-	}
-	
-	/**
-	 * Get object definition by object type 
-	 * @param objType
-	 * @return
-	 * @throws ObjectDefinitionException
-	 */
-	public ObjectDefinition getDefinitionByType(String objType) throws ObjectDefinitionException {
-		
-		for(int i = 0; i < definitions.size(); i++) {
-			if(definitions.get(i).getType().equals(objType)) {
-				return definitions.get(i);
-			}
-		}
-		throw new ObjectDefinitionException("Invalid type given. Cannot find obj type " + objType);
-	}
+    this.setAbsolutePath(absolutePath);
+  }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
+  public static synchronized ObjectDefinitions getInstance(File absolutePath) {
 
-		StringBuffer out = new StringBuffer();
-		
-		for(Object defs : this.getDefinitions()) {
-			
-			out.append("Object definitions for: " + getAbsolutePath().getAbsolutePath());
-			out.append("\n");
-			out.append(defs);
-		}
-		return out.toString();
-	}
+    if (instances.containsKey(absolutePath)) {
+      return instances.get(absolutePath);
+    }
+    instances.put(absolutePath, new ObjectDefinitions(absolutePath));
+    return instances.get(absolutePath);
+  }
+
+  /**
+   * reset object definitons
+   */
+  public void reset() {
+
+    this.definitions = new Vector<ObjectDefinition>();
+  }
+
+  /**
+   * @param absolutePath the absolutePath to set
+   */
+  public void setAbsolutePath(File absolutePath) {
+    this.absolutePath = absolutePath;
+  }
+
+  /**
+   * @return the absolutePath
+   */
+  public File getAbsolutePath() {
+    return absolutePath;
+  }
+
+  /**
+   * @return the definitions
+   */
+  public Vector<ObjectDefinition> getDefinitions() {
+    return definitions;
+  }
+
+  public void addDefinition(ObjectDefinition def) {
+    definitions.add(def);
+  }
+
+  /**
+   * Get object definition by object type
+   */
+  public ObjectDefinition getDefinitionByType(String objType) throws ObjectDefinitionException {
+
+    for (ObjectDefinition definition : definitions) {
+      if (definition.getType().equals(objType)) {
+        return definition;
+      }
+    }
+    throw new ObjectDefinitionException("Invalid type given. Cannot find obj type " + objType);
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+
+    StringBuilder out = new StringBuilder();
+
+    for (Object defs : this.getDefinitions()) {
+
+      out.append("Object definitions for: " + getAbsolutePath().getAbsolutePath());
+      out.append("\n");
+      out.append(defs);
+    }
+    return out.toString();
+  }
 }

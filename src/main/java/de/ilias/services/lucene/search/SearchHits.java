@@ -22,92 +22,82 @@
 
 package de.ilias.services.lucene.search;
 
-import java.util.Vector;
-
 import org.jdom.Element;
 
+import java.util.Vector;
 
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class SearchHits implements ResultExport {
 
-	private int totalHits = 0;
-	private int limit = 0;
-	private double maxScore = 0.0;
-	private Vector<SearchObject> objects = new Vector<SearchObject>();
+  private int totalHits = 0;
+  private int limit = 0;
+  private double maxScore = 0.0;
+  private Vector<SearchObject> objects = new Vector<>();
 
-	/**
-	 *  
-	 */
-	public SearchHits() {
+  public void addObject(SearchObject object) {
 
-	}
-	
-	/**
-	 * 
-	 * @param object
-	 */
-	public void addObject(SearchObject object) {
-		
-		objects.add(object);
-	}
+    objects.add(object);
+  }
 
-	
-	/**
-	 * @return the totalHits
-	 */
-	public int getTotalHits() {
-		return totalHits;
-	}
-	/**
-	 * @param totalHits the totalHits to set
-	 */
-	public void setTotalHits(int totalHits) {
-		this.totalHits = totalHits;
-	}
-	/**
-	 * @return the limit
-	 */
-	public int getLimit() {
-		return limit;
-	}
-	/**
-	 * @param limit the limit to set
-	 */
-	public void setLimit(int limit) {
-		this.limit = limit;
-	}
+  /**
+   * @return the totalHits
+   */
+  public int getTotalHits() {
+    return totalHits;
+  }
 
-	/**
-	 * @see de.ilias.services.lucene.search.ResultExport#addXML()
-	 */
-	public Element addXML() {
-		
-		Element hits = new Element("Hits");
-		hits.setAttribute("totalHits", String.valueOf(getTotalHits()));
-		hits.setAttribute("maxScore", String.valueOf(getMaxScore()));
-		hits.setAttribute("limit", String.valueOf(getLimit()));
-		
-		for(Object obj : objects) {
-			hits.addContent(((ResultExport) obj).addXML());
-		}
-		return hits;
-	}
-	/**
-	 * @param maxScore the maxScore to set
-	 */
-	public void setMaxScore(double maxScore) {
-		this.maxScore = maxScore;
-	}
-	/**
-	 * @return the maxScore
-	 */
-	public double getMaxScore() {
-		return maxScore;
-	}
+  /**
+   * @param totalHits the totalHits to set
+   */
+  public void setTotalHits(int totalHits) {
+    this.totalHits = totalHits;
+  }
+
+  /**
+   * @return the limit
+   */
+  public int getLimit() {
+    return limit;
+  }
+
+  /**
+   * @param limit the limit to set
+   */
+  public void setLimit(int limit) {
+    this.limit = limit;
+  }
+
+  /**
+   * @see de.ilias.services.lucene.search.ResultExport#addXML()
+   */
+  public Element addXML() {
+
+    Element hits = new Element("Hits");
+    hits.setAttribute("totalHits", String.valueOf(getTotalHits()));
+    hits.setAttribute("maxScore", String.valueOf(getMaxScore()));
+    hits.setAttribute("limit", String.valueOf(getLimit()));
+
+    for (Object obj : objects) {
+      hits.addContent(((ResultExport) obj).addXML());
+    }
+    return hits;
+  }
+
+  /**
+   * @param maxScore the maxScore to set
+   */
+  public void setMaxScore(double maxScore) {
+    this.maxScore = maxScore;
+  }
+
+  /**
+   * @return the maxScore
+   */
+  public double getMaxScore() {
+    return maxScore;
+  }
 
 }

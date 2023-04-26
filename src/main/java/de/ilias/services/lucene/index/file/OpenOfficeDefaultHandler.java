@@ -22,62 +22,55 @@
 
 package de.ilias.services.lucene.index.file;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
- * 
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
-public class OpenOfficeDefaultHandler extends ZipBasedOfficeHandler  implements FileHandler {
+public class OpenOfficeDefaultHandler extends ZipBasedOfficeHandler implements FileHandler {
 
-  private static Logger logger = LogManager.getLogger(OpenOfficeDefaultHandler.class); 
+  private static Logger logger = LogManager.getLogger(OpenOfficeDefaultHandler.class);
 
-	/**
-	 * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
-	 */
-	public String getContent(InputStream is) throws FileHandlerException, IOException {
+  /**
+   * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
+   */
+  public String getContent(InputStream is) throws FileHandlerException, IOException {
 
-		InputStream contentStream = extractContentStream(is);
-		StringBuilder content = new StringBuilder();
-		content.append(extractContent(contentStream));
-		logger.debug(content.toString());
-		
-		if(contentStream != null) {
-			try {
-				contentStream.close();
-			}
-			catch(IOException e) {
-				// Nothing
-			}
-		}
-		
-		return content.toString();
-	}
+    InputStream contentStream = extractContentStream(is);
+    StringBuilder content = new StringBuilder();
+    content.append(extractContent(contentStream));
+    logger.debug(content.toString());
 
-	/**
-	 * @see de.ilias.services.lucene.index.file.ZipBasedOfficeHandler#getContentFileName()
-	 */
-	protected String getContentFileName() {
-		
-		return "content.xml";
-	}
+    if (contentStream != null) {
+      try {
+        contentStream.close();
+      } catch (IOException e) {
+        // Nothing
+      }
+    }
 
-	/**
-	 * @see de.ilias.services.lucene.index.file.ZipBasedOfficeHandler#getXPath()
-	 */
-	protected String getXPath() {
+    return content.toString();
+  }
 
-		return "//text:p";
-	}
-	
-	
-	
-	
+  /**
+   * @see de.ilias.services.lucene.index.file.ZipBasedOfficeHandler#getContentFileName()
+   */
+  protected String getContentFileName() {
+
+    return "content.xml";
+  }
+
+  /**
+   * @see de.ilias.services.lucene.index.file.ZipBasedOfficeHandler#getXPath()
+   */
+  protected String getXPath() {
+
+    return "//text:p";
+  }
 
 }
