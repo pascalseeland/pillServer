@@ -1,0 +1,17 @@
+<web-app>
+<servlet>
+  <servlet-name>RPCServlet</servlet-name>
+  <servlet-class>de.ilias.services.rpc.RPCServlet</servlet-class>
+  <init-param>
+    <param-name>enabledForExtensions</param-name>
+    <param-value>true</param-value>
+    <description>
+      Sets, whether the servlet supports vendor extensions for XML-RPC.
+    </description>
+  </init-param>
+</servlet>
+<servlet-mapping>
+<servlet-name>RPCServlet</servlet-name>
+<url-pattern>/xmlrpc</url-pattern>
+</servlet-mapping>
+</web-app>

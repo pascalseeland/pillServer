@@ -54,17 +54,11 @@ public class RPCAdministration {
    */
   public boolean stop() throws ConfigurationException {
 
-    RPCServer server;
-
     logger.info("Received stop request");
 
     // Closing all index writers
     IndexHolder.closeAllWriters();
 
-    // TODO: add more security.
-    // It shouldn't be possible for every client to stop the rpc server.
-    server = RPCServer.getInstance();
-    server.setAlive(false);
 
     // Set server status inactive
     ILServerStatus.setActive(false);
@@ -98,10 +92,5 @@ public class RPCAdministration {
     return ILServerStatus.getStatus();
   }
 
-  public boolean start() {
-
-    ILServerStatus.setActive(true);
-    return true;
-  }
 
 }

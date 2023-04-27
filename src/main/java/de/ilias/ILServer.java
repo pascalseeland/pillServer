@@ -22,8 +22,6 @@
 
 package de.ilias;
 
-import de.ilias.services.lucene.index.IndexHolder;
-import de.ilias.services.rpc.RPCServer;
 import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.IniFileParser;
@@ -85,13 +83,7 @@ public class ILServer {
       }
     }
     command = arguments[1];
-    if (command.compareTo("start") == 0) {
-      if (arguments.length != 2) {
-        logger.error("Usage: java -jar ilServer.jar PATH_TO_SERVER_INI start");
-        return false;
-      }
-      return startServer();
-    } else if (command.compareTo("stop") == 0) {
+    if (command.compareTo("stop") == 0) {
       if (arguments.length != 2) {
         logger.error("Usage: java -jar ilServer.jar PATH_TO_SERVER_INI stop");
         return false;
@@ -207,82 +199,6 @@ public class ILServer {
       logger.error(e);
       logger.fatal(e.getMessage());
       System.exit(1);
-    }
-    return false;
-  }
-
-  /**
-   * Start RPC services
-   */
-  private boolean startServer() {
-
-    ServerSettings settings;
-    RPCServer rpc;
-    XmlRpcClient client;
-    IniFileParser parser;
-
-    try {
-
-      parser = new IniFileParser();
-      parser.parseServerSettings(arguments[0], true);
-
-      client = initRpcClient();
-
-      // Check if server is already running
-      try {
-        client.execute("RPCAdministration.status", Collections.EMPTY_LIST);
-        logger.error("Server already started. Aborting");
-        System.exit(1);
-      } catch (XmlRpcException e) {
-        logger.info("No server running. Starting new instance...");
-      }
-
-      settings = ServerSettings.getInstance();
-      logger.info("New rpc server");
-      rpc = RPCServer.getInstance(settings.getHost(), settings.getPort());
-      logger.info("Server start");
-      rpc.start();
-
-      client = initRpcClient();
-      client.execute("RPCAdministration.start", Collections.EMPTY_LIST);
-      Thread shutdownListener = new Thread() {
-        public void run() {
-
-          logger.info("Received stop signal");
-
-          // Closing all index writers
-          IndexHolder.closeAllWriters();
-          rpc.shutdown();
-
-          // Set server status inactive
-          ILServerStatus.setActive(false);
-        }
-      };
-      Runtime.getRuntime().addShutdownHook(shutdownListener);
-      // Check if webserver is alive
-      // otherwise stop execution
-      while (true) {
-
-        Thread.sleep(3000);
-        if (!rpc.isAlive()) {
-          rpc.shutdown();
-          break;
-        }
-      }
-      logger.info("WebServer shutdown. Aborting...");
-      return true;
-
-    } catch (ConfigurationException e) {
-      //logger.error(e);
-      System.exit(1);
-      return false;
-    } catch (InterruptedException e) {
-      logger.error("VM did not allow to sleep. Aborting!");
-    } catch (XmlRpcException e) {
-      logger.error("Error starting server: " + e);
-      System.exit(1);
-    } catch (IOException e) {
-      logger.error("IOException " + e.getMessage());
     }
     return false;
   }

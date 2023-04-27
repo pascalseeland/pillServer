@@ -57,12 +57,6 @@ public class IniFileParser {
       for (Ini.Section section : prefs.values()) {
 
         if (section.getName().equals("Server")) {
-          if (section.containsKey("IpAddress")) {
-            serverSettings.setHost(purgeString(section.get("IpAddress")));
-          }
-          if (section.containsKey("Port")) {
-            serverSettings.setPort(purgeString(section.get("Port")));
-          }
           if (section.containsKey("IndexPath")) {
             serverSettings.setIndexPath(purgeString(section.get("IndexPath")));
           }

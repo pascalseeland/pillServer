@@ -26,8 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /**
  * Stores general server settings like rpc host and port, global log file and
@@ -42,10 +40,6 @@ public class ServerSettings {
   private static ServerSettings instance = null;
 
   public static final long DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024;
-
-  private InetAddress host;
-  private String hostString;
-  private int port;
 
   private File indexPath;
   private int numThreads = 1;
@@ -73,52 +67,10 @@ public class ServerSettings {
 
     StringBuilder builder = new StringBuilder();
 
-    builder.append("http://");
-    builder.append(getHostString());
-    builder.append(":" + getPort());
-    builder.append("/xmlrpc");
+    builder.append("http://locahost:8080/xmlrpx");
 
     logger.info("Using RPC Url: " + builder);
     return builder.toString();
-  }
-
-  /**
-   * @return the host
-   */
-  public InetAddress getHost() {
-    return host;
-  }
-
-  public String getHostString() {
-    return hostString;
-  }
-
-  /**
-   * @param host The host to set.
-   */
-  public void setHost(String host) throws ConfigurationException {
-
-    try {
-      this.host = InetAddress.getByName(host);
-      this.hostString = host;
-    } catch (UnknownHostException e) {
-      logger.fatal("Unknown host given: " + host);
-      throw new ConfigurationException(e);
-    }
-  }
-
-  /**
-   * @return the port
-   */
-  public int getPort() {
-    return port;
-  }
-
-  /**
-   * @param port the port to set
-   */
-  public void setPort(String port) {
-    this.port = Integer.parseInt(port);
   }
 
   /**
