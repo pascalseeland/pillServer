@@ -35,11 +35,16 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Vector;
 
+import javax.inject.Inject;
+
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
 public class RPCIndexHandler {
+
+  @Inject
+  private DBFactory dbFactory;
 
   private static Logger logger = LogManager.getLogger(RPCIndexHandler.class);
 
@@ -50,7 +55,6 @@ public class RPCIndexHandler {
 
     // Set client key
     LocalSettings.setClientKey(clientKey);
-    DBFactory.init();
     ClientSettings client;
     ServerSettings server;
     ObjectDefinitionReader properties;
@@ -106,7 +110,7 @@ public class RPCIndexHandler {
       logger.error("Unknown error", e);
     } finally {
       // Purge resources
-      DBFactory.closeAll();
+      dbFactory.closeAll();
     }
 
     return false;
@@ -121,7 +125,6 @@ public class RPCIndexHandler {
 
     // Set client key
     LocalSettings.setClientKey(clientKey);
-    DBFactory.init();
     ClientSettings client;
     ServerSettings server;
     ObjectDefinitionReader properties;
@@ -187,7 +190,7 @@ public class RPCIndexHandler {
       // Purge resources
       if (doPurge) {
         ILServerStatus.removeIndexer(clientKey);
-        DBFactory.closeAll();
+        dbFactory.closeAll();
       }
     }
 

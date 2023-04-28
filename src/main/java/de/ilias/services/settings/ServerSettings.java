@@ -67,7 +67,7 @@ public class ServerSettings {
 
     StringBuilder builder = new StringBuilder();
 
-    builder.append("http://locahost:8080/xmlrpx");
+    builder.append("http://locahost:8080/xmlrpc");
 
     logger.info("Using RPC Url: " + builder);
     return builder.toString();

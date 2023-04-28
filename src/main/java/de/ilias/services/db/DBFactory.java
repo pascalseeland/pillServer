@@ -28,6 +28,7 @@ import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -36,22 +37,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+import javax.enterprise.context.ApplicationScoped;
+
 /**
  * A thread local singleton for db connections
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  */
+@ApplicationScoped
 public class DBFactory {
 
-  private static Logger logger = LogManager.getLogger(DBFactory.class);
+  private static final Logger logger = LogManager.getLogger(DBFactory.class);
 
-  private static String MARIA_DB_CONNECTOR = "jdbc:mariadb://";
+  private static final String MARIA_DB_CONNECTOR = "jdbc:mariadb://";
 
-  private static ThreadLocal<HashMap<String, PreparedStatement>> ps = ThreadLocal.withInitial(() -> new HashMap<>());
+  @ConfigProperty(name = "pillServer.ClientId")
+  private String clientID;
 
-  private static ThreadLocal<Connection> connection = ThreadLocal.withInitial(() -> {
+  private ThreadLocal<HashMap<String, PreparedStatement>> ps = ThreadLocal.withInitial(() -> new HashMap<>());
+
+  private ThreadLocal<Connection> connection = ThreadLocal.withInitial(() -> {
     try {
-      ClientSettings client = ClientSettings.getInstance(LocalSettings.getClientKey());
+      ClientSettings client = ClientSettings.getInstance(clientID);
 
       logger.info("+++++++++++++++++++++++++++++++++++++++++++ New Thread local " + LocalSettings.getClientKey());
 
@@ -68,9 +75,7 @@ public class DBFactory {
         logger.error("Unsupported db type given." + client.getDbType());
         throw new ConfigurationException("Unsupported db type given." + client.getDbType());
       }
-    } catch (SQLException e) {
-      logger.error("Cannot connect to database: " + e);
-    } catch (ConfigurationException e) {
+    } catch (SQLException | ConfigurationException e) {
       logger.error("Cannot connect to database: " + e);
     }
     return null;
@@ -79,7 +84,7 @@ public class DBFactory {
   /**
    * get singleton db connection for each url
    */
-  public static Connection factory() throws SQLException {
+  public Connection factory() throws SQLException {
 
     logger.debug("====================================== Used cached DB connector.");
     if (!connection.get().isValid(10)) {
@@ -88,7 +93,7 @@ public class DBFactory {
     return connection.get();
   }
 
-  public static void init() {
+  public void init() {
 
     logger.debug("------------------------------------- Destroying cached DB connector.");
     connection.remove();
@@ -98,7 +103,7 @@ public class DBFactory {
   /**
    * get prepared statement
    */
-  public static PreparedStatement getPreparedStatement(String query) throws SQLException {
+  public PreparedStatement getPreparedStatement(String query) throws SQLException {
 
     if (ps.get().containsKey(query)) {
 
@@ -108,14 +113,14 @@ public class DBFactory {
 
     // Create new Prepared statement
     logger.trace("Creating new prepared statement: " + query);
-    ps.get().put(query, DBFactory.factory().prepareStatement(query));
+    ps.get().put(query, this.factory().prepareStatement(query));
     return ps.get().get(query);
   }
 
   /**
    * Close prepared statement
    */
-  public static void closePreparedStatement(String query) {
+  public void closePreparedStatement(String query) {
 
     try {
       if (ps.get().containsKey(query)) {
@@ -131,7 +136,7 @@ public class DBFactory {
   /**
    * close all statements
    */
-  public static void closeAll() {
+  public void closeAll() {
 
     try {
 
@@ -162,7 +167,7 @@ public class DBFactory {
   /**
    * set string overwritten for oracle
    */
-  public static PreparedStatement setString(PreparedStatement ps, int index, String str) throws SQLException {
+  public PreparedStatement setString(PreparedStatement ps, int index, String str) throws SQLException {
 
     ClientSettings client;
     try {
@@ -183,7 +188,7 @@ public class DBFactory {
   /**
    * get string overwritten for oracle
    */
-  public static String getString(ResultSet res, String name) throws SQLException {
+  public String getString(ResultSet res, String name) throws SQLException {
 
     ClientSettings client;
     try {
@@ -203,14 +208,14 @@ public class DBFactory {
   /**
    * Get clob value
    */
-  public static String getCLOB(ResultSet res, String name) throws SQLException {
-    return DBFactory.getString(res, name);
+  public String getCLOB(ResultSet res, String name) throws SQLException {
+    return this.getString(res, name);
   }
 
   /**
    * Get integer value and parse it to int
    */
-  public static String getInt(ResultSet res, String name) throws SQLException {
+  public String getInt(ResultSet res, String name) throws SQLException {
     return String.valueOf(res.getInt(name));
   }
 
