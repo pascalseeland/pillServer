@@ -23,10 +23,8 @@
 package de.ilias.services.lucene.search.highlight;
 
 import de.ilias.services.lucene.index.FieldInfo;
-import de.ilias.services.lucene.search.SearchHolder;
 import de.ilias.services.lucene.settings.LuceneSettings;
 import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,17 +46,12 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.sql.SQLException;
 
+import jakarta.annotation.PostConstruct;
+
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class HitHighlighter {
-
-  private static int FRAGMENT_TITLE_SIZE = 10000;
-  private static String HIGHLIGHT_SEPARATOR = "...";
-
-  private static String HIGHLIGHT_BEGIN_TAG = "<span class=\"ilSearchHighlight\">";
-  private static String HIGHLIGHT_END_TAG = "</span>";
 
   private static Logger logger = LogManager.getLogger(HitHighlighter.class);
 
@@ -68,15 +61,20 @@ public class HitHighlighter {
 
   private Highlighter highlighter;
   private Highlighter titleHighlighter;
+
+
   private FieldInfo fieldInfo;
   private HighlightHits result;
+
   private LuceneSettings luceneSettings;
 
-  public HitHighlighter(Query query, ScoreDoc[] hits) throws ConfigurationException, IOException, SQLException {
 
+  public HitHighlighter(LuceneSettings luceneSettings, FieldInfo fieldInfo, IndexSearcher searcher, Query query, ScoreDoc[] hits) throws ConfigurationException, IOException, SQLException {
+    this.luceneSettings = luceneSettings;
+    this.fieldInfo = fieldInfo;
+    this.searcher = searcher;
     this.query = query;
     this.hits = hits;
-    init();
   }
 
   public void highlight() throws IOException, InvalidTokenOffsetsException {
@@ -119,6 +117,7 @@ public class HitHighlighter {
       resItem.setAbsoluteScore(hits[i].score);
       StandardAnalyzer sa = new StandardAnalyzer();
       // Title
+      String HIGHLIGHT_SEPARATOR = "...";
       if (hitDoc.get("title") != null) {
 
         token = sa.tokenStream("title", new StringReader(hitDoc.get("title")));
@@ -171,13 +170,13 @@ public class HitHighlighter {
     }
   }
 
-  private void init() throws ConfigurationException, IOException, SQLException {
-
-    // init lucene settings
-    luceneSettings = LuceneSettings.getInstance();
+  @PostConstruct
+  private void init() {
 
     // init highlighter
     QueryScorer queryScorer = new QueryScorer(query);
+    String HIGHLIGHT_BEGIN_TAG = "<span class=\"ilSearchHighlight\">";
+    String HIGHLIGHT_END_TAG = "</span>";
     SimpleHTMLFormatter formatter = new SimpleHTMLFormatter(HIGHLIGHT_BEGIN_TAG, HIGHLIGHT_END_TAG);
 
     // Default highlighter
@@ -188,16 +187,9 @@ public class HitHighlighter {
 
     // Title description highlighter -> bigger FRAGMENT SIZE
     titleHighlighter = new Highlighter(formatter, queryScorer);
+    int FRAGMENT_TITLE_SIZE = 10000;
     Fragmenter titleFragmenter = new SimpleFragmenter(FRAGMENT_TITLE_SIZE);
     titleHighlighter.setTextFragmenter(titleFragmenter);
-
-    // init fieldinfo
-    fieldInfo = FieldInfo.getInstance(LocalSettings.getClientKey());
-
-    // init searcher
-    searcher = SearchHolder.getInstance().getSearcher();
-
-    return;
   }
 
   public String toXML() {

@@ -22,14 +22,11 @@
 
 package de.ilias.services.lucene.index;
 
-import de.ilias.services.lucene.search.SearchHolder;
 import de.ilias.services.lucene.settings.LuceneSettings;
 import de.ilias.services.object.ObjectDefinition;
 import de.ilias.services.object.ObjectDefinitionException;
 import de.ilias.services.object.ObjectDefinitions;
-import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +34,11 @@ import org.apache.lucene.index.CorruptIndexException;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Vector;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * Handles command queue events
@@ -46,49 +47,29 @@ import java.util.Vector;
  * @author Pascal Seeland <pascal.seeland@tik.uni-stuttgart.de>
  * @version $Id$
  */
+@ApplicationScoped
 public class CommandController {
 
   private static final int MAX_ELEMENTS = 100;
 
   private static Logger logger = LogManager.getLogger(CommandController.class);
 
-  private CommandQueue queue;
-  private ObjectDefinitions objDefinitions;
-  private IndexHolder holder;
+  @Inject
+  CommandQueue queue;
 
-  private CommandController(ObjectDefinitions objDefinitions) throws SQLException, IOException, ConfigurationException {
+  @Inject
+  ObjectDefinitions objDefinitions;
 
-    queue = new CommandQueue();
+  @Inject
+  IndexHolder holder;
 
-    this.objDefinitions = objDefinitions;
-
-    holder = IndexHolder.getInstance();
-    holder.init();
-
-    logger.info("New command controller created.");
-  }
-
-  public CommandController() throws SQLException, IOException, ConfigurationException {
-
-    this(ObjectDefinitions.getInstance(ClientSettings.getInstance(LocalSettings.getClientKey()).getAbsolutePath()));
-  }
-
-  public static CommandController getInstance() {
-
-    try {
-      logger.info("Creating new command controller...");
-      return new CommandController();
-    } catch (Throwable t) {
-      logger.error(t);
-    }
-    return null;
-  }
+  @Inject
+  LuceneSettings luceneSettings;
 
   /**
    * Init command queue for new index
    */
   public void initCreate() throws SQLException {
-
     queue.deleteAll();
     queue.addAll();
     queue.loadFromDb();
@@ -124,40 +105,36 @@ public class CommandController {
 
         logger.debug("Handling command: " + command + "!");
 
-        if (command.equals("reset")) {
+        switch (command) {
+          case "reset":
+          case "update":
 
-          // Delete document
-          deleteDocument(currentElement);
-          try {
-            addDocument(currentElement);
-          } catch (ObjectDefinitionException e) {
-            logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
-            getQueue().deleteCommandsByType(currentElement.getObjType());
-          }
-        } else if (command.equals("create")) {
+            // content changed
 
-          // Create a new document
-          // Called for new objects or objects restored from trash
-          try {
-            addDocument(currentElement);
-          } catch (ObjectDefinitionException e) {
-            logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
-            getQueue().deleteCommandsByType(currentElement.getObjType());
-          }
-        } else if (command.equals("update")) {
+            // Delete document
+            deleteDocument(currentElement);
+            try {
+              addDocument(currentElement);
+            } catch (ObjectDefinitionException e) {
+              logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
+              getQueue().deleteCommandsByType(currentElement.getObjType());
+            }
+            break;
+          case "create":
 
-          // content changed
-          deleteDocument(currentElement);
-          try {
-            addDocument(currentElement);
-          } catch (ObjectDefinitionException e) {
-            logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
-            getQueue().deleteCommandsByType(currentElement.getObjType());
-          }
-        } else if (command.equals("delete")) {
-
-          // only delete it
-          deleteDocument(currentElement);
+            // Create a new document
+            // Called for new objects or objects restored from trash
+            try {
+              addDocument(currentElement);
+            } catch (ObjectDefinitionException e) {
+              logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
+              getQueue().deleteCommandsByType(currentElement.getObjType());
+            }
+            break;
+          case "delete":
+            // only delete it
+            deleteDocument(currentElement);
+            break;
         }
         finished.add(currentElement.getObjId());
 
@@ -183,43 +160,11 @@ public class CommandController {
       logger.info("Writer commitAndMerge.");
       holder.commitAndForceMerge();
       logger.info("Writer commited and forced merge");
-      LuceneSettings.writeLastIndexTime();
-
-      // Refresh index reader
-      SearchHolder.getInstance().getSearcher().getIndexReader().close();
-      SearchHolder.getInstance().init();
-    } catch (ConfigurationException e) {
-      logger.error("Cannot refresh index reader: " + e, e);
-    } catch (CorruptIndexException e) {
-      logger.fatal("Index Corrupted. Aborting!" + e, e);
+      this.luceneSettings.writeLastIndexTime();
     } catch (IOException e) {
-      logger.fatal("Index Corrupted. Aborting!" + e, e);
+      logger.fatal("IndexController Corrupted. Aborting!" + e, e);
     } catch (SQLException e) {
       logger.error("Cannot update search_command_queue: " + e, e);
-    }
-  }
-
-  /**
-   * Close index
-   */
-  public synchronized void closeIndex() {
-
-    try {
-      logger.info("Closing writer");
-      holder.close();
-      logger.info("Writer closed");
-
-      // reopen index reader
-      logger.info("Reopening index reader...");
-      SearchHolder.getInstance().getSearcher().getIndexReader().close();
-      SearchHolder.getInstance().init();
-      LuceneSettings.getInstance().refresh();
-    } catch (ConfigurationException e) {
-      logger.error("Cannot close index reader/writer: " + e);
-    } catch (IOException e) {
-      logger.fatal("Index Corrupted. Aborting!" + e);
-    } catch (SQLException e) {
-      logger.error("Cannot update search_command_queue: " + e);
     }
   }
 
@@ -230,7 +175,12 @@ public class CommandController {
     try {
       logger.debug("Adding new document!");
       definition = objDefinitions.getDefinitionByType(el.getObjType());
-      definition.writeDocument(el);
+      List<DocumentHolder> docs = definition.createDocument(el);
+      logger.debug("{} generated {} documents:", el, docs.size());
+      for (DocumentHolder doc: docs) {
+        holder.addDocument(doc.getGlobalDocument());
+        holder.addDocument(doc.getDocument());
+      }
     } catch (DocumentHandlerException | IOException e) {
       logger.warn(e);
     }
@@ -238,15 +188,8 @@ public class CommandController {
 
   private void deleteDocument(CommandQueueElement el) throws IOException {
 
-    logger.debug("Deleteing document with objId: " + String.valueOf(el.getObjId()));
+    logger.debug("Deleteing document with objId: " + el.getObjId());
     holder.deleteDocument(String.valueOf(el.getObjId()));
-  }
-
-  /**
-   * @param queue the queue to set
-   */
-  public void setQueue(CommandQueue queue) {
-    this.queue = queue;
   }
 
   /**

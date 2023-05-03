@@ -1,34 +1,23 @@
 package de.ilias.services.object;
 
-import de.ilias.services.lucene.index.FieldInfo;
+import de.ilias.services.db.DBFactory;
 import de.ilias.services.lucene.index.file.path.PathCreatorFactory;
 import de.ilias.services.settings.ClientSettings;
-import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jdom.Element;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 /**
  * Parser for  Lucene object definitions.
@@ -38,24 +27,21 @@ import javax.xml.transform.stream.StreamResult;
 public class ObjectDefinitionParser {
 
   private Logger logger = LogManager.getLogger(ObjectDefinitionParser.class);
-  private Vector<File> objectPropertyFiles = new Vector<File>();
-  private ClientSettings settings;
-  private ObjectDefinitions definitions;
+  private Vector<File> objectPropertyFiles;
+  private DBFactory dbFactory;
+  private ClientSettings clientSettings;
 
-  public ObjectDefinitionParser() throws ConfigurationException {
+  private List<ObjectDefinition> definitions;
 
-    settings = ClientSettings.getInstance(LocalSettings.getClientKey());
-    // reset definitions to avoíd duplicate entries
-    definitions = ObjectDefinitions.getInstance(settings.getAbsolutePath());
-    definitions.reset();
-    FieldInfo.getInstance(LocalSettings.getClientKey());
+  public ObjectDefinitionParser(Vector<File> objectPropertyFiles, DBFactory dbFactory, ClientSettings clientSettings) {
+    this.objectPropertyFiles = objectPropertyFiles;
+    this.definitions = new LinkedList<>();
+    this.dbFactory = dbFactory;
+    this.clientSettings = clientSettings;
   }
 
-  public ObjectDefinitionParser(Vector<File> objectPropertyFiles) throws ConfigurationException {
-
-    this();
-    this.objectPropertyFiles = objectPropertyFiles;
-
+  public List<ObjectDefinition> getDefinitions() {
+    return definitions;
   }
 
   public boolean parse() throws ObjectDefinitionException {
@@ -67,23 +53,6 @@ public class ObjectDefinitionParser {
       parseFile(objectPropertyFiles.get(i));
     }
     return true;
-  }
-
-  public static String xmlToString(Node node) {
-    try {
-      Source source = new DOMSource(node);
-      StringWriter stringWriter = new StringWriter();
-      Result result = new StreamResult(stringWriter);
-      TransformerFactory factory = TransformerFactory.newInstance();
-      Transformer transformer = factory.newTransformer();
-      transformer.transform(source, result);
-      return stringWriter.getBuffer().toString();
-    } catch (TransformerConfigurationException e) {
-      e.printStackTrace();
-    } catch (TransformerException e) {
-      e.printStackTrace();
-    }
-    return null;
   }
 
   private void parseFile(File file) throws ObjectDefinitionException {
@@ -103,7 +72,7 @@ public class ObjectDefinitionParser {
       // JDOM does not understand x:include but has a more comfortable API.
       org.jdom.Document jdocument = convertToJDOM(document);
 
-      definitions.addDefinition(parseObjectDefinition(jdocument));
+      definitions.add(parseObjectDefinition(jdocument));
 
       logger.debug("Start logging");
       //logger.info(definitions.toString());
@@ -111,18 +80,6 @@ public class ObjectDefinitionParser {
     } catch (IOException e) {
       logger.error("Cannot handle file: " + file.getAbsolutePath());
       throw new ObjectDefinitionException(e);
-    } catch (ParserConfigurationException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.error(writer.toString());
-    } catch (SAXException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.error(writer.toString());
-    } catch (ClassCastException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.error(writer.toString());
     } catch (Exception e) {
       StringWriter writer = new StringWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -172,7 +129,7 @@ public class ObjectDefinitionParser {
     // Workaround xi:include of metaData)
     for (Object dataSources : element.getChildren("DataSources")) {
 
-      logger.info("Adding DataSources...");
+      logger.info("Adding DataSources for {}", element.getParentElement().getAttributeValue("type"));
       for (Object source : ((Element) dataSources).getChildren("DataSource")) {
 
         definition.addDataSource(parseDataSource((Element) source));
@@ -197,7 +154,7 @@ public class ObjectDefinitionParser {
 
     if (source.getAttributeValue("type").equalsIgnoreCase("JDBC")) {
 
-      ds = new JDBCDataSource(DataSource.TYPE_JDBC);
+      ds = new JDBCDataSource(DataSource.TYPE_JDBC, dbFactory);
       ds.setAction(source.getAttributeValue("action"));
       ((JDBCDataSource) ds).setQuery(source.getChildText("Query").trim());
 
@@ -216,7 +173,7 @@ public class ObjectDefinitionParser {
 
       Element pathCreator = source.getChild("PathCreator");
       if (pathCreator != null) {
-        ((FileDataSource) ds).setPathCreator(PathCreatorFactory.factory(pathCreator.getAttributeValue("name")));
+        ((FileDataSource) ds).setPathCreator(PathCreatorFactory.factory(pathCreator.getAttributeValue("name"), clientSettings));
       }
     } else if (source.getAttributeValue("type").equalsIgnoreCase("Directory")) {
 
@@ -225,7 +182,7 @@ public class ObjectDefinitionParser {
 
       Element pathCreator = source.getChild("PathCreator");
       if (pathCreator != null) {
-        ((DirectoryDataSource) ds).setPathCreator(PathCreatorFactory.factory(pathCreator.getAttributeValue("name")));
+        ((DirectoryDataSource) ds).setPathCreator(PathCreatorFactory.factory(pathCreator.getAttributeValue("name"), clientSettings));
       }
     } else {
       throw new ObjectDefinitionException(
@@ -251,21 +208,22 @@ public class ObjectDefinitionParser {
     }
 
     // Add fields
-    for (Object field : source.getChildren("Field")) {
-
-      FieldDefinition fieldDef = new FieldDefinition(((Element) field).getAttributeValue("store"),
-          ((Element) field).getAttributeValue("index"), ((Element) field).getAttributeValue("name"),
-          ((Element) field).getAttributeValue("column"), ((Element) field).getAttributeValue("type"),
-          ((Element) field).getAttributeValue("global"), ((Element) field).getAttributeValue("dynamicName"));
+    for (Object fieldObject : source.getChildren("Field")) {
+      Element field = (Element) fieldObject;
+      FieldDefinition fieldDef = new FieldDefinition(field.getAttributeValue("store"),
+          field.getAttributeValue("index"), field.getAttributeValue("name"),
+          field.getAttributeValue("column"), field.getAttributeValue("type"),
+          field.getAttributeValue("global"), field.getAttributeValue("dynamicName"),
+          dbFactory);
       /*
        * Currentliy diabled.
-      if(fieldDef.getIndex() != Field.Index.NO) {
+      if(fieldDef.getIndex() != Field.IndexController.NO) {
         fieldInfo.addField(fieldDef.getName());
       }
       */
 
       // Add transformers to field definitions
-      for (Object transformer : ((Element) field).getChildren("Transformer")) {
+      for (Object transformer : field.getChildren("Transformer")) {
 
         TransformerDefinition transDef = new TransformerDefinition(((Element) transformer).getAttributeValue("name"));
 

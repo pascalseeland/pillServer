@@ -24,6 +24,7 @@ package de.ilias.services.object;
 
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandlerException;
+import de.ilias.services.lucene.index.DocumentHolder;
 import de.ilias.services.lucene.index.file.ExtensionFileHandler;
 import de.ilias.services.lucene.index.file.FileHandlerException;
 import de.ilias.services.lucene.index.file.path.PathCreatorException;
@@ -34,6 +35,9 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.FileFilter;
 import java.sql.ResultSet;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -51,8 +55,10 @@ public class DirectoryDataSource extends FileDataSource {
 
   /**
    * write Document
+   *
+   * @return
    */
-  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
+  public List<DocumentHolder> createDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
 
     File start;
     ExtensionFileHandler handler = new ExtensionFileHandler();
@@ -65,7 +71,7 @@ public class DirectoryDataSource extends FileDataSource {
     try {
       if (getPathCreator() == null) {
         logger.info("No path creator defined");
-        return;
+        return Collections.emptyList();
       }
       start = getPathCreator().buildFile(el, res);
 
@@ -84,12 +90,15 @@ public class DirectoryDataSource extends FileDataSource {
           logger.warn("Cannot parse file " + file.getAbsolutePath());
         }
       }
-
+      DocumentHolder documentHolder = new DocumentHolder();
       // Write content
-      for (Object field : getFields()) {
-        ((FieldDefinition) field).writeDocument(content.toString());
+      for (FieldDefinition field : getFields()) {
+        field.writeDocument(documentHolder, content.toString());
       }
       logger.debug("Content is : " + content.toString());
+      List<DocumentHolder> documentHolders = new LinkedList<>();
+      documentHolders.add(documentHolder);
+      return documentHolders;
     } catch (PathCreatorException e) {
       throw new DocumentHandlerException(e);
     }
@@ -114,12 +123,11 @@ public class DirectoryDataSource extends FileDataSource {
             if (!path.getName().equals(".svn")) {
               return true;
             }
-            return false;
           } else {
             //getCandidates().add(path);
             files.add(path);
-            return false;
           }
+          return false;
         }
       });
 

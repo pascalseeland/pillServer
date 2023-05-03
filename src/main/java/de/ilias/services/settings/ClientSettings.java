@@ -24,11 +24,12 @@ package de.ilias.services.settings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * A singleton for each client configuration
@@ -36,17 +37,19 @@ import java.util.Map;
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
+@ApplicationScoped
 public class ClientSettings {
 
   private static Logger logger = LogManager.getLogger(ClientSettings.class);
-  private static HashMap<String, ClientSettings> instances = new HashMap<>();
 
   private String client;
   private String nic;
+
   private File iliasIniFile;
   private File dataDirectory;
   private File clientIniFile;
   private File absolutePath;
+
   private File indexPath;
 
   private String dbType;
@@ -56,50 +59,21 @@ public class ClientSettings {
   private String dbUser;
   private String dbPass;
 
-  public ClientSettings(String client, String nic) {
-
-    this.client = client;
-    this.nic = nic;
-  }
-
-  public static synchronized ClientSettings getInstance(String client, String nic) throws ConfigurationException {
-
-    return getInstance(client + '_' + nic);
-  }
-
-  public static synchronized ClientSettings getInstance(String clientKey) throws ConfigurationException {
-
-    logger.debug("Using client key " + clientKey);
-    if (instances.containsKey(clientKey)) {
-      return instances.get(clientKey);
-    }
+  @Inject
+  public ClientSettings(@ConfigProperty(name = "pillServer.ClientId") String clientId,
+      @ConfigProperty(name = "pillServer.indexPath") String indexPathName,
+      @ConfigProperty(name = "pillServer.IliasIniPath") String iliasIniFileName) throws ConfigurationException {
     int posUnderscore;
-    if ((posUnderscore = clientKey.lastIndexOf("_")) == -1) {
-      logger.error("Cannot parse client key: " + clientKey);
-      throw new ConfigurationException("Cannot parse client key: " + clientKey);
+    if ((posUnderscore = clientId.lastIndexOf("_")) == -1) {
+      logger.error("Cannot parse client key: " + clientId);
+      throw new ConfigurationException("Cannot parse client key: " + clientId);
     }
 
-    String nic = clientKey.substring(posUnderscore + 1);
-    String client = clientKey.substring(0, posUnderscore);
-    logger.debug("Orig: " + clientKey + " Client: " + client + " NIC: " + nic);
-
-    instances.put(clientKey, new ClientSettings(client, nic));
-    return instances.get(clientKey);
-  }
-
-  public static boolean exists(String clientKey) {
-
-    return instances.containsKey(clientKey);
-  }
-
-  public static ArrayList<String> getClients() {
-
-    ArrayList<String> clients = new ArrayList<>();
-
-    for (Map.Entry<String, ClientSettings> entry : instances.entrySet()) {
-      clients.add(entry.getKey());
-    }
-    return clients;
+    nic = clientId.substring(posUnderscore + 1);
+    client = clientId.substring(0, posUnderscore);
+    setIndexPath(indexPathName);
+    setIliasIniFile(iliasIniFileName);
+    new IniFileParser().parseClientData(this);
   }
 
   /**
@@ -110,28 +84,7 @@ public class ClientSettings {
   }
 
   public String getClientKey() {
-    return client + '_' + getNic();
-  }
-
-  /**
-   * @param client the client to set
-   */
-  public void setClient(String client) {
-    this.client = client;
-  }
-
-  /**
-   * @return the nic
-   */
-  public String getNic() {
-    return nic;
-  }
-
-  /**
-   * @param nic the nic to set
-   */
-  public void setNic(String nic) {
-    this.nic = nic;
+    return client + '_' + nic;
   }
 
   /**
@@ -236,10 +189,10 @@ public class ClientSettings {
   public void setIndexPath(String indexPath) {
 
     this.indexPath = new File(indexPath);
-
+    logger.info("index path: {}", indexPath);
     if (!this.indexPath.isDirectory()) {
 
-      this.indexPath.mkdir();
+      logger.info("Created index path: {}", this.indexPath.mkdir());
 
     }
   }
@@ -259,11 +212,12 @@ public class ClientSettings {
     } else {
 
       StringBuilder url = new StringBuilder();
-      url.append("jdbc:oracle:thin:" + getDbUser() + "/" + getDbPass() + "@//" + getDbHost());
+      url.append("jdbc:oracle:thin:").append(getDbUser()).append("/").append(getDbPass()).append("@//")
+          .append(getDbHost());
       if (getDbPort().length() > 0) {
-        url.append(":" + getDbPort());
+        url.append(":").append(getDbPort());
       }
-      url.append("/" + getDbName());
+      url.append("/").append(getDbName());
       return url.toString();
     }
   }

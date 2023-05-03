@@ -28,60 +28,21 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 
 /**
- * Thread local singleton
- *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class DocumentHolder {
 
-  private static ThreadLocal<DocumentHolder> thDocumentHolder = new ThreadLocal<>() {
-
-    /**
-     * init document holder
-     * @see java.lang.ThreadLocal#initialValue()
-     */
-    @Override
-    protected DocumentHolder initialValue() {
-
-      return new DocumentHolder();
-    }
-  };
 
   private Document globalDoc = null;
   private Document doc = null;
 
-  /**
-   *
-   */
-  private DocumentHolder() {
 
-    newGlobalDocument();
-    newDocument();
-  }
-
-  public static DocumentHolder factory() {
-
-    return thDocumentHolder.get();
-  }
-
-  /**
-   * @return create new global document
-   */
-  public Document newGlobalDocument() {
+  public DocumentHolder() {
+    // new string fields are in contrast to TextFields not analyzed. Ensure STORE.YES
     globalDoc = new Document();
     globalDoc.add(new StringField("docType", "combined", Field.Store.YES));
-    return globalDoc;
-  }
-
-  /**
-   * @return create a new document
-   */
-  public Document newDocument() {
     doc = new Document();
-    // new string fields are in contrast to TextFields not analyzed. Ensure STORE.YES
     doc.add(new StringField("docType", "separated", Field.Store.YES));
-    return doc;
   }
 
   /**
@@ -101,16 +62,16 @@ public class DocumentHolder {
   public void add(String name, String value, boolean isGlobal, Field.Store store, boolean indexed) {
 
     if (indexed) {
-      getDocument().add(new TextField(name, value, store));
+      doc.add(new TextField(name, value, store));
     } else {
-      getDocument().add(new StringField(name, value, store));
+      doc.add(new StringField(name, value, store));
     }
 
     if (isGlobal) {
       if (indexed) {
-        getGlobalDocument().add(new TextField(name, value, store));
+        globalDoc.add(new TextField(name, value, store));
       } else {
-        getGlobalDocument().add(new StringField(name, value, store));
+        globalDoc.add(new StringField(name, value, store));
       }
     }
   }

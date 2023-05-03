@@ -22,6 +22,7 @@
 
 package de.ilias.services.lucene.search;
 
+import de.ilias.services.lucene.index.IndexHolder;
 import de.ilias.services.settings.ConfigurationException;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,22 +36,21 @@ import java.io.IOException;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class SearchResultWriter {
 
   private Logger logger = LogManager.getLogger(SearchResultWriter.class);
 
-  private IndexSearcher searcher = null;
-  private ScoreDoc[] hits = null;
-  private SearchHits result = null;
+  private IndexSearcher searcher ;
+  private ScoreDoc[] hits;
+  private SearchHits result;
   private int offset = 0;
 
-  public SearchResultWriter(ScoreDoc[] hits) throws IOException, ConfigurationException {
+  public SearchResultWriter(IndexSearcher searcher, ScoreDoc[] hits) throws IOException, ConfigurationException {
 
     this.hits = hits;
+    this.searcher = searcher;
 
-    searcher = SearchHolder.getInstance().getSearcher();
     result = new SearchHits();
   }
 
@@ -58,7 +58,7 @@ public class SearchResultWriter {
 
     result.setTotalHits(hits.length);
     logger.info("Found " + result.getTotalHits() + " hits!");
-    result.setLimit(SearchHolder.SEARCH_LIMIT);
+    result.setLimit(IndexHolder.SEARCH_LIMIT);
 
     SearchObject object;
     Document hitDoc;
@@ -70,7 +70,7 @@ public class SearchResultWriter {
       if (i < getOffset()) {
         continue;
       }
-      if (i >= (getOffset() + SearchHolder.SEARCH_LIMIT)) {
+      if (i >= (getOffset() + IndexHolder.SEARCH_LIMIT)) {
         logger.debug("Reached result limit. Aborting!");
         break;
       }

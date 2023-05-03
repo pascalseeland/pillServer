@@ -25,8 +25,10 @@ package de.ilias.services.object;
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandler;
 import de.ilias.services.lucene.index.DocumentHandlerException;
+import de.ilias.services.lucene.index.DocumentHolder;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -121,9 +123,9 @@ public abstract class DataSource implements DocumentHandler {
   }
 
   /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   * @see de.ilias.services.lucene.index.DocumentHandler#createDocument(de.ilias.services.lucene.index.CommandQueueElement)
    */
-  public abstract  void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException;
+  public abstract List<DocumentHolder> createDocument(CommandQueueElement el) throws DocumentHandlerException, IOException;
 
   /**
    * @see java.lang.Object#toString()

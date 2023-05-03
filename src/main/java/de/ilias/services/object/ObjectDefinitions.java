@@ -22,58 +22,28 @@
 
 package de.ilias.services.object;
 
-import java.io.File;
-import java.util.HashMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.Vector;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
+@ApplicationScoped
 public class ObjectDefinitions {
 
-  private static HashMap<File, ObjectDefinitions> instances = new HashMap<>();
-
-  private File absolutePath;
-  private Vector<ObjectDefinition> definitions = new Vector<ObjectDefinition>();
-
-  /**
-   * Singleton
-   */
-  public ObjectDefinitions(File absolutePath) {
-
-    this.setAbsolutePath(absolutePath);
-  }
-
-  public static synchronized ObjectDefinitions getInstance(File absolutePath) {
-
-    if (instances.containsKey(absolutePath)) {
-      return instances.get(absolutePath);
-    }
-    instances.put(absolutePath, new ObjectDefinitions(absolutePath));
-    return instances.get(absolutePath);
-  }
+  private static Logger logger = LogManager.getLogger(ObjectDefinitions.class);
+  private Vector<ObjectDefinition> definitions = new Vector<>();
 
   /**
    * reset object definitons
    */
   public void reset() {
-
-    this.definitions = new Vector<ObjectDefinition>();
-  }
-
-  /**
-   * @param absolutePath the absolutePath to set
-   */
-  public void setAbsolutePath(File absolutePath) {
-    this.absolutePath = absolutePath;
-  }
-
-  /**
-   * @return the absolutePath
-   */
-  public File getAbsolutePath() {
-    return absolutePath;
+    logger.info("Resetting object definitions");
+    definitions.clear();
   }
 
   /**
@@ -100,9 +70,6 @@ public class ObjectDefinitions {
     throw new ObjectDefinitionException("Invalid type given. Cannot find obj type " + objType);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
 
@@ -110,7 +77,7 @@ public class ObjectDefinitions {
 
     for (Object defs : this.getDefinitions()) {
 
-      out.append("Object definitions for: " + getAbsolutePath().getAbsolutePath());
+      out.append("Object definitions for: ");
       out.append("\n");
       out.append(defs);
     }

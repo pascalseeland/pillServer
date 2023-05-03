@@ -24,7 +24,6 @@ package de.ilias.services.lucene.index;
 
 import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 import de.ilias.services.settings.ServerSettings;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,13 +31,20 @@ import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.store.FSDirectory;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * Capsulates the interaction between IndexReader and IndexWriter
@@ -46,105 +52,47 @@ import java.util.HashMap;
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @author Pascal Seeland <pascal.seeland@tik.uni-stuttgart.de>
- * @version $Id$
  */
+@ApplicationScoped
 public class IndexHolder implements AutoCloseable {
 
   private static Logger logger = LogManager.getLogger(IndexHolder.class);
 
   private static final int MAX_NUM_SEGMENTS = 100;
 
-  private static HashMap<String, IndexHolder> instances = new HashMap<String, IndexHolder>();
-  private ClientSettings settings;
+  public static int SEARCH_LIMIT = 100;
+
+  @Inject
+  ClientSettings clientSettings;
+
   private IndexWriter writer;
 
-  private IndexHolder(String clientKey) throws IOException {
-
-    try {
-      settings = ClientSettings.getInstance(clientKey);
-    } catch (ConfigurationException e) {
-      throw new IOException("Caught configuration exception: " + e.getMessage());
-    }
-
-  }
-
-  public static synchronized IndexHolder getInstance(String clientKey) throws IOException {
-
-    String hash = clientKey;
-
-    if (instances.containsKey(hash)) {
-      return instances.get(hash);
-    }
-    instances.put(hash, new IndexHolder(clientKey));
-    return instances.get(hash);
-  }
-
-  public static synchronized IndexHolder getInstance() throws IOException {
-
-    return getInstance(LocalSettings.getClientKey());
-  }
-
-  public static void deleteIndex() throws ConfigurationException {
-    File indexPath = ClientSettings.getInstance(LocalSettings.getClientKey()).getIndexPath();
-
-    deleteTree(indexPath);
-    logger.info("Deleted index directory: " + indexPath.getAbsoluteFile());
-  }
+  private IndexSearcher searcher;
 
   /**
-   * Delete directory recursive
+   * @return the searcher
    */
-  private static boolean deleteTree(File path) {
-
-    if (!path.exists() || !path.isDirectory()) {
-      return false;
-    }
-    for (File del : path.listFiles()) {
-
-      if (del.isDirectory()) {
-        deleteTree(del);
-      } else {
-        del.delete();
-      }
-    }
-    path.delete();
-    return true;
+  public IndexSearcher getSearcher() {
+    return searcher;
   }
 
-  /**
-   * Close all writers
-   */
-  public static synchronized void closeAllWriters() {
-
-    logger.info("Closing document writers...");
-
-    for (Object key : instances.keySet()) {
-      try {
-        logger.info("Closing writer: " + (String) key);
-        IndexHolder holder = instances.get((String) key);
-        IndexDirectoryFactory.getDirectory(ClientSettings.getInstance((String) key).getIndexPath()).close();
-        holder.close();
-      } catch (ConfigurationException | IOException ex) {
-        logger.error("Cannot close fs directory: " + ex.getMessage());
-      }
-
-    }
-
-    logger.info("Index writers closed.");
+  public void deleteIndex() throws IOException {
+    writer.deleteAll();
+    searcher.getIndexReader().close();
+    searcher = new IndexSearcher(DirectoryReader.open(writer));
   }
 
-  /**
-   * TODO obtain lock for index writer
-   */
+  @PostConstruct
   public void init() throws IOException, ConfigurationException {
-
     try {
-      logger.debug("Adding new separated index for " + LocalSettings.getClientKey());
-
+      FSDirectory directory = IndexDirectoryFactory.getDirectory(clientSettings.getIndexPath());
       IndexWriterConfig writerConfig = new IndexWriterConfig(new StandardAnalyzer());
       writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
           .setRAMBufferSizeMB(ServerSettings.getInstance().getRAMSize());
-      writer = new IndexWriter(IndexDirectoryFactory.getDirectory(settings.getIndexPath()), writerConfig);
+      writer = new IndexWriter(directory, writerConfig);
+      IndexReader reader = DirectoryReader.open(writer);
+      searcher = new IndexSearcher(reader);
+      logger.info("Initalized the search index: {} ", searcher);
     } catch (IOException | ConfigurationException e) {
       throw e;
     }
@@ -162,19 +110,20 @@ public class IndexHolder implements AutoCloseable {
   public void commitAndForceMerge() throws IOException {
     writer.commit();
     writer.forceMerge(IndexHolder.MAX_NUM_SEGMENTS);
+    // Refresh index reader
+    searcher.getIndexReader().close();
+    searcher = new IndexSearcher(DirectoryReader.open(writer));
   }
 
-  /**
-   * Close writer
-   */
+  @PreDestroy
   public void close() {
 
     try {
       writer.close();
-      IndexDirectoryFactory.getDirectory(settings.getIndexPath()).close();
-
+      searcher.getIndexReader().close();
+      IndexDirectoryFactory.getDirectory(clientSettings.getIndexPath()).close();
     } catch (CorruptIndexException e) {
-      logger.fatal("Index corrupted." + e);
+      logger.fatal("IndexController corrupted." + e);
     } catch (IOException e) {
       logger.fatal("Error closing writer." + e);
     }

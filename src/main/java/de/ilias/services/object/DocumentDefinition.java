@@ -26,13 +26,14 @@ import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandler;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 import de.ilias.services.lucene.index.DocumentHolder;
-import de.ilias.services.lucene.index.IndexHolder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.sql.ResultSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -102,42 +103,30 @@ public class DocumentDefinition implements DocumentHandler {
   }
 
   /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   * @see de.ilias.services.lucene.index.DocumentHandler#createDocument(de.ilias.services.lucene.index.CommandQueueElement)
    */
-  public void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
-
-    writeDocument(el, null);
+  public List<DocumentHolder> createDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
+    return createDocument(el, null);
   }
 
   /**
    * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
    */
-  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
+  public List<DocumentHolder> createDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
 
-    DocumentHolder doc = DocumentHolder.factory();
-    doc.newDocument();
+    List<DocumentHolder> documentHolders = new LinkedList<>();
+    DocumentHolder doc = new DocumentHolder();
 
     for (int i = 0; i < getDataSource().size(); i++) {
 
       try {
-        getDataSource().get(i).writeDocument(el);
+        documentHolders.addAll(getDataSource().get(i).createDocument(el));
       } catch (IOException e) {
         logger.warn("Cannot parse data source: " + e);
       } catch (DocumentHandlerException e) {
         logger.warn(e);
       }
     }
-
-    IndexHolder writer;
-    try {
-      writer = IndexHolder.getInstance();
-      if (doc.getDocument() == null) {
-        logger.warn("Found empty document.");
-      } else {
-        writer.addDocument(doc.getDocument());
-      }
-    } catch (IOException e) {
-      logger.warn(e);
-    }
+    return documentHolders;
   }
 }

@@ -33,6 +33,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import jakarta.inject.Inject;
+
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
@@ -49,6 +51,9 @@ public class ParameterDefinition {
   private int format;
   private int type;
   private String value;
+
+  @Inject
+  DBFactory dbFactory;
 
   public ParameterDefinition(int format, int type, String value) {
 
@@ -179,7 +184,7 @@ public class ParameterDefinition {
 
       try {
         logger.debug(parentResult.getString(getValue()).trim());
-        return DBFactory.getString(parentResult, getValue());
+        return this.dbFactory.getString(parentResult, getValue());
       } catch (SQLException e) {
         // ignoring this error
         // and trying to fetch objId and metaObjId

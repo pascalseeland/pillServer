@@ -23,7 +23,6 @@
 package de.ilias.services.lucene.settings;
 
 import de.ilias.services.db.DBFactory;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,14 +34,21 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.HashMap;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
+@ApplicationScoped
 public class LuceneSettings {
 
   public static final int OPERATOR_AND = 1;
   public static final int OPERATOR_OR = 2;
+
+  @Inject
+  DBFactory dbFactory;
 
   private static Logger logger = LogManager.getLogger(LuceneSettings.class);
   private static HashMap<String, LuceneSettings> instances = new HashMap<>();
@@ -53,29 +59,9 @@ public class LuceneSettings {
   private Date lastIndexTime = new java.util.Date();
   private int prefixWildcard = 0;
 
-  public LuceneSettings() throws SQLException {
-    super();
-    readSettings();
-  }
-
-  /**
-   * Get singleton instance for a client
-   *
-   * @return FieldInfo
-   */
-  public static LuceneSettings getInstance() throws SQLException {
-
-    return getInstance(LocalSettings.getClientKey());
-  }
-
-  public static LuceneSettings getInstance(String clientKey) throws SQLException {
-
-    if (instances.containsKey(clientKey)) {
-      return instances.get(clientKey);
-    }
-
-    instances.put(clientKey, new LuceneSettings());
-    return instances.get(clientKey);
+  @PostConstruct
+  public void init() throws SQLException {
+    this.readSettings();
   }
 
   public boolean refresh() throws SQLException {
@@ -135,9 +121,8 @@ public class LuceneSettings {
     this.prefixWildcard = stat;
   }
 
-  public static void writeLastIndexTime() throws SQLException {
-    DBFactory.init();
-    Statement sta = DBFactory.factory().createStatement();
+  public void writeLastIndexTime() throws SQLException {
+    Statement sta = this.dbFactory.factory().createStatement();
     sta.executeUpdate("DELETE FROM settings " + "WHERE module = 'common' AND keyword = 'lucene_last_index_time'");
     try {
       sta.close();
@@ -146,13 +131,13 @@ public class LuceneSettings {
     }
 
     String query = "INSERT INTO settings (value,module,keyword) " + "VALUES (?,?,?) ";
-    PreparedStatement pst = DBFactory.getPreparedStatement(query);
+    PreparedStatement pst = this.dbFactory.getPreparedStatement(query);
 
     pst.setString(1, String.valueOf(new java.util.Date().getTime() / 1000));
     pst.setString(2, "common");
     pst.setString(3, "lucene_last_index_time");
     pst.executeUpdate();
-    DBFactory.closePreparedStatement(query);
+    this.dbFactory.closePreparedStatement(query);
   }
 
   public void setLastIndexTime(Date date) {
@@ -169,7 +154,7 @@ public class LuceneSettings {
 
   private void readSettings() throws SQLException {
 
-    Statement sta = DBFactory.factory().createStatement();
+    Statement sta = this.dbFactory.factory().createStatement();
     ResultSet res = sta.executeQuery(
         "SELECT value FROM settings WHERE module = 'common' " + "AND keyword = 'lucene_default_operator'");
 

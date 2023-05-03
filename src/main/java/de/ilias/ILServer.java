@@ -22,22 +22,17 @@
 
 package de.ilias;
 
-import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.IniFileParser;
 import de.ilias.services.settings.ServerSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
@@ -88,173 +83,147 @@ public class ILServer {
         logger.error("Usage: java -jar ilServer.jar PATH_TO_SERVER_INI stop");
         return false;
       }
-      return stopServer();
+      return false;//stopServer();
     } else if (command.compareTo("createIndex") == 0) {
       if (arguments.length != 3) {
         logger.error("Usage java -jar ilServer.jar PATH_TO_SERVER_INI createIndex CLIENT_KEY");
         return false;
       }
-      return createIndexer();
+      return false; //createIndexer();
     } else if (command.compareTo("updateIndex") == 0) {
       if (arguments.length < 3) {
         logger.error("Usage java -jar ilServer.jar PATH_TO_SERVER_INI updateIndex CLIENT_KEY");
         return false;
       }
-      return updateIndexer();
+      return false;//updateIndexer();
     } else if (command.compareTo("search") == 0) {
       if (arguments.length != 4) {
         logger.error("Usage java -jar ilServer.jar PATH_TO_SERVER_INI CLIENT_KEY search QUERY_STRING");
         return false;
       }
-      return startSearch();
+      return false;//startSearch();
 
     } else if (command.compareTo("status") == 0) {
       if (arguments.length != 2) {
         logger.error("Usage java -jar ilServer.jar PATH_TO_SERVER_INI status");
         return false;
       }
-      return getStatus();
+      return false;//getStatus();
     } else {
       logger.error(getUsage());
       return false;
     }
   }
 
-  private boolean createIndexer() {
+//  private boolean createIndexer() {
+//
+//    XmlRpcClient client;
+//    IniFileParser parser;
+//
+//    try {
+//      parser = new IniFileParser();
+//      parser.parseServerSettings(arguments[0], true);
+//
+//      if (!ClientSettings.exists(arguments[2])) {
+//        throw new ConfigurationException("Unknown client given: " + arguments[2]);
+//      }
+//
+//      client = initRpcClient();
+//      Object[] params = new Object[2];
+//      params[0] = arguments[2];
+//      params[1] = false;
+//      client.execute("RPCIndexHandler.index", params);
+//      return true;
+//    } catch (Exception e) {
+//      logger.error(e);
+//      logger.fatal(e.getMessage());
+//      System.exit(1);
+//    }
+//    return false;
+//  }
 
-    XmlRpcClient client;
-    IniFileParser parser;
+//  private boolean updateIndexer() {
+//
+//    XmlRpcClient client;
+//    IniFileParser parser;
+//
+//    try {
+//      parser = new IniFileParser();
+//      parser.parseServerSettings(arguments[0], true);
+//
+//      if (!ClientSettings.exists(arguments[2])) {
+//        throw new ConfigurationException("Unknown client given: " + arguments[2]);
+//      }
+//
+//      client = initRpcClient();
+//      Object[] params = new Object[2];
+//      params[0] = arguments[2];
+//      params[1] = true;
+//      client.execute("RPCIndexHandler.index", params);
+//      return true;
+//    } catch (Exception e) {
+//      logger.error(e);
+//      logger.fatal(e.getMessage());
+//      System.exit(1);
+//    }
+//    return false;
+//  }
 
-    try {
-      parser = new IniFileParser();
-      parser.parseServerSettings(arguments[0], true);
+//  private boolean startSearch() {
+//
+//    XmlRpcClient client;
+//    IniFileParser parser;
+//
+//    try {
+//      parser = new IniFileParser();
+//      parser.parseServerSettings(arguments[0], true);
+//
+//      if (!ClientSettings.exists(arguments[2])) {
+//        throw new ConfigurationException("Unknown client given: " + arguments[2]);
+//      }
+//
+//      client = initRpcClient();
+//      Object[] params = new Object[3];
+//      params[0] = arguments[2];
+//      params[1] = arguments[3];
+//      params[2] = 1;
+//      String response = (String) client.execute("RPCSearchHandler.search", params);
+//      logger.debug(response);
+//      return true;
+//    } catch (Exception e) {
+//      logger.error(e);
+//      logger.fatal(e.getMessage());
+//      System.exit(1);
+//    }
+//    return false;
+//  }
 
-      if (!ClientSettings.exists(arguments[2])) {
-        throw new ConfigurationException("Unknown client given: " + arguments[2]);
-      }
-
-      client = initRpcClient();
-      Object[] params = new Object[2];
-      params[0] = arguments[2];
-      params[1] = false;
-      client.execute("RPCIndexHandler.index", params);
-      return true;
-    } catch (Exception e) {
-      logger.error(e);
-      logger.fatal(e.getMessage());
-      System.exit(1);
-    }
-    return false;
-  }
-
-  private boolean updateIndexer() {
-
-    XmlRpcClient client;
-    IniFileParser parser;
-
-    try {
-      parser = new IniFileParser();
-      parser.parseServerSettings(arguments[0], true);
-
-      if (!ClientSettings.exists(arguments[2])) {
-        throw new ConfigurationException("Unknown client given: " + arguments[2]);
-      }
-
-      client = initRpcClient();
-      Object[] params = new Object[2];
-      params[0] = arguments[2];
-      params[1] = true;
-      client.execute("RPCIndexHandler.index", params);
-      return true;
-    } catch (Exception e) {
-      logger.error(e);
-      logger.fatal(e.getMessage());
-      System.exit(1);
-    }
-    return false;
-  }
-
-  private boolean startSearch() {
-
-    XmlRpcClient client;
-    IniFileParser parser;
-
-    try {
-      parser = new IniFileParser();
-      parser.parseServerSettings(arguments[0], true);
-
-      if (!ClientSettings.exists(arguments[2])) {
-        throw new ConfigurationException("Unknown client given: " + arguments[2]);
-      }
-
-      client = initRpcClient();
-      Object[] params = new Object[3];
-      params[0] = arguments[2];
-      params[1] = arguments[3];
-      params[2] = 1;
-      String response = (String) client.execute("RPCSearchHandler.search", params);
-      logger.debug(response);
-      return true;
-    } catch (Exception e) {
-      logger.error(e);
-      logger.fatal(e.getMessage());
-      System.exit(1);
-    }
-    return false;
-  }
-
-  /**
-   * Call RPC stop method, which will stop the WebServer
-   * and after that stop the execution of the main thread
-   */
-  private boolean stopServer() {
-
-    XmlRpcClient client;
-    IniFileParser parser;
-
-    try {
-      parser = new IniFileParser();
-      parser.parseServerSettings(arguments[0], false);
-
-      client = initRpcClient();
-      client.execute("RPCAdministration.stop", Collections.EMPTY_LIST);
-      return true;
-    } catch (ConfigurationException e) {
-      logger.error("Configuration " + e.getMessage());
-    } catch (XmlRpcException e) {
-      logger.error("XMLRPC " + e.getMessage());
-    } catch (IOException e) {
-      logger.error("IOException " + e.getMessage());
-    }
-    return false;
-  }
-
-  private boolean getStatus() {
-
-    XmlRpcClient client;
-    IniFileParser parser;
-
-    String status;
-
-    try {
-      parser = new IniFileParser();
-      parser.parseServerSettings(arguments[0], false);
-
-      client = initRpcClient();
-      status = (String) client.execute("RPCAdministration.status", Collections.EMPTY_LIST);
-      logger.info(status);
-      return true;
-    } catch (ConfigurationException e) {
-      logger.error("Configuration " + e.getMessage());
-    } catch (XmlRpcException e) {
-      logger.error(ILServerStatus.STOPPED);
-      System.exit(1);
-    } catch (IOException e) {
-      logger.error(ILServerStatus.STOPPED);
-      System.exit(1);
-    }
-    return false;
-  }
+//  private boolean getStatus() {
+//
+//    XmlRpcClient client;
+//    IniFileParser parser;
+//
+//    String status;
+//
+//    try {
+//      parser = new IniFileParser();
+//      parser.parseServerSettings(arguments[0], false);
+//
+//      client = initRpcClient();
+//      status = (String) client.execute("RPCAdministration.status", Collections.EMPTY_LIST);
+//      logger.info(status);
+//      return true;
+//    } catch (ConfigurationException e) {
+//      logger.error("Configuration " + e.getMessage());
+//    } catch (XmlRpcException e) {
+//      logger.error(ILServerStatus.STOPPED);
+//      System.exit(1);
+//    } catch (IOException e) {
+//      logger.error(ILServerStatus.STOPPED);
+//      System.exit(1);
+//    }
+//    return false;
+//  }
 
   /**
    * @return String usage

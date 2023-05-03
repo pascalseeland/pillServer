@@ -24,18 +24,21 @@ package de.ilias.services.lucene.index.file.path;
 
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.settings.ClientSettings;
-import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 
 import java.io.File;
 import java.sql.ResultSet;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
+@ApplicationScoped
 public class HTLMObjectPathCreator implements PathCreator {
 
+  @Inject
+  ClientSettings clientSettings;
   /**
    * @see de.ilias.services.lucene.index.file.path.PathCreator#buildFile(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
    */
@@ -46,26 +49,22 @@ public class HTLMObjectPathCreator implements PathCreator {
 
     File file;
 
-    try {
-      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getAbsolutePath());
-      fullPath.append(System.getProperty("file.separator"));
-      fullPath.append("data");
-      fullPath.append(System.getProperty("file.separator"));
-      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-      fullPath.append(System.getProperty("file.separator"));
-      fullPath.append("lm_data");
-      fullPath.append(System.getProperty("file.separator"));
-      fullPath.append("lm_");
-      fullPath.append(String.valueOf(objId));
+    fullPath.append(clientSettings.getAbsolutePath());
+    fullPath.append(System.getProperty("file.separator"));
+    fullPath.append("data");
+    fullPath.append(System.getProperty("file.separator"));
+    fullPath.append(clientSettings.getClient());
+    fullPath.append(System.getProperty("file.separator"));
+    fullPath.append("lm_data");
+    fullPath.append(System.getProperty("file.separator"));
+    fullPath.append("lm_");
+    fullPath.append(objId);
 
-      file = new File(fullPath.toString());
-      if (file.exists() && file.canRead()) {
-        return file;
-      }
-      throw new PathCreatorException("Cannot access directory: " + fullPath.toString());
-    } catch (ConfigurationException e) {
-      throw new PathCreatorException(e);
+    file = new File(fullPath.toString());
+    if (file.exists() && file.canRead()) {
+      return file;
     }
+    throw new PathCreatorException("Cannot access directory: " + fullPath);
   }
 
   @Override

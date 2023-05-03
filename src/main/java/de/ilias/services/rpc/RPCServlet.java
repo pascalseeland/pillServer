@@ -7,9 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.server.PropertyHandlerMapping;
 import org.apache.xmlrpc.server.XmlRpcHandlerMapping;
-import org.apache.xmlrpc.webserver.XmlRpcServlet;
 
-public class RPCServlet extends XmlRpcServlet {
+public class RPCServlet  {
 
   private static Logger logger = LogManager.getLogger(RPCServlet.class);
 

@@ -4,8 +4,6 @@ package de.ilias.services.lucene.index.file.path;
 
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.settings.ClientSettings;
-import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,12 +21,10 @@ public class FileObjectPathCreator7 implements PathCreator {
   protected String basePath = "storage";
   protected static final String BIN_NAME = "data";
 
-  /**
-   * Set base path
-   */
-  public void setBasePath(String bp) {
+  ClientSettings clientSettings;
 
-    this.basePath = bp;
+  public FileObjectPathCreator7(ClientSettings clientSettings) {
+    this.clientSettings = clientSettings;
   }
 
   /**
@@ -58,32 +54,32 @@ public class FileObjectPathCreator7 implements PathCreator {
         versionCode = resVersion;
       }
 
-      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
+      fullPath.append(clientSettings.getDataDirectory().getAbsolutePath());
       fullPath.append(System.getProperty("file.separator"));
-      fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
+      fullPath.append(clientSettings.getClient());
       fullPath.append(System.getProperty("file.separator"));
       fullPath.append(getBasePath());
       fullPath.append(System.getProperty("file.separator"));
       fullPath.append(res.getString("resource_path"));
       versionPath.append(fullPath);
       versionPath.append(System.getProperty("file.separator"));
-      versionPath.append(String.valueOf(versionCode));
+      versionPath.append(versionCode);
       versionPath.append(System.getProperty("file.separator"));
       versionPath.append(BIN_NAME);
 
-      logger.info("Detected file object path is: " + versionPath.toString());
+      logger.info("Detected file object path is: " + versionPath);
 
       file = new File(versionPath.toString());
       if (!file.exists()) {
-        throw new PathCreatorException("Cannot find file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot find file: " + fullPath);
       }
 
       if (!file.canRead()) {
-        throw new PathCreatorException("Cannot read file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot read file: " + fullPath);
       }
 
       return file;
-    } catch (ConfigurationException | SQLException | NullPointerException e) {
+    } catch (SQLException | NullPointerException e) {
       throw new PathCreatorException(e);
     }
   }
@@ -99,10 +95,10 @@ public class FileObjectPathCreator7 implements PathCreator {
         throw new PathCreatorException("Cannot split NULL filename for objId: " + el.getObjId());
       }
       int dotIndex = fileName.lastIndexOf(".");
-      if ((dotIndex > 0) && (dotIndex < fileName.length())) {
-        extension.append(fileName.substring(dotIndex + 1, fileName.length()));
+      if (dotIndex > 0) {
+        extension.append(fileName.substring(dotIndex + 1));
       }
-      logger.info("Extraced extension: " + extension.toString() + " from file name: " + fileName);
+      logger.info("Extraced extension: " + extension + " from file name: " + fileName);
 
     } catch (SQLException ex) {
       logger.error(ex.toString());

@@ -24,7 +24,6 @@ package de.ilias.services.db;
 
 import de.ilias.services.settings.ClientSettings;
 import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +36,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * A thread local singleton for db connections
@@ -52,28 +52,29 @@ public class DBFactory {
   private static final String MARIA_DB_CONNECTOR = "jdbc:mariadb://";
 
   @ConfigProperty(name = "pillServer.ClientId")
-  private String clientID;
+  String clientID;
+
+  @Inject
+  ClientSettings clientSettings;
 
   private ThreadLocal<HashMap<String, PreparedStatement>> ps = ThreadLocal.withInitial(() -> new HashMap<>());
 
   private ThreadLocal<Connection> connection = ThreadLocal.withInitial(() -> {
     try {
-      ClientSettings client = ClientSettings.getInstance(clientID);
-
-      logger.info("+++++++++++++++++++++++++++++++++++++++++++ New Thread local " + LocalSettings.getClientKey());
+      logger.info("+++++++++++++++++++++++++++++++++++++++++++ New Thread local " + this.clientID);
 
       // MySQL
-      if (client.getDbType().equalsIgnoreCase("mysql")) {
+      if (this.clientSettings.getDbType().equalsIgnoreCase("mysql")) {
 
         logger.info("Loading maria db driver...");
-        logger.info("Using jdbc url: " + client.getDbUrl() + "/" + client.getDbUser() + "/" + "******"
+        logger.info("Using jdbc url: " + this.clientSettings.getDbUrl() + "/" + this.clientSettings.getDbUser() + "/" + "******"
             + "?autoReconnect=true");
 
-        return DriverManager.getConnection(DBFactory.MARIA_DB_CONNECTOR + client.getDbUrl() + "?autoReconnect=true",
-            client.getDbUser(), client.getDbPass());
+        return DriverManager.getConnection(DBFactory.MARIA_DB_CONNECTOR + this.clientSettings.getDbUrl() + "?autoReconnect=true",
+            this.clientSettings.getDbUser(), this.clientSettings.getDbPass());
       } else {
-        logger.error("Unsupported db type given." + client.getDbType());
-        throw new ConfigurationException("Unsupported db type given." + client.getDbType());
+        logger.error("Unsupported db type given." + this.clientSettings.getDbType());
+        throw new ConfigurationException("Unsupported db type given." + this.clientSettings.getDbType());
       }
     } catch (SQLException | ConfigurationException e) {
       logger.error("Cannot connect to database: " + e);
@@ -169,20 +170,12 @@ public class DBFactory {
    */
   public PreparedStatement setString(PreparedStatement ps, int index, String str) throws SQLException {
 
-    ClientSettings client;
-    try {
+    if (clientSettings.getDbType().equals("mysql")) {
 
-      client = ClientSettings.getInstance(LocalSettings.getClientKey());
-      if (client.getDbType().equals("mysql")) {
-
-        ps.setString(index, str);
-        return ps;
-      }
-    } catch (ConfigurationException e) {
-      // shouldn't happen here
-      logger.error(e);
+      ps.setString(index, str);
+      return ps;
     }
-    return (PreparedStatement) ps;
+    return ps;
   }
 
   /**
@@ -190,17 +183,8 @@ public class DBFactory {
    */
   public String getString(ResultSet res, String name) throws SQLException {
 
-    ClientSettings client;
-    try {
-
-      client = ClientSettings.getInstance(LocalSettings.getClientKey());
-      if (client.getDbType().equals("mysql")) {
-
-        return res.getString(name);
-      }
-    } catch (ConfigurationException e) {
-      // shouldn't happen here
-      logger.error(e);
+    if (clientSettings.getDbType().equals("mysql")) {
+      return res.getString(name);
     }
     return "";
   }

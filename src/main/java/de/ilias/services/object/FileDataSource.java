@@ -24,6 +24,7 @@ package de.ilias.services.object;
 
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandlerException;
+import de.ilias.services.lucene.index.DocumentHolder;
 import de.ilias.services.lucene.index.file.ExtensionFileHandler;
 import de.ilias.services.lucene.index.file.FileHandlerException;
 import de.ilias.services.lucene.index.file.path.PathCreator;
@@ -33,12 +34,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class FileDataSource extends DataSource {
 
@@ -52,36 +54,36 @@ public class FileDataSource extends DataSource {
   }
 
   /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
+   * @see de.ilias.services.lucene.index.DocumentHandler#createDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
    */
-  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
+  public List<DocumentHolder> createDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
 
     File file = null;
     ExtensionFileHandler handler = new ExtensionFileHandler();
 
     try {
-      if (getPathCreator() == null) {
+      if (pathCreator == null) {
         logger.info("No path creator defined");
-        return;
+        return Collections.emptyList();
       }
-      file = getPathCreator().buildFile(el, res);
-      String extension = getPathCreator().getExtension(el, res);
-
+      file = pathCreator.buildFile(el, res);
+      String extension = pathCreator.getExtension(el, res);
+      DocumentHolder documentHolder = new DocumentHolder();
       // Analyze encoding (transfer encoding), parse file extension and finally read content
-      for (Object field : getFields()) {
-        ((FieldDefinition) field).writeDocument(handler.getContent(file, extension));
+      for (FieldDefinition field : fields) {
+        field.writeDocument(documentHolder, handler.getContent(file, extension));
       }
       logger.debug("File path is: " + file.getAbsolutePath());
-      return;
+      List<DocumentHolder> documentHolders = new LinkedList<>();
+      documentHolders.add(documentHolder);
+      return documentHolders;
     } catch (PathCreatorException e) {
       if (file != null) {
         logger.info("Current Files is: " + file.getAbsolutePath());
       }
       throw new DocumentHandlerException(e);
     } catch (FileHandlerException e) {
-      if (file != null) {
-        logger.info("Current Files is: " + file.getAbsolutePath());
-      }
+      logger.info("Current Files is: " + file.getAbsolutePath());
       throw new DocumentHandlerException(e);
     }
   }
@@ -101,11 +103,11 @@ public class FileDataSource extends DataSource {
   }
 
   /**
-   * @see de.ilias.services.object.DataSource#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   * @see de.ilias.services.object.DataSource#createDocument(de.ilias.services.lucene.index.CommandQueueElement)
    */
   @Override
-  public void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
+  public List<DocumentHolder> createDocument(CommandQueueElement el) throws DocumentHandlerException {
 
-    writeDocument(el, null);
+    return createDocument(el, null);
   }
 }

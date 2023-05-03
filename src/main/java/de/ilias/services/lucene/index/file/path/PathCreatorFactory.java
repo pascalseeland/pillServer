@@ -23,6 +23,7 @@
 package de.ilias.services.lucene.index.file.path;
 
 import de.ilias.services.object.ObjectDefinitionException;
+import de.ilias.services.settings.ClientSettings;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
@@ -30,7 +31,7 @@ import de.ilias.services.object.ObjectDefinitionException;
  */
 public class PathCreatorFactory {
 
-  public static PathCreator factory(String name) throws ObjectDefinitionException {
+  public static PathCreator factory(String name, ClientSettings clientSettings) throws ObjectDefinitionException {
 
     if (name.equalsIgnoreCase("FileObjectPathCreator")) {
       return new FileObjectPathCreator();
@@ -54,7 +55,7 @@ public class PathCreatorFactory {
       return new MailAttachmentPathCreator();
     }
     if (name.equalsIgnoreCase("FileObjectPathCreator7")) {
-      return new FileObjectPathCreator7();
+      return new FileObjectPathCreator7(clientSettings);
     }
 
     throw new ObjectDefinitionException("Invalid path creator name given: " + name);

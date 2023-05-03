@@ -29,15 +29,12 @@ import java.util.Vector;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class QueryRewriter {
 
   public static final int MODE_SEARCH = 1;
   public static final int MODE_HIGHLIGHT = 2;
-  // begin-patch user-search
   public static final int MODE_MAIL_HIGHLIGHT = 3;
-  // begin-patch user-search
 
   public static final int MODE_USER_HIGHLIGHT = 4;
 
@@ -46,7 +43,7 @@ public class QueryRewriter {
   private String query;
   private StringBuffer rewritten;
   private int mode;
-  private Vector<Integer> objIds = new Vector<Integer>();
+  private Vector<Integer> objIds = new Vector<>();
 
   public QueryRewriter(int mode, String query) {
 
@@ -67,7 +64,7 @@ public class QueryRewriter {
         return rewriteUserHighlight();
     }
 
-    return getQuery();
+    return query;
   }
 
   public String rewrite(int userId, int folderId) {
@@ -75,7 +72,7 @@ public class QueryRewriter {
     if (mode == MODE_MAIL_HIGHLIGHT) {
       return rewriteMailHighlight(userId, folderId);
     }
-    return getQuery();
+    return query;
   }
 
   public String rewrite(Vector<Integer> objIds) {
@@ -87,7 +84,7 @@ public class QueryRewriter {
   private String rewriteHighlight() {
 
     rewritten.append("( ");
-    rewritten.append(getQuery());
+    rewritten.append(query);
     rewritten.append(" ) AND ((");
     for (Integer objId : objIds) {
       rewritten.append("objId:");
@@ -96,7 +93,7 @@ public class QueryRewriter {
     }
     rewritten.append(" ) AND docType:separated)");
 
-    logger.debug("Searching for: " + rewritten.toString());
+    logger.debug("Searching for: " + rewritten);
     return rewritten.toString();
   }
 
@@ -106,7 +103,7 @@ public class QueryRewriter {
   private String rewriteMailHighlight(int userId, int folderId) {
 
     rewritten.append("( ");
-    rewritten.append(getQuery());
+    rewritten.append(query);
     rewritten.append(") AND ((");
     rewritten.append("objId:");
     rewritten.append(userId);
@@ -117,18 +114,18 @@ public class QueryRewriter {
     }
     rewritten.append(") AND docType:separated) ");
 
-    logger.debug("Searching for: " + rewritten.toString());
+    logger.debug("Searching for: " + rewritten);
     return rewritten.toString();
   }
 
   private String rewriteSearch() {
 
     rewritten.append("(");
-    rewritten.append(getQuery());
+    rewritten.append(query);
     rewritten.append(")");
     rewritten.append(" AND +docType:combined");
 
-    logger.debug("Searching for: " + rewritten.toString());
+    logger.debug("Searching for: " + rewritten);
     return rewritten.toString();
   }
 
@@ -138,47 +135,12 @@ public class QueryRewriter {
   private String rewriteUserHighlight() {
 
     rewritten.append("(");
-    rewritten.append(getQuery());
+    rewritten.append(query);
     rewritten.append(")");
     rewritten.append(" AND type:usr");
 
-    logger.info("Searching for:" + rewritten.toString());
+    logger.info("Searching for:" + rewritten);
     return rewritten.toString();
-  }
-
-  /**
-   * @return the query
-   */
-  public String getQuery() {
-    return query;
-  }
-
-  /**
-   * @param query the query to set
-   */
-  public void setQuery(String query) {
-    this.query = query;
-  }
-
-  /**
-   * @return the mode
-   */
-  public int getMode() {
-    return mode;
-  }
-
-  /**
-   * @param mode the mode to set
-   */
-  public void setMode(int mode) {
-    this.mode = mode;
-  }
-
-  /**
-   * @return the objIds
-   */
-  public Vector<Integer> getObjIds() {
-    return objIds;
   }
 
   /**

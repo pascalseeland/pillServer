@@ -23,7 +23,6 @@
 package de.ilias.services.rpc;
 
 import de.ilias.ILServerStatus;
-import de.ilias.services.lucene.index.IndexHolder;
 import de.ilias.services.lucene.settings.LuceneSettings;
 import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.LocalSettings;
@@ -58,7 +57,7 @@ public class RPCAdministration {
     logger.info("Received stop request");
 
     // Closing all index writers
-    IndexHolder.closeAllWriters();
+    //IndexHolder.closeAllWriters();
 
 
     // Set server status inactive
@@ -79,7 +78,8 @@ public class RPCAdministration {
     try {
       logger.info("Reading lucene client settings from database.");
       logger.info("Client key: " + clientKey);
-      settings = LuceneSettings.getInstance(clientKey);
+      //TODO rewrite rpc with option to refresh settings from db
+      //settings = LuceneSettings.getInstance(clientKey);
       settings.refresh();
       return true;
     } catch (SQLException e) {

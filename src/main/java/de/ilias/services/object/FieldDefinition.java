@@ -37,7 +37,6 @@ import java.util.Vector;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class FieldDefinition {
 
@@ -50,13 +49,15 @@ public class FieldDefinition {
   public static final int INDEX_ANALYZED = 1;
   public static final int INDEX_NOT_ANALYZED = 2;
 
+  private DBFactory dbFactory;
+
   /**
    * Is stored
    */
   private Field.Store store = Field.Store.NO;
 
   /**
-   * Index field type
+   * IndexController field type
    */
   public int indexType = FieldDefinition.INDEX_NO;
 
@@ -88,7 +89,7 @@ public class FieldDefinition {
   Vector<TransformerDefinition> transformers = new Vector<>();
 
   public FieldDefinition(String store, String index, String name, String column, String type, String isGlobal,
-      String dynamicName) {
+      String dynamicName, DBFactory dbFactory) {
 
     if (store.equalsIgnoreCase("YES")) {
       this.store = Field.Store.YES;
@@ -117,6 +118,7 @@ public class FieldDefinition {
     if (type != null && type.length() != 0) {
       this.type = type;
     }
+    this.dbFactory = dbFactory;
   }
 
   /**
@@ -186,11 +188,11 @@ public class FieldDefinition {
       String value;
 
       if (getType().equalsIgnoreCase("clob")) {
-        value = DBFactory.getCLOB(res, getName());
+        value = this.dbFactory.getCLOB(res, getName());
       } else if (getType().equalsIgnoreCase("text")) {
-        value = DBFactory.getString(res, getName());
+        value = this.dbFactory.getString(res, getName());
       } else if (getType().equalsIgnoreCase("integer")) {
-        value = DBFactory.getInt(res, getName());
+        value = this.dbFactory.getInt(res, getName());
       } else {
         logger.warn("Unknown type given for Field name: " + getName());
         return "";
@@ -269,18 +271,18 @@ public class FieldDefinition {
     return out.toString();
   }
 
-  public void writeDocument(ResultSet res) throws SQLException {
+  public void writeDocument(DocumentHolder docHolder, ResultSet res) throws SQLException {
 
     try {
       String value;
       boolean indexed = false;
 
       if (getType().equalsIgnoreCase("clob")) {
-        value = DBFactory.getCLOB(res, getColumn());
+        value = this.dbFactory.getCLOB(res, getColumn());
       } else if (getType().equalsIgnoreCase("text")) {
-        value = DBFactory.getString(res, getColumn());
+        value = this.dbFactory.getString(res, getColumn());
       } else if (getType().equalsIgnoreCase("integer")) {
-        value = DBFactory.getInt(res, getColumn());
+        value = this.dbFactory.getInt(res, getColumn());
       } else {
         logger.warn("Unknown type given for Field name: " + getName());
         return;
@@ -295,26 +297,22 @@ public class FieldDefinition {
         if (getIndexType().equals(INDEX_ANALYZED)) {
           indexed = true;
         }
-        DocumentHolder.factory().add(fieldName, purged, isGlobal(), store, indexed);
+        docHolder.add(fieldName, purged, global, store, indexed);
       }
-      return;
     } catch (NullPointerException e) {
       logger.error("Caught NullPointerException: " + e.getMessage());
     }
   }
 
-  public void writeDocument(String content) {
-
-    boolean indexed = false;
+  public void writeDocument(DocumentHolder docHolder, String content) {
 
     if (content != null && content.length() != 0) {
 
       String purged = callTransformers(content);
 
-      if (getIndexType().equals(INDEX_ANALYZED)) {
-        indexed = true;
-      }
-      DocumentHolder.factory().add(getName(), purged, isGlobal(), store, indexed);
+      boolean indexed = getIndexType().equals(INDEX_ANALYZED);
+
+      docHolder.add(name, purged, global, store, indexed);
     }
   }
 

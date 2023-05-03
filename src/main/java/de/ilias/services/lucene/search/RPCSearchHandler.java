@@ -24,10 +24,10 @@ package de.ilias.services.lucene.search;
 
 import de.ilias.services.lucene.index.FieldInfo;
 import de.ilias.services.lucene.index.FieldInfoUser;
+import de.ilias.services.lucene.index.IndexHolder;
 import de.ilias.services.lucene.search.highlight.HitHighlighter;
 import de.ilias.services.lucene.settings.LuceneSettings;
 import de.ilias.services.settings.ConfigurationException;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +44,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -51,11 +52,28 @@ import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.Vector;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
+
+@ApplicationScoped
 public class RPCSearchHandler {
+
+  @Inject
+  LuceneSettings luceneSettings;
+
+  @ConfigProperty(name = "pillServer.ClientId")
+  String clientID;
+
+  @Inject
+  IndexHolder searchHolder;
+
+  @Inject
+  FieldInfo fieldInfo;
 
   Logger logger = LogManager.getLogger(RPCSearchHandler.class);
 
@@ -69,15 +87,17 @@ public class RPCSearchHandler {
   /**
    * Multi field searcher
    * Searches in all defined fields.
-   *
-   * @TDOD allow configuration of searchable fields.
+   * TDOD allow configuration of searchable fields.
    */
   public String search(String clientKey, String queryString, int pageNumber) {
 
-    LuceneSettings luceneSettings;
-    LocalSettings.setClientKey(clientKey);
+    // check that search is called with proper clientID
+    if (!this.clientID.equals(clientKey)) {
+      logger.error("Called with {} instead of {}", clientKey, clientID);
+      return "";
+    }
+
     IndexSearcher searcher;
-    FieldInfo fieldInfo;
     String rewrittenQuery;
 
     logger.info("Query is: " + queryString);
@@ -86,26 +106,18 @@ public class RPCSearchHandler {
 
       long start = new java.util.Date().getTime();
 
-      fieldInfo = FieldInfo.getInstance(LocalSettings.getClientKey());
-      luceneSettings = LuceneSettings.getInstance(LocalSettings.getClientKey());
-
       // Append doctype
-      searcher = SearchHolder.getInstance().getSearcher();
+      searcher = this.searchHolder.getSearcher();
 
       // Rewrite query
       QueryRewriter rewriter = new QueryRewriter(QueryRewriter.MODE_SEARCH, queryString);
       rewrittenQuery = rewriter.rewrite();
 
-      Vector<Occur> occurs = new Vector<Occur>();
-      for (int i = 0; i < fieldInfo.getFieldSize(); i++) {
-        occurs.add(BooleanClause.Occur.SHOULD);
-      }
-
       MultiFieldQueryParser multiParser = new MultiFieldQueryParser(fieldInfo.getFieldsAsStringArray(),
           new StandardAnalyzer());
-      multiParser.setAllowLeadingWildcard(luceneSettings.isPrefixWildcardQueryEnabled());
+      multiParser.setAllowLeadingWildcard(this.luceneSettings.isPrefixWildcardQueryEnabled());
 
-      if (luceneSettings.getDefaultOperator() == LuceneSettings.OPERATOR_AND) {
+      if (this.luceneSettings.getDefaultOperator() == LuceneSettings.OPERATOR_AND) {
         multiParser.setDefaultOperator(Operator.AND);
       } else {
         multiParser.setDefaultOperator(Operator.OR);
@@ -120,8 +132,8 @@ public class RPCSearchHandler {
       //    occurs.toArray(new Occur[0]),
       //    new StandardAnalyzer());
 
-      for (Object f : fieldInfo.getFields()) {
-        logger.info(((String) f).toString());
+      for (String f : fieldInfo.getFields()) {
+        logger.info(f);
       }
       TopScoreDocCollector collector = TopScoreDocCollector.create(1000);
       long s_start = new java.util.Date().getTime();
@@ -129,8 +141,8 @@ public class RPCSearchHandler {
       long s_end = new java.util.Date().getTime();
       ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
-      SearchResultWriter writer = new SearchResultWriter(hits);
-      writer.setOffset(SearchHolder.SEARCH_LIMIT * (pageNumber - 1));
+      SearchResultWriter writer = new SearchResultWriter(this.searchHolder.getSearcher(), hits);
+      writer.setOffset(IndexHolder.SEARCH_LIMIT * (pageNumber - 1));
       writer.write();
 
       long end = new java.util.Date().getTime();
@@ -159,8 +171,12 @@ public class RPCSearchHandler {
    */
   public String searchUsers(String clientKey, String queryString) {
 
-    LuceneSettings luceneSettings;
-    LocalSettings.setClientKey(clientKey);
+    // check that search is called with proper clientID
+    if (!this.clientID.equals(clientKey)) {
+      logger.error("Called with {} instead of {}", clientKey, clientID);
+      return "";
+    }
+
     FieldInfoUser fieldInfo;
     IndexSearcher searcher;
     String rewrittenQuery;
@@ -170,24 +186,17 @@ public class RPCSearchHandler {
       // Store duration of request
       long start = new java.util.Date().getTime();
 
-      fieldInfo = (FieldInfoUser) FieldInfoUser.getInstance(LocalSettings.getClientKey());
-      luceneSettings = LuceneSettings.getInstance();
+      fieldInfo = FieldInfoUser.getInstance(this.clientID);
 
       // Rewrite query
       QueryRewriter rewriter = new QueryRewriter(QueryRewriter.MODE_USER_HIGHLIGHT, queryString);
       rewrittenQuery = rewriter.rewrite();
 
-      searcher = SearchHolder.getInstance().getSearcher();
-
-      // @todo special field info for user search
-      Vector<Occur> occurs = new Vector<Occur>();
-      for (int i = 0; i < fieldInfo.getFieldSize(); i++) {
-        occurs.add(BooleanClause.Occur.SHOULD);
-      }
+      searcher = this.searchHolder.getSearcher();
 
       MultiFieldQueryParser multiParser = new MultiFieldQueryParser(fieldInfo.getFieldsAsStringArray(),
           new StandardAnalyzer());
-      multiParser.setAllowLeadingWildcard(luceneSettings.isPrefixWildcardQueryEnabled());
+      multiParser.setAllowLeadingWildcard(this.luceneSettings.isPrefixWildcardQueryEnabled());
 
       if (luceneSettings.getDefaultOperator() == LuceneSettings.OPERATOR_AND) {
         multiParser.setDefaultOperator(Operator.AND);
@@ -205,7 +214,7 @@ public class RPCSearchHandler {
       ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
       long h_start = new java.util.Date().getTime();
-      HitHighlighter hh = new HitHighlighter(query, hits);
+      HitHighlighter hh = new HitHighlighter(luceneSettings, this.fieldInfo, searchHolder.getSearcher(), query, hits);
       hh.highlight();
       long h_end = new java.util.Date().getTime();
 
@@ -213,25 +222,9 @@ public class RPCSearchHandler {
       logger.info("Highlighter time: " + (h_end - h_start));
       logger.info("Total time: " + (end - start));
       return hh.toXML();
-    } catch (IOException e) {
+    } catch (IOException | InvalidTokenOffsetsException | SQLException | ParseException | ConfigurationException e) {
       StringWriter writer = new StringWriter();
       e.printStackTrace(new PrintWriter(writer));
-      logger.fatal(writer.toString());
-    } catch (ConfigurationException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.fatal(writer.toString());
-    } catch (ParseException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.fatal(writer.toString());
-    } catch (SQLException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.fatal(writer.toString());
-    } catch (InvalidTokenOffsetsException ex) {
-      StringWriter writer = new StringWriter();
-      ex.printStackTrace(new PrintWriter(writer));
       logger.fatal(writer.toString());
     }
 
@@ -240,15 +233,16 @@ public class RPCSearchHandler {
 
   public String highlight(String clientKey, Vector<Integer> objIds, String queryString) {
 
-    LuceneSettings luceneSettings;
-    LocalSettings.setClientKey(clientKey);
-    FieldInfo fieldInfo;
+    // check that search is called with proper clientID
+    if (!this.clientID.equals(clientKey)) {
+      logger.error("Called with {} instead of {}", clientKey, clientID);
+      return "";
+    }
+
     IndexSearcher searcher;
     String rewrittenQuery;
 
     try {
-      fieldInfo = FieldInfo.getInstance(LocalSettings.getClientKey());
-      luceneSettings = LuceneSettings.getInstance(LocalSettings.getClientKey());
 
       long start = new java.util.Date().getTime();
 
@@ -257,9 +251,9 @@ public class RPCSearchHandler {
       rewrittenQuery = rewriter.rewrite(objIds);
       logger.info("Searching for: " + rewrittenQuery);
 
-      searcher = SearchHolder.getInstance().getSearcher();
+      searcher = this.searchHolder.getSearcher();
 
-      Vector<Occur> occurs = new Vector<Occur>();
+      Vector<Occur> occurs = new Vector<>();
       for (int i = 0; i < fieldInfo.getFieldSize(); i++) {
         occurs.add(BooleanClause.Occur.SHOULD);
       }
@@ -273,7 +267,7 @@ public class RPCSearchHandler {
           MultiFieldQueryParser.parse(rewrittenQuery, fieldInfo.getFieldsAsStringArray(), occurs.toArray(new Occur[0]),
               new StandardAnalyzer()));
 
-      logger.info("What occurs" + occurs.toString());
+      logger.info("What occurs" + occurs);
       logger.info("Rewritten query is: " + query.toString());
 
       TopScoreDocCollector collector = TopScoreDocCollector.create(1000);
@@ -281,7 +275,7 @@ public class RPCSearchHandler {
       ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
       long h_start = new java.util.Date().getTime();
-      HitHighlighter hh = new HitHighlighter(query, hits);
+      HitHighlighter hh = new HitHighlighter(luceneSettings, fieldInfo, searchHolder.getSearcher(), query, hits);
       hh.highlight();
       long h_end = new java.util.Date().getTime();
 
@@ -294,12 +288,10 @@ public class RPCSearchHandler {
       return hh.toXML();
     } catch (CorruptIndexException e) {
       logger.fatal(e);
-    } catch (ConfigurationException e) {
+    } catch (ConfigurationException | IOException e) {
       logger.error(e);
     } catch (ParseException e) {
       logger.warn(e);
-    } catch (IOException e) {
-      logger.error(e);
     } catch (Exception e) {
       StringWriter writer = new StringWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -313,14 +305,16 @@ public class RPCSearchHandler {
    */
   public String searchMail(String clientKey, int userId, String queryString, int folderId) {
 
-    LocalSettings.setClientKey(clientKey);
-    FieldInfo fieldInfo;
+    // check that search is called with proper clientID
+    if (!this.clientID.equals(clientKey)) {
+      logger.error("Called with {} instead of {}", clientKey, clientID);
+      return "";
+    }
+
     IndexSearcher searcher;
     String rewrittenQuery;
 
     try {
-      fieldInfo = FieldInfo.getInstance(LocalSettings.getClientKey());
-
       long start = new java.util.Date().getTime();
 
       // Rewrite query
@@ -328,9 +322,9 @@ public class RPCSearchHandler {
       rewrittenQuery = rewriter.rewrite(userId, folderId);
       logger.info("Searching for: " + rewrittenQuery);
 
-      searcher = SearchHolder.getInstance().getSearcher();
+      searcher = this.searchHolder.getSearcher();
 
-      Vector<Occur> occurs = new Vector<Occur>();
+      Vector<Occur> occurs = new Vector<>();
       for (int i = 0; i < fieldInfo.getFieldSize(); i++) {
         occurs.add(BooleanClause.Occur.SHOULD);
       }
@@ -346,7 +340,7 @@ public class RPCSearchHandler {
       ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
       long h_start = new java.util.Date().getTime();
-      HitHighlighter hh = new HitHighlighter(query, hits);
+      HitHighlighter hh = new HitHighlighter(luceneSettings, fieldInfo, searchHolder.getSearcher(), query, hits);
       hh.highlight();
       long h_end = new java.util.Date().getTime();
 

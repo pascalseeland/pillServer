@@ -24,13 +24,11 @@ package de.ilias.services.settings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ini4j.Ini;
 import org.ini4j.IniPreferences;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -46,64 +44,64 @@ public class IniFileParser {
 
   private static Logger logger = LogManager.getLogger(IniFileParser.class);
 
-  public void parseServerSettings(String path, boolean parseClientSettings) throws ConfigurationException {
-
-    Ini prefs;
-    ServerSettings serverSettings = ServerSettings.getInstance();
-    ClientSettings clientSettings;
-    try {
-
-      prefs = new Ini(new FileReader(path));
-      for (Ini.Section section : prefs.values()) {
-
-        if (section.getName().equals("Server")) {
-          if (section.containsKey("IndexPath")) {
-            serverSettings.setIndexPath(purgeString(section.get("IndexPath")));
-          }
-          if (section.containsKey("NumThreads")) {
-            serverSettings.setThreadNumber(purgeString(section.get("NumThreads")));
-          }
-          if (section.containsKey("RAMBufferSize")) {
-            serverSettings.setRAMSize(purgeString(section.get("RAMBufferSize")));
-          }
-          if (section.containsKey("IndexMaxFileSizeMB")) {
-            serverSettings.setMaxFileSizeMB(purgeString(section.get("IndexMaxFileSizeMB")));
-          }
-          if (section.containsKey("IgnoreDocAndXlsFiles")) {
-            serverSettings.setIgnoreDocAndXlsFiles(Boolean.parseBoolean(section.get("IgnoreDocAndXlsFiles")));
-          }
-        }
-        if (section.getName().startsWith("Client") && parseClientSettings) {
-          if (section.containsKey("ClientId")) {
-            String client = purgeString(section.get("ClientId"));
-            String nic;
-            if (section.containsKey("NicId")) {
-              nic = purgeString(section.get("NicId"));
-            } else {
-              nic = "0";
-            }
-            clientSettings = ClientSettings.getInstance(client, nic);
-            if (section.containsKey("IliasIniPath")) {
-              clientSettings.setIliasIniFile(purgeString(section.get("IliasIniPath")));
-
-              // Now parse the ilias.ini file
-              parseClientData(clientSettings);
-            }
-          } else {
-            logger.error("No ClientId given for section: " + section.getName());
-            throw new ConfigurationException("No ClientId given for section: " + section.getName());
-          }
-        }
-      }
-
-    } catch (ConfigurationException e) {
-      logger.error("Cannot parse server settings: " + e.getMessage());
-      throw new ConfigurationException(e);
-    } catch (IOException e) {
-      logger.error("Cannot parse server settings: " + e.getMessage());
-      throw new ConfigurationException(e);
-    }
-  }
+//  public void parseServerSettings(String path, boolean parseClientSettings) throws ConfigurationException {
+//
+//    Ini prefs;
+//    ServerSettings serverSettings = ServerSettings.getInstance();
+//    ClientSettings clientSettings;
+//    try {
+//
+//      prefs = new Ini(new FileReader(path));
+//      for (Ini.Section section : prefs.values()) {
+//
+//        if (section.getName().equals("Server")) {
+//          if (section.containsKey("IndexPath")) {
+//            serverSettings.setIndexPath(purgeString(section.get("IndexPath")));
+//          }
+//          if (section.containsKey("NumThreads")) {
+//            serverSettings.setThreadNumber(purgeString(section.get("NumThreads")));
+//          }
+//          if (section.containsKey("RAMBufferSize")) {
+//            serverSettings.setRAMSize(purgeString(section.get("RAMBufferSize")));
+//          }
+//          if (section.containsKey("IndexMaxFileSizeMB")) {
+//            serverSettings.setMaxFileSizeMB(purgeString(section.get("IndexMaxFileSizeMB")));
+//          }
+//          if (section.containsKey("IgnoreDocAndXlsFiles")) {
+//            serverSettings.setIgnoreDocAndXlsFiles(Boolean.parseBoolean(section.get("IgnoreDocAndXlsFiles")));
+//          }
+//        }
+//        if (section.getName().startsWith("Client") && parseClientSettings) {
+//          if (section.containsKey("ClientId")) {
+//            String client = purgeString(section.get("ClientId"));
+//            String nic;
+//            if (section.containsKey("NicId")) {
+//              nic = purgeString(section.get("NicId"));
+//            } else {
+//              nic = "0";
+//            }
+//            clientSettings = ClientSettings.getInstance(client, nic);
+//            if (section.containsKey("IliasIniPath")) {
+//              clientSettings.setIliasIniFile(purgeString(section.get("IliasIniPath")));
+//
+//              // Now parse the ilias.ini file
+//              parseClientData(clientSettings);
+//            }
+//          } else {
+//            logger.error("No ClientId given for section: " + section.getName());
+//            throw new ConfigurationException("No ClientId given for section: " + section.getName());
+//          }
+//        }
+//      }
+//
+//    } catch (ConfigurationException e) {
+//      logger.error("Cannot parse server settings: " + e.getMessage());
+//      throw new ConfigurationException(e);
+//    } catch (IOException e) {
+//      logger.error("Cannot parse server settings: " + e.getMessage());
+//      throw new ConfigurationException(e);
+//    }
+//  }
 
   public void parseClientData(ClientSettings clientSettings) throws ConfigurationException {
 
@@ -121,8 +119,8 @@ public class IniFileParser {
           clientSettings.getAbsolutePath().getCanonicalPath() + System.getProperty("file.separator") + dataName
               + System.getProperty("file.separator") + clientSettings.getClient() + System.getProperty("file.separator")
               + iniFileName);
-      clientSettings.setIndexPath(ServerSettings.getInstance().getIndexPath() + System.getProperty("file.separator")
-          + clientSettings.getClientKey());
+//      clientSettings.setIndexPath(ServerSettings.getInstance().getIndexPath() + System.getProperty("file.separator")
+      //+ clientSettings.getClientKey());
       // now parse client.ini.php
       prefs = new IniPreferences(convertIniFile(clientSettings.getClientIniFile()));
 

@@ -23,14 +23,12 @@
 package de.ilias.services.lucene.index;
 
 import de.ilias.services.db.DBFactory;
-import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class CommandControllerThread extends Thread {
 
@@ -39,13 +37,13 @@ public class CommandControllerThread extends Thread {
 
   protected CommandController controller = null;
 
-  /**
-   * Constructor
-   */
-  public CommandControllerThread(String ck, CommandController con) {
+  private DBFactory dbFactory;
+
+  public CommandControllerThread(String ck, CommandController con, DBFactory dbFactory) {
 
     clientKey = ck;
     controller = con;
+    this.dbFactory = dbFactory;
 
     this.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 
@@ -58,7 +56,7 @@ public class CommandControllerThread extends Thread {
 
         try {
 
-          CommandControllerThread nt = new CommandControllerThread(clientKey, controller);
+          CommandControllerThread nt = new CommandControllerThread(clientKey, controller, dbFactory);
           nt.start();
           nt.join();
         } catch (Exception ex) {
@@ -77,8 +75,7 @@ public class CommandControllerThread extends Thread {
     logger.info("Started new indexer thread...");
 
     // Initialize thread local settings
-    LocalSettings.setClientKey(clientKey);
-    DBFactory.init();
+    this.dbFactory.init();
 
     try {
       controller.start();
@@ -87,7 +84,7 @@ public class CommandControllerThread extends Thread {
       e.printStackTrace();
       this.interrupt();
     } finally {
-      DBFactory.closeAll();
+      this.dbFactory.closeAll();
     }
   }
 
