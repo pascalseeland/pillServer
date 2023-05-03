@@ -8,6 +8,9 @@
   <packaging>jar</packaging>
   <name>ILServer</name>
   <url>http://www.ilias.de</url>
+  <scm>
+    <developerConnection>scm:git:git@github.com:pascalseeland/pillServer.git</developerConnection>
+  </scm>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.release>11</java.release>
@@ -259,6 +262,14 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+        </configuration>
       </plugin>
     </plugins>
   </build>
