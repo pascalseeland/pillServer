@@ -33,7 +33,7 @@ jobs:
       - uses: actions/download-artifact@master
         with:
           name: ilserver-jar
-          path: ilserver.jar
+          path: ilserver-download
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "ilserver.jar"
+          artifacts: "ilserver-downloa/ilserver.jar"
