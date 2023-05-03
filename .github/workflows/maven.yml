@@ -36,4 +36,4 @@ jobs:
           path: ilserver-download
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "ilserver-downloa/ilserver.jar"
+          artifacts: "ilserver-download/ilserver.jar"
