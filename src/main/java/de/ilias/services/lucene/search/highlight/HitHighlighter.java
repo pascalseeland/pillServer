@@ -34,6 +34,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -97,7 +98,8 @@ public class HitHighlighter {
       }
 
       StringBuilder allContent = new StringBuilder();
-      Document hitDoc = searcher.doc(hits[i].doc);
+      StoredFields storedFields = searcher.storedFields();
+      Document hitDoc = storedFields.document(hits[i].doc);
 
       int objId;
       int subItem;

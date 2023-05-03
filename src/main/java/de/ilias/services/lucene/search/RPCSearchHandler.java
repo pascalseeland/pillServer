@@ -111,9 +111,9 @@ public class RPCSearchHandler {
         multiParser.setDefaultOperator(Operator.OR);
       }
 
-      BooleanQuery.setMaxClauseCount(10000);
+      IndexSearcher.setMaxClauseCount(10000);
       BooleanQuery query = (BooleanQuery) multiParser.parse(rewrittenQuery);
-      logger.info("Max clauses allowed: " + BooleanQuery.getMaxClauseCount());
+      logger.info("Max clauses allowed: " + IndexSearcher.getMaxClauseCount());
 
       //BooleanQuery query = (BooleanQuery) MultiFieldQueryParser.parse(rewrittenQuery,
       //    fieldInfo.getFieldsAsStringArray(),
@@ -123,7 +123,7 @@ public class RPCSearchHandler {
       for (Object f : fieldInfo.getFields()) {
         logger.info(((String) f).toString());
       }
-      TopScoreDocCollector collector = TopScoreDocCollector.create(1000);
+      TopScoreDocCollector collector = TopScoreDocCollector.create(1000,1000);
       long s_start = new java.util.Date().getTime();
       searcher.search(query, collector);
       long s_end = new java.util.Date().getTime();
@@ -195,12 +195,12 @@ public class RPCSearchHandler {
         multiParser.setDefaultOperator(Operator.OR);
       }
 
-      BooleanQuery.setMaxClauseCount(10000);
+      IndexSearcher.setMaxClauseCount(10000);
       BooleanQuery query = (BooleanQuery) multiParser.parse(rewrittenQuery);
-      logger.info("Max clauses allowed: " + BooleanQuery.getMaxClauseCount());
+      logger.info("Max clauses allowed: " + IndexSearcher.getMaxClauseCount());
 
       logger.info("Rewritten query is: " + query.toString());
-      TopScoreDocCollector collector = TopScoreDocCollector.create(1000);
+      TopScoreDocCollector collector = TopScoreDocCollector.create(1000,1000);
       searcher.search(query, collector);
       ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
@@ -276,7 +276,7 @@ public class RPCSearchHandler {
       logger.info("What occurs" + occurs.toString());
       logger.info("Rewritten query is: " + query.toString());
 
-      TopScoreDocCollector collector = TopScoreDocCollector.create(1000);
+      TopScoreDocCollector collector = TopScoreDocCollector.create(1000,1000);
       searcher.search(query, collector);
       ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
@@ -340,7 +340,7 @@ public class RPCSearchHandler {
               new StandardAnalyzer()));
 
       logger.info("Rewritten query is: " + query.toString());
-      TopScoreDocCollector collector = TopScoreDocCollector.create(500);
+      TopScoreDocCollector collector = TopScoreDocCollector.create(500,500);
 
       searcher.search(query, collector);
       ScoreDoc[] hits = collector.topDocs().scoreDocs;

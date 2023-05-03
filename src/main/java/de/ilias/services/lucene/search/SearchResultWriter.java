@@ -27,6 +27,7 @@ import de.ilias.services.settings.ConfigurationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.jdom.output.XMLOutputter;
@@ -77,7 +78,8 @@ public class SearchResultWriter {
       try {
         logger.debug("Added object");
         object = new SearchObject();
-        hitDoc = searcher.doc(hits[i].doc);
+        StoredFields storedFields = searcher.storedFields();
+        hitDoc = storedFields.document(hits[i].doc);
         object.setId(Integer.parseInt(hitDoc.get("objId")));
         object.setAbsoluteScore(hits[i].score);
         result.addObject(object);
