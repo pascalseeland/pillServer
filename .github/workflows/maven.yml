@@ -19,12 +19,21 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Test and Package with Maven
         run: mvn -B test package
+      - uses: actions/upload-artifact@master
+        with:
+          name: ilserver-jar
+          path: target/ilserver.jar
   deploy:
     runs-on: ubuntu-latest
     needs: [build]
     if: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags/') }}
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@master
+        with:
+          name: ilserver-jar
+          path: ilserver.jar
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "target/ilserver.jar"
+          artifacts: "ilserver.jar"
