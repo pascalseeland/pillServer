@@ -14,7 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.release>11</java.release>
     <log4j.version>2.20.0</log4j.version>
-    <lucene.version>9.5.0</lucene.version>
+    <lucene.version>9.6.0</lucene.version>
   </properties>
   <dependencies>
     <dependency>
@@ -234,7 +234,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>10.10.0</version>
+            <version>10.11.0</version>
           </dependency>
         </dependencies>
         <configuration>
