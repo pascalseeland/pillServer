@@ -22,7 +22,7 @@
 
 package de.ilias.services.lucene.search;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * XML export interface

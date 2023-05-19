@@ -8,7 +8,7 @@ import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
@@ -101,7 +101,7 @@ public class ObjectDefinitionParser {
       //logger.info(ObjectDefinitionParser.xmlToString(document));
 
       // JDOM does not understand x:include but has a more comfortable API.
-      org.jdom.Document jdocument = convertToJDOM(document);
+      org.jdom2.Document jdocument = convertToJDOM(document);
 
       definitions.addDefinition(parseObjectDefinition(jdocument));
 
@@ -130,17 +130,17 @@ public class ObjectDefinitionParser {
     }
   }
 
-  private org.jdom.Document convertToJDOM(org.w3c.dom.Document document) {
+  private org.jdom2.Document convertToJDOM(org.w3c.dom.Document document) {
 
-    org.jdom.input.DOMBuilder builder = new org.jdom.input.DOMBuilder();
+    org.jdom2.input.DOMBuilder builder = new org.jdom2.input.DOMBuilder();
     return builder.build(document);
   }
 
-  private ObjectDefinition parseObjectDefinition(org.jdom.Document jdocument) throws ObjectDefinitionException {
+  private ObjectDefinition parseObjectDefinition(org.jdom2.Document jdocument) throws ObjectDefinitionException {
 
     ObjectDefinition definition;
 
-    org.jdom.Element root = jdocument.getRootElement();
+    org.jdom2.Element root = jdocument.getRootElement();
 
     if (!root.getName().equals("ObjectDefinition")) {
       throw new ObjectDefinitionException("Cannot find root element 'ObjectDefinition'");

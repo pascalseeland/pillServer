@@ -24,10 +24,12 @@ package de.ilias.services.lucene.index.file;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
-import org.jdom.xpath.XPath;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.filter.Filters;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.xpath.XPathExpression;
+import org.jdom2.xpath.XPathFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,7 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -57,8 +58,7 @@ public abstract class ZipBasedOfficeHandler {
 
   protected InputStream extractContentStream(InputStream is) throws FileHandlerException {
 
-    ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    try {
+    try (ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
       ZipInputStream zip = new ZipInputStream(is);
       ZipEntry entry;
 
@@ -75,18 +75,9 @@ public abstract class ZipBasedOfficeHandler {
       }
       is.close();
       return new ByteArrayInputStream(bout.toByteArray());
-    } catch (ZipException e) {
-      logger.info("Cannot extract " + getContentFileName() + " " + e.getMessage());
-      throw new FileHandlerException(e);
     } catch (IOException e) {
       logger.info("Cannot extract " + getContentFileName() + " " + e.getMessage());
       throw new FileHandlerException(e);
-    } finally {
-      try {
-        bout.close();
-      } catch (IOException e) {
-        // Yepp
-      }
     }
   }
 
@@ -96,22 +87,19 @@ public abstract class ZipBasedOfficeHandler {
     StringBuilder content = new StringBuilder();
 
     try {
-      org.jdom.Document doc = builder.build(is);
-      XPath xpath = XPath.newInstance(getXPath());
-      List res = xpath.selectNodes(doc);
-
-      for (Object element : res) {
-        Element el = (Element) element;
+      org.jdom2.Document doc = builder.build(is);
+      XPathExpression<Element> xpath =
+          XPathFactory.instance().compile(getXPath(), Filters.element());
+      List<Element> elements = xpath.evaluate(doc);
+      for (Element element : elements) {
         content.append(" ");
-        content.append(el.getTextTrim());
+        content.append(element.getTextTrim());
       }
       return content.toString();
 
     } catch (NullPointerException e) {
       logger.warn("Caught NullPointerException: " + e);
-    } catch (JDOMException e) {
-      logger.info("Cannot parse OO content: " + e);
-    } catch (IOException e) {
+    } catch (JDOMException | IOException e) {
       logger.info("Cannot parse OO content: " + e);
     }
     return "";

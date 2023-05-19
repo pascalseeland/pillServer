@@ -24,7 +24,7 @@ package de.ilias.services.lucene.search.highlight;
 
 import de.ilias.services.lucene.search.ResultExport;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import java.util.Vector;
 

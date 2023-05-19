@@ -24,9 +24,9 @@ package de.ilias.services.lucene.search.highlight;
 
 import de.ilias.services.lucene.search.ResultExport;
 
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.output.XMLOutputter;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.output.XMLOutputter;
 
 import java.util.HashMap;
 

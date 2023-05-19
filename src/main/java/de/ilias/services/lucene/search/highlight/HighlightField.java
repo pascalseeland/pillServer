@@ -25,7 +25,7 @@ package de.ilias.services.lucene.search.highlight;
 import de.ilias.services.lucene.search.ResultExport;
 import de.ilias.services.xml.XMLUtils;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
