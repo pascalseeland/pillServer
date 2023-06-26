@@ -14,7 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.release>11</java.release>
     <log4j.version>2.20.0</log4j.version>
-    <lucene.version>9.6.0</lucene.version>
+    <lucene.version>9.7.0</lucene.version>
   </properties>
   <dependencies>
     <dependency>
