@@ -14,7 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.release>11</java.release>
     <log4j.version>2.20.0</log4j.version>
-    <lucene.version>9.6.0</lucene.version>
+    <lucene.version>9.7.0</lucene.version>
   </properties>
   <dependencies>
     <dependency>
@@ -115,7 +115,7 @@
     <dependency>
       <groupId>com.github.jtidy</groupId>
       <artifactId>jtidy</artifactId>
-      <version>1.0.3</version>
+      <version>1.0.4</version>
       <exclusions>
         <exclusion>
           <groupId>xml-apis</groupId>
@@ -234,7 +234,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>10.12.0</version>
+            <version>10.12.2</version>
           </dependency>
         </dependencies>
         <configuration>
