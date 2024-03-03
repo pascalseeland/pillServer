@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.ilias</groupId>
   <artifactId>ILServer</artifactId>
-  <version>0.0.7</version>
+  <version>0.0.8-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>ILServer</name>
   <url>http://www.ilias.de</url>
   <scm>
     <developerConnection>scm:git:git@github.com:pascalseeland/pillServer.git</developerConnection>
-    <tag>v0.0.7</tag>
+    <tag>HEAD</tag>
   </scm>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
