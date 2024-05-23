@@ -33,13 +33,6 @@ public class ObjectDefinitionException extends Exception {
    */
   private static final long serialVersionUID = 3677597719277646726L;
 
-  /**
-   *
-   */
-  public ObjectDefinitionException() {
-    // TODO Auto-generated constructor stub
-  }
-
   public ObjectDefinitionException(String message) {
     super(message);
     // TODO Auto-generated constructor stub
@@ -47,11 +40,6 @@ public class ObjectDefinitionException extends Exception {
 
   public ObjectDefinitionException(Throwable cause) {
     super(cause);
-    // TODO Auto-generated constructor stub
-  }
-
-  public ObjectDefinitionException(String message, Throwable cause) {
-    super(message, cause);
     // TODO Auto-generated constructor stub
   }
 

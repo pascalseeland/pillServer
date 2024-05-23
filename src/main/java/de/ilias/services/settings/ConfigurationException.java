@@ -27,11 +27,6 @@ package de.ilias.services.settings;
  */
 public class ConfigurationException extends Exception {
 
-  private static final long serialVersionUID = 1L;
-
-  public ConfigurationException() {
-  }
-
   public ConfigurationException(String message) {
     super(message);
   }
@@ -40,8 +35,5 @@ public class ConfigurationException extends Exception {
     super(cause);
   }
 
-  public ConfigurationException(String message, Throwable cause) {
-    super(message, cause);
-  }
 
 }

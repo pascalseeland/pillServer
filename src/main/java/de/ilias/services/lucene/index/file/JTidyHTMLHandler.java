@@ -39,17 +39,15 @@ import java.io.PrintWriter;
  */
 public class JTidyHTMLHandler implements FileHandler {
 
-  private Tidy tidy;
-
-  /**
+    /**
    * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
    */
-  public String getContent(InputStream is) throws FileHandlerException, IOException {
+  public String getContent(InputStream is) {
 
     StringBuilder builder = new StringBuilder();
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
-    tidy = new Tidy();
+    Tidy tidy = new Tidy();
     tidy.setErrout(new PrintWriter(new ByteArrayOutputStream()));
     tidy.setQuiet(true);
     tidy.setShowWarnings(false);
@@ -60,19 +58,17 @@ public class JTidyHTMLHandler implements FileHandler {
     String title = getTitle(rawDoc);
     String body = getBody(rawDoc);
 
-    if (title != null && !title.equals("")) {
+    if (title != null && !title.isEmpty()) {
       builder.append(title);
     }
-    if (body != null && !body.equals("")) {
+    if (body != null && !body.isEmpty()) {
       builder.append(body);
     }
 
-    if (bout != null) {
-      try {
-        bout.close();
-      } catch (IOException e) {
-        // Nothing
-      }
+    try {
+      bout.close();
+    } catch (IOException e) {
+      // Nothing
     }
 
     return builder.toString();

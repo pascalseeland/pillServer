@@ -49,10 +49,10 @@ import java.util.Vector;
  */
 public class CommandQueue {
 
-  private Logger logger = LogManager.getLogger(CommandQueue.class);
+  private static final Logger logger = LogManager.getLogger(CommandQueue.class);
 
-  private Connection db;
-  private Vector<CommandQueueElement> elements;
+  private final Connection db;
+  private final Vector<CommandQueueElement> elements;
   private Iterator<CommandQueueElement> elementsIter;
 
   public CommandQueue() throws SQLException {
@@ -61,25 +61,8 @@ public class CommandQueue {
     elements = new Vector<>();
   }
 
-  public void setFinished(CommandQueueElement el) throws SQLException, IllegalArgumentException {
-
-    if (elements.removeElement(el) == false) {
-      throw new IllegalArgumentException("Cannot find element!");
-    }
-
-    PreparedStatement sta = DBFactory.getPreparedStatement(
-        "UPDATE search_command_queue " + "SET finished = 1, " + "last_update = ? " + "WHERE  obj_id = ? "
-            + "AND obj_type = ? " + "AND sub_id = ? " + "AND sub_type = ? ");
-    sta.setInt(1, el.getObjId());
-    sta.setTimestamp(2, new java.sql.Timestamp(new java.util.Date().getTime()));
-    DBFactory.setString(sta, 3, el.getObjType());
-    sta.setInt(4, el.getSubId());
-    DBFactory.setString(sta, 5, el.getSubType());
-    sta.executeUpdate();
-  }
-
   public void setFinished(Vector<Integer> objIds) throws SQLException {
-    if (objIds.size() > 0) {
+    if (!objIds.isEmpty()) {
       PreparedStatement psta = DBFactory.getPreparedStatement(
           "UPDATE search_command_queue SET finished = 1 WHERE obj_id = ?");
       for (Integer i : objIds) {
@@ -94,7 +77,7 @@ public class CommandQueue {
 
     logger.info("Start reading command queue");
 
-    // Substitute all reset_all commands withc reset command for each undeleted object id
+    // Substitute all reset_all commands with reset command for each undeleted object id
     substituteResetCommands();
 
     PreparedStatement pst = DBFactory.getPreparedStatement(
@@ -111,10 +94,7 @@ public class CommandQueue {
       logger.debug("Found type: " + res.getString("obj_type") + " with id " + res.getInt("obj_id"));
       element.setObjId(res.getInt("obj_id"));
       element.setObjType(DBFactory.getString(res, "obj_type"));
-      element.setSubId(res.getInt("sub_id"));
-      element.setSubType(DBFactory.getString(res, "sub_type"));
-      element.setCommand(DBFactory.getString(res, "command"));
-      element.setFinished(false);
+      element.setCommand(CommandQueueElement.Command.valueOfLabel(DBFactory.getString(res, "command")));
 
       elements.add(element);
     }
@@ -129,44 +109,6 @@ public class CommandQueue {
     logger.info("Found " + (elements.size() - waitingUpdates) + " new update events!");
   }
 
-  public synchronized void loadFromObjectList(Vector<Integer> objIds) throws SQLException {
-
-    PreparedStatement pst = DBFactory.getPreparedStatement(
-        "SELECT obj_id,type FROM object_data " + "WHERE obj_id = ? ");
-
-    int counter = 0;
-    for (int objId : objIds) {
-
-      pst.setInt(1, objId);
-      ResultSet res = pst.executeQuery();
-
-      while (res.next()) {
-
-        CommandQueueElement element = new CommandQueueElement();
-
-        //logger.debug("Found type: " + res.getString("obj_type") + " with id " + res.getInt("obj_id"));
-        element.setObjId(res.getInt("obj_id"));
-        element.setObjType(DBFactory.getString(res, "type"));
-        element.setSubId(0);
-        element.setSubType("");
-        element.setCommand("reset");
-        element.setFinished(false);
-
-        elements.add(element);
-        counter++;
-      }
-      try {
-        res.close();
-      } catch (SQLException e) {
-        logger.warn(e);
-        throw e;
-      }
-    }
-    //reset the iterator
-    elementsIter = elements.iterator();
-    logger.info("Found " + counter + " new update events!");
-  }
-
   private synchronized void substituteResetCommands() throws SQLException {
 
     String query = "SELECT * FROM search_command_queue WHERE command = ? AND obj_id = 0";
@@ -175,7 +117,7 @@ public class CommandQueue {
       logger.info("Substituting reset commands");
 
       PreparedStatement sta = DBFactory.getPreparedStatement(query);
-      DBFactory.setString(sta, 1, "reset_all");
+      DBFactory.setString(sta, 1, CommandQueueElement.Command.RESET_ALL.label);
       logger.debug("Substitution query: " + sta.toString());
       ResultSet res = sta.executeQuery();
       while (res.next()) {
@@ -229,16 +171,16 @@ public class CommandQueue {
 
     try {
 
-      int res = 0;
-      PreparedStatement sta = null;
+      int res;
+      PreparedStatement sta;
 
-      if (objType.equalsIgnoreCase("help") == true) {
+      if (objType.equalsIgnoreCase("help")) {
 
         sta = DBFactory.getPreparedStatement(
             "INSERT INTO search_command_queue(obj_id, obj_type, sub_id, sub_type, command, last_update, finished) "
                 + "SELECT help_module.lm_id, ? as obj_type ,0,'','reset',now(),0 FROM help_module");
         DBFactory.setString(sta, 1, objType);
-      } else if (objType.equalsIgnoreCase("usr") != true) {
+      } else if (!objType.equalsIgnoreCase("usr")) {
         sta = DBFactory.getPreparedStatement(
             "INSERT INTO search_command_queue(obj_id, obj_type, sub_id, sub_type, command, last_update, finished)"
                 + "SELECT DISTINCT(oda.obj_id),oda.type as obj_type ,0,'','reset',now(),0  FROM object_data oda JOIN object_reference ore ON oda.obj_id = ore.obj_id "
@@ -264,7 +206,7 @@ public class CommandQueue {
   }
 
   public CommandQueueElement nextElement() {
-    synchronized (elementsIter) {
+    synchronized (elements) {
       if (elementsIter.hasNext()) {
         return elementsIter.next();
       } else {
@@ -281,7 +223,7 @@ public class CommandQueue {
     resetType.setString(2, type);
     resetType.setInt(3, 0);
     resetType.setString(4, "");
-    resetType.setString(5, "reset_all");
+    resetType.setString(5, CommandQueueElement.Command.RESET_ALL.label);
     resetType.setTimestamp(6, new java.sql.Timestamp(new java.util.Date().getTime()));
     resetType.setInt(7, 0);
 
@@ -304,9 +246,7 @@ public class CommandQueue {
       delete.executeUpdate("DELETE FROM search_command_queue");
 
       try {
-        if (delete != null) {
-          delete.close();
-        }
+        delete.close();
       } catch (SQLException e) {
         logger.warn(e);
       }
@@ -318,16 +258,7 @@ public class CommandQueue {
               + "VALUES ( ?, ?, ?, ?, ?, ?, ?) ");
 
       for (ObjectDefinition def : ObjectDefinitions.getInstance(client.getAbsolutePath()).getDefinitions()) {
-
-        logger.info("Adding reset command for " + def.getType());
-        pst.setInt(1, 0);
-        pst.setString(2, def.getType());
-        pst.setInt(3, 0);
-        pst.setString(4, "");
-        pst.setString(5, "reset_all");
-        pst.setTimestamp(6, new java.sql.Timestamp(new java.util.Date().getTime()));
-        pst.setInt(7, 0);
-
+        bindPreparedStatement(pst, def);
         try {
           pst.executeUpdate();
         } catch (SQLException e) {
@@ -370,7 +301,7 @@ public class CommandQueue {
           "DELETE FROM search_command_queue " + "WHERE obj_type = ?");
       for (ObjectDefinition def : ObjectDefinitions.getInstance(client.getAbsolutePath()).getDefinitions()) {
 
-        if (def.getIndexType() == ObjectDefinition.TYPE_FULL) {
+        if (def.getIndexType() == ObjectDefinition.INDEX_TYPE.FULL) {
 
           DBFactory.setString(pst, 1, def.getType());
           pst.executeUpdate();
@@ -397,17 +328,9 @@ public class CommandQueue {
               + "VALUES (?,?,?,?,?,?,?)");
       for (ObjectDefinition def : ObjectDefinitions.getInstance(client.getAbsolutePath()).getDefinitions()) {
 
-        if (def.getIndexType() == ObjectDefinition.TYPE_FULL) {
+        if (def.getIndexType() == ObjectDefinition.INDEX_TYPE.FULL) {
 
-          logger.info("Adding reset command for " + def.getType());
-          pst.setInt(1, 0);
-          pst.setString(2, def.getType());
-          pst.setInt(3, 0);
-          pst.setString(4, "");
-          pst.setString(5, "reset_all");
-          pst.setTimestamp(6, new java.sql.Timestamp(new java.util.Date().getTime()));
-          pst.setInt(7, 0);
-
+          bindPreparedStatement(pst, def);
           try {
             pst.executeUpdate();
           } catch (SQLException e) {
@@ -419,6 +342,17 @@ public class CommandQueue {
       logger.error("Error updating command queue", e);
       throw e;
     }
+  }
+
+  private void bindPreparedStatement(PreparedStatement pst, ObjectDefinition def) throws SQLException {
+    logger.info("Adding reset command for " + def.getType());
+    pst.setInt(1, 0);
+    pst.setString(2, def.getType());
+    pst.setInt(3, 0);
+    pst.setString(4, "");
+    pst.setString(5, CommandQueueElement.Command.RESET_ALL.label);
+    pst.setTimestamp(6, new java.sql.Timestamp(new java.util.Date().getTime()));
+    pst.setInt(7, 0);
   }
 
 }

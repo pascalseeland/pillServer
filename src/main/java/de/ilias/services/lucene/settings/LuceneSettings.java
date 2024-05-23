@@ -41,15 +41,30 @@ import java.util.HashMap;
  */
 public class LuceneSettings {
 
-  public static final int OPERATOR_AND = 1;
-  public static final int OPERATOR_OR = 2;
+  public enum OPERATOR {
+    AND(1),
+    OR(2);
+    public final int label;
 
-  private static Logger logger = LogManager.getLogger(LuceneSettings.class);
-  private static HashMap<String, LuceneSettings> instances = new HashMap<>();
+    OPERATOR(int label) {
+      this.label = label;
+    }
+    public static OPERATOR valueOfLabel(int label) {
+      for (OPERATOR a : values()) {
+        if (a.label == label) {
+          return a;
+        }
+      }
+      return null;
+    }
+  }
+
+  private static final Logger logger = LogManager.getLogger(LuceneSettings.class);
+  private static final HashMap<String, LuceneSettings> instances = new HashMap<>();
 
   private int fragmentSize = 30;
   private int numFragments = 3;
-  private int defaultOperator = OPERATOR_AND;
+  private OPERATOR defaultOperator = OPERATOR.AND;
   private Date lastIndexTime = new java.util.Date();
   private int prefixWildcard = 0;
 
@@ -78,10 +93,8 @@ public class LuceneSettings {
     return instances.get(clientKey);
   }
 
-  public boolean refresh() throws SQLException {
-
+  public void refresh() throws SQLException {
     readSettings();
-    return true;
   }
 
   /**
@@ -115,19 +128,19 @@ public class LuceneSettings {
   /**
    * @return the defaultOperator
    */
-  public int getDefaultOperator() {
+  public OPERATOR getDefaultOperator() {
     return defaultOperator;
   }
 
   /**
    * @param defaultOperator the defaultOperator to set
    */
-  public void setDefaultOperator(int defaultOperator) {
+  public void setDefaultOperator(OPERATOR defaultOperator) {
     this.defaultOperator = defaultOperator;
   }
 
   public boolean isPrefixWildcardQueryEnabled() {
-    return this.prefixWildcard > 0 ? true : false;
+    return this.prefixWildcard > 0;
   }
 
   public void enablePrefixWildcardQuery(int stat) {
@@ -138,7 +151,7 @@ public class LuceneSettings {
   public static void writeLastIndexTime() throws SQLException {
     DBFactory.init();
     Statement sta = DBFactory.factory().createStatement();
-    sta.executeUpdate("DELETE FROM settings " + "WHERE module = 'common' AND keyword = 'lucene_last_index_time'");
+    sta.executeUpdate("DELETE FROM settings WHERE module = 'common' AND keyword = 'lucene_last_index_time'");
     try {
       sta.close();
     } catch (SQLException e) {
@@ -174,7 +187,7 @@ public class LuceneSettings {
         "SELECT value FROM settings WHERE module = 'common' " + "AND keyword = 'lucene_default_operator'");
 
     while (res.next()) {
-      setDefaultOperator(Integer.parseInt(res.getString("value")));
+      setDefaultOperator(OPERATOR.valueOfLabel(Integer.parseInt(res.getString("value"))));
       logger.info("Default Operator is: " + getDefaultOperator());
     }
 
@@ -183,7 +196,7 @@ public class LuceneSettings {
     while (res.next()) {
 
       try {
-        if (res.getString("value").length() > 0) {
+        if (!res.getString("value").isEmpty()) {
           this.enablePrefixWildcardQuery(Integer.parseInt(res.getString("value")));
         }
       } catch (NumberFormatException e) {

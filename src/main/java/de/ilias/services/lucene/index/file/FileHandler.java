@@ -22,7 +22,6 @@
 
 package de.ilias.services.lucene.index.file;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -33,6 +32,6 @@ interface FileHandler {
   /**
    * get file content
    */
-  String getContent(InputStream is) throws FileHandlerException, IOException;
+  String getContent(InputStream is) throws FileHandlerException;
 
 }

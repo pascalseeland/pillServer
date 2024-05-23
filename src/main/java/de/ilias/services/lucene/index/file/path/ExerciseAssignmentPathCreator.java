@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -22,7 +23,7 @@ import java.sql.SQLException;
 
 public class ExerciseAssignmentPathCreator implements PathCreator {
 
-  private Logger logger = LogManager.getLogger(ExerciseAssignmentPathCreator.class);
+  private static final Logger logger = LogManager.getLogger(ExerciseAssignmentPathCreator.class);
 
   public File buildFile(CommandQueueElement el, ResultSet res) throws PathCreatorException {
 
@@ -34,26 +35,22 @@ public class ExerciseAssignmentPathCreator implements PathCreator {
     try {
 
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append("ilExercise");
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(PathUtils.buildSplittedPathFromId(objId, "exc"));
-      fullPath.append("ass_" + String.valueOf(DBFactory.getInt(res, "id")));
+      fullPath.append("ass_").append(DBFactory.getInt(res, "id"));
 
-      logger.info("Try to read from path: " + fullPath.toString());
+      logger.info("Try to read from path: " + fullPath);
 
       file = new File(fullPath.toString());
       if (file.exists() && file.canRead()) {
         return file;
       }
-      throw new PathCreatorException("Cannot access directory: " + fullPath.toString());
-    } catch (ConfigurationException e) {
-      throw new PathCreatorException(e);
-    } catch (SQLException e) {
-      throw new PathCreatorException(e);
-    } catch (NullPointerException e) {
+      throw new PathCreatorException("Cannot access directory: " + fullPath);
+    } catch (ConfigurationException | SQLException | NullPointerException e) {
       throw new PathCreatorException(e);
     }
   }

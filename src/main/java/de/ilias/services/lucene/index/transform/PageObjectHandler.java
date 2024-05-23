@@ -25,7 +25,6 @@ package de.ilias.services.lucene.index.transform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
@@ -33,47 +32,28 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class PageObjectHandler extends DefaultHandler {
 
-  private Logger logger = LogManager.getLogger(PageObjectHandler.class);
+  private static final Logger logger = LogManager.getLogger(PageObjectHandler.class);
 
-  private StringBuffer buffer = new StringBuffer();
+  private final StringBuffer buffer = new StringBuffer();
   private boolean isContent = false;
 
   public void endDocument() {
 
   }
 
-  public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+  public void startElement(String uri, String localName, String qName, Attributes attributes) {
     if (localName.equalsIgnoreCase("Paragraph")) {
       isContent = true;
     }
-    /*
-    if(localName.equalsIgnoreCase("Strong")) {
-    }
-    if(localName.equalsIgnoreCase("Comment")) {
-
-    }
-    if(localName.equalsIgnoreCase("Emph")) {
-
-    }
-    if(localName.equalsIgnoreCase("Footnote")) {
-
-    }
-    if(localName.equalsIgnoreCase("Quotation")) {
-
-    }
-    if(localName.equalsIgnoreCase("Code")) {
-
-    }
-    */
   }
 
-  public void endElement(String uri, String localName, String qName) throws SAXException {
+  public void endElement(String uri, String localName, String qName) {
     if (localName.equalsIgnoreCase("Paragraph")) {
       isContent = false;
     }
   }
 
-  public void characters(char[] ch, int start, int length) throws SAXException {
+  public void characters(char[] ch, int start, int length) {
     if (!isContent) {
       return;
     }
@@ -97,7 +77,7 @@ public class PageObjectHandler extends DefaultHandler {
 
   public String getContent() {
 
-    logger.debug("Parsed content:" + buffer.toString());
+    logger.debug("Parsed content:" + buffer);
     return buffer.toString();
   }
 

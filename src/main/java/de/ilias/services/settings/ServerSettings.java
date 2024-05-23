@@ -38,10 +38,8 @@ import java.net.UnknownHostException;
  */
 public class ServerSettings {
 
-  private static Logger logger = LogManager.getLogger(ServerSettings.class);
+  private static final Logger logger = LogManager.getLogger(ServerSettings.class);
   private static ServerSettings instance = null;
-
-  public static final long DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024;
 
   private InetAddress host;
   private String hostString;
@@ -61,7 +59,7 @@ public class ServerSettings {
   /**
    * Global singleton for all threads
    */
-  public static synchronized ServerSettings getInstance() throws ConfigurationException {
+  public static synchronized ServerSettings getInstance() {
 
     if (instance == null) {
       instance = new ServerSettings();
@@ -75,7 +73,7 @@ public class ServerSettings {
 
     builder.append("http://");
     builder.append(getHostString());
-    builder.append(":" + getPort());
+    builder.append(":").append(getPort());
     builder.append("/xmlrpc");
 
     logger.info("Using RPC Url: " + builder);
@@ -162,10 +160,6 @@ public class ServerSettings {
   public void setRAMSize(String purgedString) {
 
     RAMSize = Double.parseDouble(purgedString);
-  }
-
-  public int getMaxFileSizeMB() {
-    return indexMaxFileSizeMB;
   }
 
   public long getMaxFileSize() {

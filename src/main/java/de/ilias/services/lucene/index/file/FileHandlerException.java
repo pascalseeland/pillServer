@@ -28,15 +28,6 @@ package de.ilias.services.lucene.index.file;
  */
 public class FileHandlerException extends Exception {
 
-  /**
-   *
-   */
-  private static final long serialVersionUID = 1L;
-
-  public FileHandlerException() {
-    super();
-  }
-
   public FileHandlerException(String message) {
     super(message);
   }

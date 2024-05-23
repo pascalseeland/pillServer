@@ -44,18 +44,11 @@ public class ParameterDefinition {
   public static final int TYPE_INT = 1;
   public static final int TYPE_STRING = 2;
 
-  private Logger logger = LogManager.getLogger(ParameterDefinition.class);
+  private static final Logger logger = LogManager.getLogger(ParameterDefinition.class);
 
   private int format;
   private int type;
-  private String value;
-
-  public ParameterDefinition(int format, int type, String value) {
-
-    this.format = format;
-    this.type = type;
-    this.value = value;
-  }
+  private final String value;
 
   public ParameterDefinition(String format, String type, String value) {
 
@@ -72,31 +65,10 @@ public class ParameterDefinition {
   }
 
   /**
-   * @return the format
-   */
-  public int getFormat() {
-    return format;
-  }
-
-  /**
-   * @param format the format to set
-   */
-  public void setFormat(int format) {
-    this.format = format;
-  }
-
-  /**
    * @return the type
    */
   public int getType() {
     return type;
-  }
-
-  /**
-   * @param type the type to set
-   */
-  public void setType(int type) {
-    this.type = type;
   }
 
   /**
@@ -106,17 +78,9 @@ public class ParameterDefinition {
     return value;
   }
 
-  /**
-   * @param value the value to set
-   */
-  public void setValue(String value) {
-    this.value = value;
-  }
-
   @Override
   public String toString() {
-    String out = "Parameter " + format + " " + type + " " + value + "\n";
-    return out;
+    return "Parameter " + format + " " + type + " " + value + "\n";
   }
 
   public void writeParameter(PreparedStatement pst, int index, CommandQueueElement el, ResultSet parentResult)
@@ -138,7 +102,7 @@ public class ParameterDefinition {
     }
   }
 
-  private int getParameterValue(CommandQueueElement el, ResultSet parentResult) throws SQLException {
+  private int getParameterValue(CommandQueueElement el, ResultSet parentResult) {
 
     // Check for parent result (e.g. pg,st)
     if (parentResult != null) {
@@ -172,7 +136,7 @@ public class ParameterDefinition {
     return 0;
   }
 
-  private String getParameterString(CommandQueueElement el, ResultSet parentResult) throws SQLException {
+  private String getParameterString(CommandQueueElement el, ResultSet parentResult) {
 
     if (parentResult != null) {
       logger.debug("Trying to read parameter from parent result set...");

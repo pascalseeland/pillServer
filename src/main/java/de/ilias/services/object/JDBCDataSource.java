@@ -24,15 +24,13 @@ package de.ilias.services.object;
 
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.lucene.index.CommandQueueElement;
-import de.ilias.services.lucene.index.DocumentHandler;
+import de.ilias.services.lucene.index.DocumentExtractor;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 import de.ilias.services.lucene.index.DocumentHolder;
-import de.ilias.services.lucene.index.IndexHolder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,18 +38,16 @@ import java.util.Vector;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class JDBCDataSource extends DataSource {
 
-  private static Logger logger = LogManager.getLogger(JDBCDataSource.class);
+  private static final Logger logger = LogManager.getLogger(JDBCDataSource.class);
 
   String query;
-  Vector<ParameterDefinition> parameters = new Vector<ParameterDefinition>();
+  private final Vector<ParameterDefinition> parameters = new Vector<>();
 
-  public JDBCDataSource(int type) {
-
-    super(type);
+  public JDBCDataSource() {
+    super(TYPE.JDBC);
   }
 
   /**
@@ -80,13 +76,6 @@ public class JDBCDataSource extends DataSource {
     return parameters;
   }
 
-  /**
-   * @param parameters the parameters to set
-   */
-  public void setParameters(Vector<ParameterDefinition> parameters) {
-    this.parameters = parameters;
-  }
-
   public void addParameter(ParameterDefinition parameter) {
     this.parameters.add(parameter);
   }
@@ -98,7 +87,7 @@ public class JDBCDataSource extends DataSource {
 
     out.append("New JDBC Data Source");
     out.append("\n");
-    out.append("Query: " + getQuery());
+    out.append("Query: ").append(getQuery());
     out.append("\n");
 
     for (Object param : getParameters()) {
@@ -111,25 +100,21 @@ public class JDBCDataSource extends DataSource {
   }
 
   /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   * @see DocumentExtractor#extractDocument(CommandQueueElement, DocumentHolder)
    */
-  public void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
-
-    writeDocument(el, null);
+  public void extractDocument(CommandQueueElement el, DocumentHolder dh) throws DocumentHandlerException {
+    extractDocument(el, dh, null);
   }
 
   /**
    * TODO remove the synchronized (cannot use more than one result set for one prepared statement)
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
+   * @see DocumentExtractor#extractDocument(CommandQueueElement, DocumentHolder, ResultSet)
    */
-  public void writeDocument(CommandQueueElement el, ResultSet parentResult) throws DocumentHandlerException {
+  public void extractDocument(CommandQueueElement el, DocumentHolder dh, ResultSet parentResult) throws DocumentHandlerException {
 
     logger.trace("Handling data source: " + getType());
 
     try {
-      // Create Statement for JDBC data source
-      DocumentHolder doc = DocumentHolder.factory();
-
       int paramNumber = 1;
       for (ParameterDefinition param : getParameters()) {
 
@@ -143,21 +128,12 @@ public class JDBCDataSource extends DataSource {
 
         logger.trace("Found new result");
         for (FieldDefinition field : getFields()) {
-          field.writeDocument(res);
+          field.writeDocument(res, dh);
         }
 
         // Add subitems from additional data sources
-        for (DocumentHandler ds : getDataSources()) {
-
-          ds.writeDocument(el, res);
-        }
-
-        // Finally addDocument to index
-        if (getAction().equalsIgnoreCase(ACTION_CREATE)) {
-          logger.trace("Adding new document...");
-          IndexHolder writer = IndexHolder.getInstance();
-          writer.addDocument(doc.getDocument());
-          doc.newDocument();
+        for (DocumentExtractor ds : getDataSources()) {
+          ds.extractDocument(el, dh, res);
         }
       }
       try {
@@ -165,7 +141,7 @@ public class JDBCDataSource extends DataSource {
       } catch (SQLException e) {
         logger.warn("Cannot close result set", e);
       }
-    } catch (SQLException | IOException e) {
+    } catch (SQLException e) {
       logger.error("Cannot parse data source.", e);
       throw new DocumentHandlerException(e);
     }

@@ -22,8 +22,6 @@
 
 package de.ilias.services.lucene.index;
 
-import de.ilias.services.settings.LocalSettings;
-
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -33,8 +31,8 @@ import java.util.Vector;
  */
 public class FieldInfoUser {
 
-  private static HashMap<String, FieldInfoUser> instances = new HashMap<String, FieldInfoUser>();
-  private Vector<String> fields = new Vector<String>();
+  private static final HashMap<String, FieldInfoUser> instances = new HashMap<>();
+  private final Vector<String> fields = new Vector<>();
 
   /**
    *
@@ -42,14 +40,6 @@ public class FieldInfoUser {
   protected FieldInfoUser() {
 
     initDefaultFields();
-  }
-
-  /**
-   * Get singleton instance for a client
-   */
-  protected static FieldInfoUser getInstance() {
-
-    return getInstance(LocalSettings.getClientKey());
   }
 
   public static FieldInfoUser getInstance(String clientKey) {
@@ -73,24 +63,10 @@ public class FieldInfoUser {
   }
 
   /**
-   * Get fields as Vector
-   *
-   * @return Vector fields
-   */
-  public Vector<String> getFields() {
-    return fields;
-  }
-
-  /**
    * Return fields as string array
    */
   public String[] getFieldsAsStringArray() {
     return fields.toArray(new String[0]);
-  }
-
-  public int getFieldSize() {
-
-    return fields.size();
   }
 
   /**

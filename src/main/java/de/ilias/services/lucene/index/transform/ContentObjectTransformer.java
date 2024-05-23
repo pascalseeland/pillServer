@@ -41,7 +41,7 @@ import javax.xml.parsers.SAXParserFactory;
  */
 public class ContentObjectTransformer implements ContentTransformer {
 
-  private Logger logger = LogManager.getLogger(ContentObjectTransformer.class);
+  private static final Logger logger = LogManager.getLogger(ContentObjectTransformer.class);
 
   /**
    * Extract text from page_objects
@@ -50,8 +50,8 @@ public class ContentObjectTransformer implements ContentTransformer {
    */
   public String transform(String content) {
 
-    XMLReader reader = null;
-    PageObjectHandler handler = null;
+    XMLReader reader;
+    PageObjectHandler handler;
     StringReader stringReader = new StringReader(content);
 
     try {

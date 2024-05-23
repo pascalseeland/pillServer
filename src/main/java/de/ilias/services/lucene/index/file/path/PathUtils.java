@@ -22,6 +22,7 @@
 
 package de.ilias.services.lucene.index.file.path;
 
+import java.nio.file.FileSystems;
 import java.util.Vector;
 
 /**
@@ -42,7 +43,7 @@ public class PathUtils {
 
     for (int i = PathUtils.MAX_EXPONENT; i > 0; i--) {
 
-      int tmp = 0;
+      int tmp;
       int factor = (int) Math.pow(PathUtils.FACTOR, i);
 
       if (((tmp = (num / factor)) != 0) || found) {
@@ -56,7 +57,7 @@ public class PathUtils {
     for (String s : path) {
 
       pathString.append(s);
-      pathString.append(System.getProperty("file.separator"));
+      pathString.append(FileSystems.getDefault().getSeparator());
     }
 
     return pathString.toString();
@@ -72,8 +73,8 @@ public class PathUtils {
     }
     fullPath.append(name);
     fullPath.append('_');
-    fullPath.append(String.valueOf(objId));
-    fullPath.append(System.getProperty("file.separator"));
+    fullPath.append(objId);
+    fullPath.append(FileSystems.getDefault().getSeparator());
 
     return fullPath.toString();
   }
@@ -87,15 +88,15 @@ public class PathUtils {
 
     if (version < 10) {
       directoryName.append("00");
-      directoryName.append(String.valueOf(version));
+      directoryName.append(version);
       return directoryName.toString();
     } else if (version < 100) {
       directoryName.append("0");
-      directoryName.append(String.valueOf(version));
+      directoryName.append(version);
       return directoryName.toString();
 
     } else {
-      directoryName.append(String.valueOf(version));
+      directoryName.append(version);
       return directoryName.toString();
     }
   }

@@ -41,7 +41,7 @@ import java.util.Vector;
  */
 public class FieldDefinition {
 
-  private static Logger logger = LogManager.getLogger(FieldDefinition.class);
+  private static final Logger logger = LogManager.getLogger(FieldDefinition.class);
 
   /**
    * Possible index types
@@ -63,12 +63,12 @@ public class FieldDefinition {
   /**
    * Name if field
    */
-  private String name;
+  private final String name;
 
   /**
    * Column name
    */
-  private String column;
+  private final String column;
 
   /**
    * Type
@@ -85,7 +85,7 @@ public class FieldDefinition {
    */
   private boolean isDynamic = false;
 
-  Vector<TransformerDefinition> transformers = new Vector<>();
+  private final Vector<TransformerDefinition> transformers = new Vector<>();
 
   public FieldDefinition(String store, String index, String name, String column, String type, String isGlobal,
       String dynamicName) {
@@ -114,63 +114,9 @@ public class FieldDefinition {
 
     this.column = column;
 
-    if (type != null && type.length() != 0) {
+    if (type != null && !type.isEmpty()) {
       this.type = type;
     }
-  }
-
-  /**
-   * @return the index
-   */
-  public Integer getIndexType() {
-    return indexType;
-  }
-
-  public void setIndexType(int type) {
-    this.indexType = type;
-  }
-
-  public Field.Store getStore() {
-    return this.store;
-  }
-
-  /**
-   * @return the column
-   */
-  public String getColumn() {
-    return column;
-  }
-
-  /**
-   * @param column the column to set
-   */
-  public void setColumn(String column) {
-    this.column = column;
-  }
-
-  /**
-   * @return the name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * @param name the name to set
-   */
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  /**
-   * set type (one of char,text,clob)
-   */
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getType() {
-    return type;
   }
 
   /**
@@ -178,31 +124,31 @@ public class FieldDefinition {
    */
   public String parseName(ResultSet res) throws SQLException {
 
-    if (isDynamic == false) {
-      return getName();
+    if (!isDynamic) {
+      return name;
     }
     if (res != null) {
 
       String value;
 
-      if (getType().equalsIgnoreCase("clob")) {
-        value = DBFactory.getCLOB(res, getName());
-      } else if (getType().equalsIgnoreCase("text")) {
-        value = DBFactory.getString(res, getName());
-      } else if (getType().equalsIgnoreCase("integer")) {
-        value = DBFactory.getInt(res, getName());
+      if (type.equalsIgnoreCase("clob")) {
+        value = DBFactory.getCLOB(res, name);
+      } else if (type.equalsIgnoreCase("text")) {
+        value = DBFactory.getString(res, name);
+      } else if (type.equalsIgnoreCase("integer")) {
+        value = DBFactory.getInt(res, name);
       } else {
-        logger.warn("Unknown type given for Field name: " + getName());
+        logger.warn("Unknown type given for Field name: " + name);
         return "";
       }
 
       if (value != null) {
         logger.debug("Dynamic name value: " + value);
-        logger.debug("Dynamic name:" + getName());
+        logger.debug("Dynamic name:" + name);
         return value;
       }
     }
-    throw new SQLException("Invalid result set for dynamic field name: " + getName());
+    throw new SQLException("Invalid result set for dynamic field name: " + name);
   }
 
   /**
@@ -212,44 +158,9 @@ public class FieldDefinition {
     return transformers;
   }
 
-  /**
-   * @param transformers the transformers to set
-   */
-  public void setTransformers(Vector<TransformerDefinition> transformers) {
-    this.transformers = transformers;
-  }
-
   public void addTransformer(TransformerDefinition trans) {
 
     this.transformers.add(trans);
-  }
-
-  /**
-   * @param global the global to set
-   */
-  public void setGlobal(boolean global) {
-    this.global = global;
-  }
-
-  /**
-   * @return the global
-   */
-  public boolean isGlobal() {
-    return global;
-  }
-
-  /**
-   * @param isDynamic the isDynamic to set
-   */
-  public void setDynamic(boolean isDynamic) {
-    this.isDynamic = isDynamic;
-  }
-
-  /**
-   * @return the isDynamic
-   */
-  public boolean isDynamic() {
-    return isDynamic;
   }
 
   @Override
@@ -257,7 +168,7 @@ public class FieldDefinition {
 
     StringBuilder out = new StringBuilder();
 
-    out.append(getIndexType() + " " + getColumn() + " " + getName());
+    out.append(indexType).append(" ").append(column).append(" ").append(name);
     out.append("\n");
 
     for (Object tr : getTransformers()) {
@@ -269,52 +180,45 @@ public class FieldDefinition {
     return out.toString();
   }
 
-  public void writeDocument(ResultSet res) throws SQLException {
+  public void writeDocument(ResultSet res, DocumentHolder dh) throws SQLException {
 
     try {
       String value;
-      boolean indexed = false;
+      boolean indexed = INDEX_ANALYZED == indexType;
 
-      if (getType().equalsIgnoreCase("clob")) {
-        value = DBFactory.getCLOB(res, getColumn());
-      } else if (getType().equalsIgnoreCase("text")) {
-        value = DBFactory.getString(res, getColumn());
-      } else if (getType().equalsIgnoreCase("integer")) {
-        value = DBFactory.getInt(res, getColumn());
+      if (type.equalsIgnoreCase("clob")) {
+        value = DBFactory.getCLOB(res, column);
+      } else if (type.equalsIgnoreCase("text")) {
+        value = DBFactory.getString(res, column);
+      } else if (type.equalsIgnoreCase("integer")) {
+        value = DBFactory.getInt(res, column);
       } else {
-        logger.warn("Unknown type given for Field name: " + getName());
+        logger.warn("Unknown type given for Field name: " + name);
         return;
       }
 
-      if (value != null && value.length() > 0) {
+      if (value != null && !value.isEmpty()) {
         String purged = callTransformers(value);
         String fieldName = parseName(res);
 
         logger.debug("Found value: " + purged + " for name: " + fieldName);
 
-        if (getIndexType().equals(INDEX_ANALYZED)) {
-          indexed = true;
-        }
-        DocumentHolder.factory().add(fieldName, purged, isGlobal(), store, indexed);
+        dh.add(fieldName, purged, global, store, indexed);
       }
-      return;
     } catch (NullPointerException e) {
       logger.error("Caught NullPointerException: " + e.getMessage());
     }
   }
 
-  public void writeDocument(String content) {
+  public void writeDocument(String content, DocumentHolder dh) {
 
-    boolean indexed = false;
+    boolean indexed = (INDEX_ANALYZED == indexType);
 
-    if (content != null && content.length() != 0) {
+    if (content != null && !content.isEmpty()) {
 
       String purged = callTransformers(content);
 
-      if (getIndexType().equals(INDEX_ANALYZED)) {
-        indexed = true;
-      }
-      DocumentHolder.factory().add(getName(), purged, isGlobal(), store, indexed);
+      dh.add(name, purged, global, store, indexed);
     }
   }
 

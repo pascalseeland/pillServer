@@ -6,14 +6,14 @@ This code is based on the original ILIAS code (https://github.com/ILIAS-eLearnin
 
 1. [Apache Lucene](#apache-lucene)
    1. [Requirements](#requirements)
-1. [Installation](#installation)
+2.[Installation](#installation)
    1. [Create a Server Configuration File](#create-a-server-configuration-file)
-   1. [Start the server:](#start-the-server)
-   1. [Creating a new Lucene index:](#creating-a-new-lucene-index)
-   1. [Updating an existing index:](#updating-an-existing-index)
-   1. [Performing a query](#performing-a-query)
-1. [Preparing ILIAS](#preparing-ilias)
-1. [Starting Lucene server at boot time](#starting-lucene-server-at-boot-time)
+   2. [Start the server:](#start-the-server)
+   3. [Creating a new Lucene index:](#creating-a-new-lucene-index)
+   4. [Updating an existing index:](#updating-an-existing-index)
+   5. [Performing a query](#performing-a-query)
+3. [Preparing ILIAS](#preparing-ilias)
+4. [Starting Lucene server at boot time](#starting-lucene-server-at-boot-time)
    1. [SysV-Init](#sysv-init)
 
 <!-- /MarkdownTOC -->

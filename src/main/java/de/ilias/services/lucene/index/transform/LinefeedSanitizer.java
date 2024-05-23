@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  */
 public class LinefeedSanitizer implements ContentTransformer {
 
-  private Logger logger = LogManager.getLogger(LinefeedSanitizer.class);
+  private static final Logger logger = LogManager.getLogger(LinefeedSanitizer.class);
 
   /**
    * @see de.ilias.services.lucene.index.transform.ContentTransformer#transform(java.lang.String)

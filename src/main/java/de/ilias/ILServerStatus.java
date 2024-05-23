@@ -26,11 +26,11 @@ import java.util.HashMap;
 
 public class ILServerStatus {
 
-  public static final String RUNNING = "Runnning";
+  public static final String RUNNING = "Running";
   public static final String STOPPED = "Stopped";
   public static final String INDEXING = "Indexing";
 
-  private static HashMap<String, Boolean> indexer = new HashMap<String, Boolean>();
+  private static final HashMap<String, Boolean> indexer = new HashMap<>();
   private static boolean active = false;
 
   /**
@@ -47,45 +47,8 @@ public class ILServerStatus {
     ILServerStatus.active = active;
   }
 
-  /**
-   * Enable an indexer for a specific client
-   */
-  public static void addIndexer(String clientKey) {
-
-    indexer.put(clientKey, true);
-    setActive(true);
-  }
-
-  public static boolean isIndexerActive(String clientKey) {
-
-    return indexer.containsKey(clientKey);
-  }
-
-  /**
-   * Remove indexer for a specific client
-   */
-  public static void removeIndexer(String clientKey) {
-
-    if (indexer.containsKey(clientKey)) {
-
-      indexer.remove(clientKey);
-    }
-  }
-
-  /**
-   * Get current number of running indexers
-   */
-  public static int getCountActiveIndexer() {
-
-    return indexer.size();
-  }
-
   public static String getStatus() {
 
-    if (getCountActiveIndexer() != 0) {
-
-      return INDEXING + " (" + getCountActiveIndexer() + ")";
-    }
     if (isActive()) {
 
       return RUNNING;

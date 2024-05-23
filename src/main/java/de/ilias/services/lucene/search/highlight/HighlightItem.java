@@ -35,7 +35,7 @@ import java.util.Vector;
 public class HighlightItem implements ResultExport {
   private int subId;
   private double absoluteScore = 0;
-  private Vector<HighlightField> fields = new Vector<HighlightField>();
+  private final Vector<HighlightField> fields = new Vector<>();
 
   public HighlightItem(int subId) {
 
@@ -70,17 +70,8 @@ public class HighlightItem implements ResultExport {
     return absoluteScore;
   }
 
-  public HighlightField addField(HighlightField field) {
-
+  public void addField(HighlightField field) {
     fields.add(field);
-    return field;
-  }
-
-  /**
-   * @return the fields
-   */
-  public Vector<HighlightField> getFields() {
-    return fields;
   }
 
   /**
@@ -94,9 +85,9 @@ public class HighlightItem implements ResultExport {
     item.setAttribute("id", String.valueOf(getSubId()));
     item.setAttribute("absoluteScore", String.valueOf(getAbsoluteScore()));
 
-    for (Object field : fields) {
+    for (ResultExport field : fields) {
 
-      item.addContent(((ResultExport) field).addXML());
+      item.addContent(field.addXML());
     }
     return item;
   }

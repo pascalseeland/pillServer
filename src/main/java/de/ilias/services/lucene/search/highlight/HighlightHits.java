@@ -37,7 +37,7 @@ import java.util.HashMap;
  */
 public class HighlightHits implements ResultExport {
 
-  private HashMap<Integer, HighlightObject> objects = new HashMap<Integer, HighlightObject>();
+  private final HashMap<Integer, HighlightObject> objects = new HashMap<>();
 
   private double maxScore = 0;
 
@@ -50,13 +50,6 @@ public class HighlightHits implements ResultExport {
     //logger.debug("New object with id: " + String.valueOf(objId));
     objects.put(objId, new HighlightObject(objId));
     return objects.get(objId);
-  }
-
-  /**
-   * @return the objects
-   */
-  public HashMap<Integer, HighlightObject> getObjects() {
-    return objects;
   }
 
   /**
@@ -92,9 +85,9 @@ public class HighlightHits implements ResultExport {
     Element hits = new Element("Hits");
     hits.setAttribute("maxScore", String.valueOf(getMaxScore()));
 
-    for (Object obj : objects.values()) {
+    for (ResultExport obj : objects.values()) {
 
-      hits.addContent(((ResultExport) obj).addXML());
+      hits.addContent(obj.addXML());
     }
     return hits;
   }

@@ -28,6 +28,7 @@ import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.LocalSettings;
 
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 
 /**
@@ -48,21 +49,21 @@ public class HTLMObjectPathCreator implements PathCreator {
 
     try {
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getAbsolutePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append("data");
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append("lm_data");
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append("lm_");
-      fullPath.append(String.valueOf(objId));
+      fullPath.append(objId);
 
       file = new File(fullPath.toString());
       if (file.exists() && file.canRead()) {
         return file;
       }
-      throw new PathCreatorException("Cannot access directory: " + fullPath.toString());
+      throw new PathCreatorException("Cannot access directory: " + fullPath);
     } catch (ConfigurationException e) {
       throw new PathCreatorException(e);
     }

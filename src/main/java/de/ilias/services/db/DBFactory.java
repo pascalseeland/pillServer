@@ -43,13 +43,13 @@ import java.util.HashMap;
  */
 public class DBFactory {
 
-  private static Logger logger = LogManager.getLogger(DBFactory.class);
+  private static final Logger logger = LogManager.getLogger(DBFactory.class);
 
-  private static String MARIA_DB_CONNECTOR = "jdbc:mariadb://";
+  private static final String MARIA_DB_CONNECTOR = "jdbc:mariadb://";
 
-  private static ThreadLocal<HashMap<String, PreparedStatement>> ps = ThreadLocal.withInitial(() -> new HashMap<>());
+  private static final ThreadLocal<HashMap<String, PreparedStatement>> ps = ThreadLocal.withInitial(HashMap::new);
 
-  private static ThreadLocal<Connection> connection = ThreadLocal.withInitial(() -> {
+  private static final ThreadLocal<Connection> connection = ThreadLocal.withInitial(() -> {
     try {
       ClientSettings client = ClientSettings.getInstance(LocalSettings.getClientKey());
 
@@ -68,9 +68,7 @@ public class DBFactory {
         logger.error("Unsupported db type given." + client.getDbType());
         throw new ConfigurationException("Unsupported db type given." + client.getDbType());
       }
-    } catch (SQLException e) {
-      logger.error("Cannot connect to database: " + e);
-    } catch (ConfigurationException e) {
+    } catch (SQLException | ConfigurationException e) {
       logger.error("Cannot connect to database: " + e);
     }
     return null;
@@ -162,7 +160,7 @@ public class DBFactory {
   /**
    * set string overwritten for oracle
    */
-  public static PreparedStatement setString(PreparedStatement ps, int index, String str) throws SQLException {
+  public static void setString(PreparedStatement ps, int index, String str) throws SQLException {
 
     ClientSettings client;
     try {
@@ -171,13 +169,11 @@ public class DBFactory {
       if (client.getDbType().equals("mysql")) {
 
         ps.setString(index, str);
-        return ps;
       }
     } catch (ConfigurationException e) {
       // shouldn't happen here
       logger.error(e);
     }
-    return (PreparedStatement) ps;
   }
 
   /**

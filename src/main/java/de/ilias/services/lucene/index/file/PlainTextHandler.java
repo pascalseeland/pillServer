@@ -22,6 +22,9 @@
 
 package de.ilias.services.lucene.index.file;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +37,8 @@ import java.io.InputStreamReader;
  * @version $Id$
  */
 public class PlainTextHandler implements FileHandler {
+
+  private final Logger logger = LogManager.getLogger(PlainTextHandler.class);
 
   /**
    *
@@ -50,7 +55,7 @@ public class PlainTextHandler implements FileHandler {
     BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
     try {
-      String line = null;
+      String line;
       while ((line = br.readLine()) != null) {
         content.append(' ');
         content.append(line);
@@ -59,11 +64,10 @@ public class PlainTextHandler implements FileHandler {
     } catch (IOException e) {
       throw new FileHandlerException("Cannot read plain text file: " + e);
     } finally {
-      if (br != null) {
-        try {
-          br.close();
-        } catch (IOException e) {
-        }
+      try {
+        br.close();
+      } catch (IOException e) {
+        logger.error("Error closing BufferedReader", e);
       }
     }
   }

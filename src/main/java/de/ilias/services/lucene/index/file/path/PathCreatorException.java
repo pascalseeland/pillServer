@@ -28,18 +28,6 @@ package de.ilias.services.lucene.index.file.path;
  */
 public class PathCreatorException extends Exception {
 
-  /**
-   *
-   */
-  private static final long serialVersionUID = 1L;
-
-  /**
-   *
-   */
-  public PathCreatorException() {
-    // TODO Auto-generated constructor stub
-  }
-
   public PathCreatorException(String message) {
     super(message);
     // TODO Auto-generated constructor stub
@@ -47,11 +35,6 @@ public class PathCreatorException extends Exception {
 
   public PathCreatorException(Throwable cause) {
     super(cause);
-    // TODO Auto-generated constructor stub
-  }
-
-  public PathCreatorException(String message, Throwable cause) {
-    super(message, cause);
     // TODO Auto-generated constructor stub
   }
 

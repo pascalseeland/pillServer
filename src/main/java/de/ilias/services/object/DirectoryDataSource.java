@@ -24,6 +24,7 @@ package de.ilias.services.object;
 
 import de.ilias.services.lucene.index.CommandQueueElement;
 import de.ilias.services.lucene.index.DocumentHandlerException;
+import de.ilias.services.lucene.index.DocumentHolder;
 import de.ilias.services.lucene.index.file.ExtensionFileHandler;
 import de.ilias.services.lucene.index.file.FileHandlerException;
 import de.ilias.services.lucene.index.file.path.PathCreatorException;
@@ -32,7 +33,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.sql.ResultSet;
 import java.util.Vector;
 
@@ -40,19 +40,18 @@ import java.util.Vector;
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  * @version $Id$
  */
-public class DirectoryDataSource extends FileDataSource {
+public class DirectoryDataSource extends FSDataSource {
 
-  private static Logger logger = LogManager.getLogger(DirectoryDataSource.class);
+  private static final Logger logger = LogManager.getLogger(DirectoryDataSource.class);
 
-  public DirectoryDataSource(int type) {
+  public DirectoryDataSource(TYPE type) {
     super(type);
-
   }
 
   /**
    * write Document
    */
-  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
+  public void extractDocument(CommandQueueElement el, DocumentHolder dh, ResultSet res) throws DocumentHandlerException {
 
     File start;
     ExtensionFileHandler handler = new ExtensionFileHandler();
@@ -79,17 +78,17 @@ public class DirectoryDataSource extends FileDataSource {
         // Analyze encoding (transfer encoding), parse file extension
         // and finally read content
         try {
-          content.append(" " + handler.getContent(file, ""));
+          content.append(" ").append(handler.getContent(file, ""));
         } catch (FileHandlerException e) {
           logger.warn("Cannot parse file " + file.getAbsolutePath());
         }
       }
 
       // Write content
-      for (Object field : getFields()) {
-        ((FieldDefinition) field).writeDocument(content.toString());
+      for (FieldDefinition field : getFields()) {
+        field.writeDocument(content.toString(), dh);
       }
-      logger.debug("Content is : " + content.toString());
+      logger.debug("Content is : " + content);
     } catch (PathCreatorException e) {
       throw new DocumentHandlerException(e);
     }
@@ -98,8 +97,8 @@ public class DirectoryDataSource extends FileDataSource {
   /**
    * Read all files in a directory
    */
-  class FileReader {
-    Vector<File> files = new Vector<>();
+  static class FileReader {
+    private final Vector<File> files = new Vector<>();
 
     public Vector<File> getFiles() {
       return files;
@@ -107,25 +106,22 @@ public class DirectoryDataSource extends FileDataSource {
 
     public void traverse(File dir) {
 
-      File[] entries = dir.listFiles(new FileFilter() {
-        public boolean accept(File path) {
+      File[] entries = dir.listFiles(path -> {
 
-          if (path.isDirectory()) {
-            if (!path.getName().equals(".svn")) {
-              return true;
-            }
-            return false;
-          } else {
-            //getCandidates().add(path);
-            files.add(path);
-            return false;
-          }
+        if (path.isDirectory()) {
+          return !path.getName().equals(".svn");
+        } else {
+          //getCandidates().add(path);
+          files.add(path);
+          return false;
         }
       });
 
-      for (File entry : entries) {
-        // there are only directories
-        traverse(entry);
+      if (entries != null) {
+        for (File entry : entries) {
+          // there are only directories
+          traverse(entry);
+        }
       }
     }
   }

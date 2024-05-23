@@ -40,11 +40,11 @@ import java.io.IOException;
  */
 public class SearchResultWriter {
 
-  private Logger logger = LogManager.getLogger(SearchResultWriter.class);
+  private static final Logger logger = LogManager.getLogger(SearchResultWriter.class);
 
-  private IndexSearcher searcher = null;
-  private ScoreDoc[] hits = null;
-  private SearchHits result = null;
+  private final IndexSearcher searcher;
+  private final ScoreDoc[] hits;
+  private final SearchHits result;
   private int offset = 0;
 
   public SearchResultWriter(ScoreDoc[] hits) throws IOException, ConfigurationException {

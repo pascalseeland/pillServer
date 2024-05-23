@@ -22,7 +22,9 @@
 
 package de.ilias.services.rpc;
 
-import de.ilias.services.lucene.index.RPCIndexHandler;
+import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
+
+import de.ilias.services.lucene.index.UpdateIndexJob;
 import de.ilias.services.settings.ConfigurationException;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,8 +34,17 @@ import org.apache.xmlrpc.server.PropertyHandlerMapping;
 import org.apache.xmlrpc.server.XmlRpcServer;
 import org.apache.xmlrpc.server.XmlRpcServerConfigImpl;
 import org.apache.xmlrpc.webserver.WebServer;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.StdSchedulerFactory;
 
 import java.net.InetAddress;
+
+
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
@@ -42,26 +53,24 @@ import java.net.InetAddress;
 public class RPCServer {
 
   private static RPCServer instance = null;
-  private static Logger logger = LogManager.getLogger(RPCServer.class);
+  private static final Logger logger = LogManager.getLogger(RPCServer.class);
 
+  private Scheduler scheduler;
   private WebServer server;
   private InetAddress host = null;
   private int port = 0;
   private boolean alive = false;
 
-  private RPCServer(InetAddress host, int port) throws XmlRpcException {
+  private RPCServer(InetAddress host, int port) throws XmlRpcException, SchedulerException {
 
     logger.info("New RPCServer construct.");
     setHost(host);
     setPort(port);
     initServer();
+    initScheduler();
   }
 
-  private RPCServer() {
-
-  }
-
-  public static RPCServer getInstance(InetAddress host, int port) throws XmlRpcException {
+  public static RPCServer getInstance(InetAddress host, int port) throws XmlRpcException, SchedulerException {
 
     if (RPCServer.instance == null) {
       return RPCServer.instance = new RPCServer(host, port);
@@ -133,9 +142,23 @@ public class RPCServer {
     config = (XmlRpcServerConfigImpl) rpcServer.getConfig();
     config.setKeepAliveEnabled(true);
     config.setEncoding("UTF8");
-    // nothing to do in the moment.
+  }
 
-    return;
+  public void initScheduler() throws SchedulerException {
+    scheduler = StdSchedulerFactory.getDefaultScheduler();
+    JobDetail job = JobBuilder.newJob(UpdateIndexJob.class)
+            .withIdentity("updateJob", "group1")
+            .usingJobData("jobSays", "Hello World!")
+            .usingJobData("myFloatValue", 3.141f)
+            .build();
+    Trigger trigger = TriggerBuilder.newTrigger()
+            .withIdentity("myTrigger", "group1")
+            .startNow()
+            .withSchedule(simpleSchedule()
+                    .withIntervalInSeconds(60)
+                    .repeatForever())
+            .build();
+    scheduler.scheduleJob(job, trigger);
   }
 
   /**
@@ -145,6 +168,8 @@ public class RPCServer {
 
     try {
       logger.info("Starting ILIAS RPC-Server...");
+      scheduler.start();
+      logger.info("Started quartz scheduler");
       server.start();
       logger.debug("Using host :" + getHost().toString());
       logger.debug("Using port :" + getPort());
@@ -162,10 +187,12 @@ public class RPCServer {
   /**
    * Stop Webserver
    */
-  public void shutdown() {
+  public void shutdown() throws SchedulerException {
 
-    logger.debug("Stopping Webserver...");
+    logger.info("Stopping webserver...");
     server.shutdown();
+    logger.info("Stopping scheduler");
+    scheduler.shutdown();
     alive = false;
   }
 
@@ -176,7 +203,6 @@ public class RPCServer {
     mapping = new PropertyHandlerMapping();
     mapping.addHandler("RPCDebug", de.ilias.services.rpc.RPCDebug.class);
     mapping.addHandler("RPCAdministration", de.ilias.services.rpc.RPCAdministration.class);
-    mapping.addHandler("RPCIndexHandler", RPCIndexHandler.class);
     mapping.addHandler("RPCSearchHandler", de.ilias.services.lucene.search.RPCSearchHandler.class);
     mapping.addHandler("RPCTransformationHandler", de.ilias.services.transformation.RPCTransformationHandler.class);
 

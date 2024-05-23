@@ -26,7 +26,6 @@ import de.ilias.ILServerStatus;
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.lucene.index.IndexHolder;
 import de.ilias.services.lucene.settings.LuceneSettings;
-import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,7 +39,7 @@ import java.sql.SQLException;
  */
 public class RPCAdministration {
 
-  private static Logger logger = LogManager.getLogger(RPCAdministration.class);
+  private static final Logger logger = LogManager.getLogger(RPCAdministration.class);
 
   /**
    *
@@ -52,7 +51,8 @@ public class RPCAdministration {
   /**
    * Stop RPC server and application
    */
-  public boolean stop() throws ConfigurationException {
+  @SuppressWarnings({"unused", "SameReturnValue"})
+  public boolean stop() {
 
     RPCServer server;
 
@@ -75,9 +75,10 @@ public class RPCAdministration {
   /**
    * Refresh settings
    */
+  @SuppressWarnings("unused")
   public boolean refreshSettings(String clientKey) {
 
-    LuceneSettings settings = null;
+    LuceneSettings settings;
     LocalSettings.setClientKey(clientKey);
     DBFactory.init();
 
@@ -93,11 +94,13 @@ public class RPCAdministration {
     }
   }
 
+  @SuppressWarnings("unused")
   public String status() {
 
     return ILServerStatus.getStatus();
   }
 
+  @SuppressWarnings({"unused", "SameReturnValue"})
   public boolean start() {
 
     ILServerStatus.setActive(true);

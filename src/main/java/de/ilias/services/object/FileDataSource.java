@@ -23,38 +23,35 @@
 package de.ilias.services.object;
 
 import de.ilias.services.lucene.index.CommandQueueElement;
+import de.ilias.services.lucene.index.DocumentExtractor;
 import de.ilias.services.lucene.index.DocumentHandlerException;
+import de.ilias.services.lucene.index.DocumentHolder;
 import de.ilias.services.lucene.index.file.ExtensionFileHandler;
 import de.ilias.services.lucene.index.file.FileHandlerException;
-import de.ilias.services.lucene.index.file.path.PathCreator;
 import de.ilias.services.lucene.index.file.path.PathCreatorException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
-public class FileDataSource extends DataSource {
+public class FileDataSource extends FSDataSource {
 
-  private static Logger logger = LogManager.getLogger(FileDataSource.class);
+  private static final Logger logger = LogManager.getLogger(FileDataSource.class);
 
-  private PathCreator pathCreator = null;
 
-  public FileDataSource(int type) {
-
+  public FileDataSource(TYPE type) {
     super(type);
   }
 
   /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
+   * @see DocumentExtractor#extractDocument(CommandQueueElement, DocumentHolder, ResultSet)
    */
-  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
+  public void extractDocument(CommandQueueElement el, DocumentHolder dh, ResultSet res) throws DocumentHandlerException {
 
     File file = null;
     ExtensionFileHandler handler = new ExtensionFileHandler();
@@ -68,44 +65,13 @@ public class FileDataSource extends DataSource {
       String extension = getPathCreator().getExtension(el, res);
 
       // Analyze encoding (transfer encoding), parse file extension and finally read content
-      for (Object field : getFields()) {
-        ((FieldDefinition) field).writeDocument(handler.getContent(file, extension));
+      for (FieldDefinition field : getFields()) {
+        field.writeDocument(handler.getContent(file, extension), dh);
       }
       logger.debug("File path is: " + file.getAbsolutePath());
-      return;
-    } catch (PathCreatorException e) {
-      if (file != null) {
-        logger.info("Current Files is: " + file.getAbsolutePath());
-      }
-      throw new DocumentHandlerException(e);
-    } catch (FileHandlerException e) {
-      if (file != null) {
-        logger.info("Current Files is: " + file.getAbsolutePath());
-      }
+    } catch (PathCreatorException | FileHandlerException e) {
+      logger.info("Current Files is: " + file.getAbsolutePath());
       throw new DocumentHandlerException(e);
     }
-  }
-
-  /**
-   * @param pathCreator the pathCreator to set
-   */
-  public void setPathCreator(PathCreator pathCreator) {
-    this.pathCreator = pathCreator;
-  }
-
-  /**
-   * @return the pathCreator
-   */
-  public PathCreator getPathCreator() {
-    return pathCreator;
-  }
-
-  /**
-   * @see de.ilias.services.object.DataSource#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
-   */
-  @Override
-  public void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
-
-    writeDocument(el, null);
   }
 }

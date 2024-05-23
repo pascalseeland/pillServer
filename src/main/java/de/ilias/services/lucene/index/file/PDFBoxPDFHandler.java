@@ -72,6 +72,7 @@ public class PDFBoxPDFHandler implements FileHandler {
           pddo.close();
         }
       } catch (IOException e) {
+        logger.error(e.getMessage(), e);
       }
     }
     return str;

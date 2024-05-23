@@ -22,7 +22,6 @@
 
 package de.ilias.services.lucene.index.file;
 
-import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.ServerSettings;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,15 +39,11 @@ import java.io.IOException;
  */
 public class ExtensionFileHandler {
 
-  private static Logger logger = LogManager.getLogger(ExtensionFileHandler.class);
-  private ServerSettings serverSettings;
+  private static final Logger logger = LogManager.getLogger(ExtensionFileHandler.class);
+  private final ServerSettings serverSettings;
 
   public ExtensionFileHandler() {
-    try {
-      serverSettings = ServerSettings.getInstance();
-    } catch (ConfigurationException e) {
-      logger.error("Error getting server settings", e);
-    }
+    serverSettings = ServerSettings.getInstance();
   }
 
   public String getContent(File file, String extension) throws FileHandlerException {
@@ -67,8 +62,8 @@ public class ExtensionFileHandler {
     try {
       String filename = file.getName();
       int dotIndex = filename.lastIndexOf(".");
-      if ((extension.length() == 0) && (dotIndex > 0) && (dotIndex < filename.length())) {
-        extension = filename.substring(dotIndex + 1, filename.length());
+      if (extension.isEmpty() && dotIndex > 0) {
+        extension = filename.substring(dotIndex + 1);
       }
       if (extension.equalsIgnoreCase("")) {
         logger.warn("no valid extension found for: " + file.getName());
@@ -97,7 +92,7 @@ public class ExtensionFileHandler {
         logger.info("Using getHTMLDocument() for " + file.getName());
         return getHTMLDocument(file);
       }
-      if (extension.equalsIgnoreCase("txt") || extension.length() == 0) {
+      if (extension.equalsIgnoreCase("txt") || extension.isEmpty()) {
         logger.info("Using getTextDocument() for: " + file.getName());
         return getTextDocument(file);
       }
@@ -134,10 +129,6 @@ public class ExtensionFileHandler {
         logger.info("Using getOpenOfficeDocument() for " + file.getName());
         return getOpenOfficeDocument(file);
       }
-      if (extension.equalsIgnoreCase("sxw")) {
-        logger.info("Using getOpenOfficeDocument() for " + file.getName());
-        return getOpenOfficeDocument(file);
-      }
       // Flat XML OO documents
       if (extension.equalsIgnoreCase("fodt")) {
         logger.info("Using getOpenOfficeDocument() for " + file.getName());
@@ -153,9 +144,6 @@ public class ExtensionFileHandler {
         logger.info("Using getRTFDocument() for " + file.getName());
         return getRTFDocument(file);
       }
-    } catch (FileHandlerException e) {
-      logger.warn("Parsing failed with message: " + e);
-      return "";
     } catch (Exception e) {
       logger.warn("Parsing failed with message: " + e);
       return "";
@@ -173,7 +161,7 @@ public class ExtensionFileHandler {
 
     try {
       StringBuilder content = new StringBuilder();
-      POITextExtractor extractor = null;
+      POITextExtractor extractor;
       logger.debug("starting poi extractor");
       extractor = ExtractorFactory.createExtractor(fis = new FileInputStream(file));
       logger.debug("poi extractor gettext" + extractor.getMetadataTextExtractor().getText());
@@ -208,29 +196,25 @@ public class ExtensionFileHandler {
   private String getTextDocument(File file) throws FileHandlerException {
 
     FileInputStream fis = null;
-    FileHandler doch = (FileHandler) new PlainTextHandler();
+    FileHandler doch = new PlainTextHandler();
 
     try {
       return doch.getContent(fis = new FileInputStream(file.getAbsolutePath()));
     } catch (FileNotFoundException e) {
       throw new FileHandlerException("Cannot find file: " + file.getAbsolutePath());
-    } catch (FileHandlerException e) {
-      throw e;
-    } catch (IOException e) {
-      throw new FileHandlerException(e);
     } finally {
       try {
         if (fis != null) {
           fis.close();
         }
-      } catch (IOException e) {
+      } catch (IOException ignored) {
       }
     }
   }
 
   private String getPDFDocument(File file) throws FileHandlerException {
 
-    FileHandler doch = (FileHandler) new PDFBoxPDFHandler();
+    FileHandler doch = new PDFBoxPDFHandler();
     FileInputStream fis = null;
     logger.debug("Start PDFBoxPDFHandler...");
 
@@ -238,8 +222,6 @@ public class ExtensionFileHandler {
 
       logger.debug(file.getAbsolutePath());
       return doch.getContent(fis = new FileInputStream(file.getAbsolutePath()));
-    } catch (IOException e) {
-      throw new FileHandlerException("Caught unknown exception " + e.getMessage());
     } catch (FileHandlerException e) {
       throw e;
     } catch (Exception e) {
@@ -249,7 +231,7 @@ public class ExtensionFileHandler {
         if (fis != null) {
           fis.close();
         }
-      } catch (IOException e) {
+      } catch (IOException ignored) {
       }
     }
   }
@@ -257,12 +239,10 @@ public class ExtensionFileHandler {
   private String getHTMLDocument(File file) throws FileHandlerException {
 
     FileInputStream fis = null;
-    FileHandler doch = (FileHandler) new JTidyHTMLHandler();
+    FileHandler doch = new JTidyHTMLHandler();
 
     try {
       return doch.getContent(fis = new FileInputStream(file.getAbsolutePath()));
-    } catch (FileHandlerException e) {
-      throw e;
     } catch (IOException e) {
       throw new FileHandlerException(e);
     } finally {
@@ -270,7 +250,7 @@ public class ExtensionFileHandler {
         if (fis != null) {
           fis.close();
         }
-      } catch (IOException e) {
+      } catch (IOException ignored) {
       }
     }
   }
@@ -278,7 +258,7 @@ public class ExtensionFileHandler {
   private String getOpenOfficeDocument(File file) throws FileHandlerException {
 
     FileInputStream fis = null;
-    FileHandler doch = (FileHandler) new OpenOfficeDefaultHandler();
+    FileHandler doch = new OpenOfficeDefaultHandler();
 
     try {
       return doch.getContent(fis = new FileInputStream(file.getAbsolutePath()));
@@ -289,7 +269,7 @@ public class ExtensionFileHandler {
         if (fis != null) {
           fis.close();
         }
-      } catch (IOException e) {
+      } catch (IOException ignored) {
       }
     }
   }
@@ -308,7 +288,7 @@ public class ExtensionFileHandler {
         if (fis != null) {
           fis.close();
         }
-      } catch (IOException e) {
+      } catch (IOException ignored) {
       }
     }
   }
@@ -316,7 +296,7 @@ public class ExtensionFileHandler {
   private String getRTFDocument(File file) throws FileHandlerException {
 
     FileInputStream fis = null;
-    FileHandler doch = (FileHandler) new RTFHandler();
+    FileHandler doch = new RTFHandler();
 
     try {
       return doch.getContent(fis = new FileInputStream(file.getAbsolutePath()));
@@ -327,7 +307,7 @@ public class ExtensionFileHandler {
         if (fis != null) {
           fis.close();
         }
-      } catch (IOException e) {
+      } catch (IOException ignored) {
       }
     }
   }
@@ -336,13 +316,9 @@ public class ExtensionFileHandler {
    * Check file size limit
    */
   private boolean checkFileSizeLimit(File file) {
-    long maxFileSize = 0;
+    long maxFileSize;
 
-    try {
-      maxFileSize = ServerSettings.getInstance().getMaxFileSize();
-    } catch (ConfigurationException e) {
-      maxFileSize = ServerSettings.DEFAULT_MAX_FILE_SIZE;
-    }
+    maxFileSize = ServerSettings.getInstance().getMaxFileSize();
 
     if (file.length() > maxFileSize) {
       logger.info("File size is " + file.length() + " bytes.");

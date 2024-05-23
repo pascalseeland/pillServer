@@ -23,40 +23,30 @@
 package de.ilias.services.object;
 
 import de.ilias.services.lucene.index.CommandQueueElement;
-import de.ilias.services.lucene.index.DocumentHandler;
+import de.ilias.services.lucene.index.DocumentExtractor;
 import de.ilias.services.lucene.index.DocumentHandlerException;
 import de.ilias.services.lucene.index.DocumentHolder;
-import de.ilias.services.lucene.index.IndexHolder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.Vector;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
-public class DocumentDefinition implements DocumentHandler {
+public class DocumentDefinition {
 
-  private Logger logger = LogManager.getLogger(DocumentDefinition.class);
+  private final Logger logger = LogManager.getLogger(DocumentDefinition.class);
 
-  private String type;
-  private Vector<DataSource> dataSource = new Vector<>();
+  private final String type;
+  private final Vector<DataSource> dataSource = new Vector<>();
 
   /**
    *
    */
   public DocumentDefinition(String type) {
-    this.type = type;
-  }
-
-  /**
-   * @param type the type to set
-   */
-  public void setType(String type) {
     this.type = type;
   }
 
@@ -70,15 +60,8 @@ public class DocumentDefinition implements DocumentHandler {
   /**
    * @return the dataSource
    */
-  public Vector<DataSource> getDataSource() {
+  private Vector<DataSource> getDataSource() {
     return dataSource;
-  }
-
-  /**
-   * @param dataSource the dataSource to set
-   */
-  public void setDataSource(Vector<DataSource> dataSource) {
-    this.dataSource = dataSource;
   }
 
   public void addDataSource(DataSource source) {
@@ -90,7 +73,7 @@ public class DocumentDefinition implements DocumentHandler {
 
     StringBuilder out = new StringBuilder();
 
-    out.append("Document of type = " + getType());
+    out.append("Document of type = ").append(getType());
     out.append("\n");
 
     for (Object doc : getDataSource()) {
@@ -102,42 +85,17 @@ public class DocumentDefinition implements DocumentHandler {
   }
 
   /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
+   * @see DocumentExtractor#extractDocument(CommandQueueElement, DocumentHolder, ResultSet)
    */
-  public void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException {
-
-    writeDocument(el, null);
-  }
-
-  /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement, java.sql.ResultSet)
-   */
-  public void writeDocument(CommandQueueElement el, ResultSet res) throws DocumentHandlerException {
-
-    DocumentHolder doc = DocumentHolder.factory();
-    doc.newDocument();
-
+  public void extractDocument(CommandQueueElement el, DocumentHolder dh) {
     for (int i = 0; i < getDataSource().size(); i++) {
-
       try {
-        getDataSource().get(i).writeDocument(el);
-      } catch (IOException e) {
-        logger.warn("Cannot parse data source: " + e);
+        getDataSource().get(i).extractDocument(el, dh, null);
       } catch (DocumentHandlerException e) {
         logger.warn(e);
       }
     }
 
-    IndexHolder writer;
-    try {
-      writer = IndexHolder.getInstance();
-      if (doc.getDocument() == null) {
-        logger.warn("Found empty document.");
-      } else {
-        writer.addDocument(doc.getDocument());
-      }
-    } catch (IOException e) {
-      logger.warn(e);
-    }
+
   }
 }

@@ -20,8 +20,8 @@ import java.io.IOException;
  */
 public class ILIASFopDhAdapter extends DefaultHandler {
 
-  private static Logger logger = LogManager.getLogger(ILIASFopDhAdapter.class);
-  private DefaultHandler adaptie;
+  private static final Logger logger = LogManager.getLogger(ILIASFopDhAdapter.class);
+  private final DefaultHandler adaptie;
 
   public ILIASFopDhAdapter(DefaultHandler adaptie) {
     this.adaptie = adaptie;

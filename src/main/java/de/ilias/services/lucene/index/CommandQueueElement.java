@@ -31,19 +31,31 @@ package de.ilias.services.lucene.index;
  */
 public class CommandQueueElement {
 
-  public static final String RESET = "reset";
-  public static final String RESET_ALL = "reset_all";
-  public static final String UPDATE = "update";
-  public static final String CREATE = "create";
-  public static final String DELETE = "delete";
+  public enum Command {
+    RESET("reset"),
+    RESET_ALL("reset_all"),
+    UPDATE("update"),
+    CREATE("create"),
+    DELETE("delete");
+    public final String label;
 
+    Command(String label) {
+      this.label = label;
+    }
+
+    public static Command valueOfLabel(String label) {
+      for (Command c : values()) {
+        if (c.label.equals(label)) {
+          return c;
+        }
+      }
+      return null;
+    }
+  }
   private int objId;
   private String objType;
-  private int subId;
-  private String subType;
 
-  private String command;
-  private boolean finished;
+  private Command command;
 
   /**
    *
@@ -81,58 +93,16 @@ public class CommandQueueElement {
   }
 
   /**
-   * @return the subId
-   */
-  public int getSubId() {
-    return subId;
-  }
-
-  /**
-   * @param subId the subId to set
-   */
-  public void setSubId(int subId) {
-    this.subId = subId;
-  }
-
-  /**
-   * @return the subType
-   */
-  public String getSubType() {
-    return subType;
-  }
-
-  /**
-   * @param subType the subType to set
-   */
-  public void setSubType(String subType) {
-    this.subType = subType;
-  }
-
-  /**
    * @return the command
    */
-  public String getCommand() {
+  public Command getCommand() {
     return command;
   }
 
   /**
    * @param command the command to set
    */
-  public void setCommand(String command) {
+  public void setCommand(Command command) {
     this.command = command;
-  }
-
-  /**
-   * @return the finished
-   */
-  public boolean isFinished() {
-    return finished;
-  }
-
-  /**
-   * @param finished the finished to set
-   */
-  public void setFinished(boolean finished) {
-    this.finished = finished;
   }
 }

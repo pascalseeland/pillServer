@@ -22,31 +22,45 @@
 
 package de.ilias.services.object;
 
-import de.ilias.services.lucene.index.CommandQueueElement;
-import de.ilias.services.lucene.index.DocumentHandler;
-import de.ilias.services.lucene.index.DocumentHandlerException;
+import de.ilias.services.lucene.index.DocumentExtractor;
 
-import java.io.IOException;
 import java.util.Vector;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  */
-public abstract class DataSource implements DocumentHandler {
+public abstract class DataSource implements DocumentExtractor {
 
-  public static final int TYPE_JDBC = 1;
-  public static final int TYPE_FILE = 2;
-  public static final int TYPE_DIRECTORY = 3;
+  public enum TYPE {
+    JDBC,
+    FILE,
+    DIRECTORY
+  }
 
-  public static final String ACTION_APPEND = "append";
-  public static final String ACTION_CREATE = "create";
+  public enum ACTION {
+    CREATE("create"),
+    APPEND("append");
+    public final String label;
 
-  private int type;
-  private String action;
-  Vector<FieldDefinition> fields = new Vector<>();
-  Vector<DataSource> ds = new Vector<>();
+    ACTION(String label) {
+      this.label = label;
+    }
+    public static ACTION valueOfLabel(String label) {
+      for (ACTION a : values()) {
+        if (a.label.equals(label)) {
+          return a;
+        }
+      }
+      return null;
+    }
+  }
 
-  public DataSource(int type) {
+  private final TYPE type;
+  private ACTION action;
+  private final Vector<FieldDefinition> fields = new Vector<>();
+  private final Vector<DataSource> ds = new Vector<>();
+
+  public DataSource(TYPE type) {
 
     this.type = type;
   }
@@ -54,28 +68,21 @@ public abstract class DataSource implements DocumentHandler {
   /**
    * @return the type
    */
-  public int getType() {
+  public TYPE getType() {
     return type;
-  }
-
-  /**
-   * @param type the type to set
-   */
-  public void setType(int type) {
-    this.type = type;
   }
 
   /**
    * @param action the action to set
    */
-  public void setAction(String action) {
+  public void setAction(ACTION action) {
     this.action = action;
   }
 
   /**
    * @return the action
    */
-  public String getAction() {
+  public ACTION getAction() {
     return action;
   }
 
@@ -84,13 +91,6 @@ public abstract class DataSource implements DocumentHandler {
    */
   public Vector<FieldDefinition> getFields() {
     return fields;
-  }
-
-  /**
-   * @param fields the fields to set
-   */
-  public void setFields(Vector<FieldDefinition> fields) {
-    this.fields = fields;
   }
 
   public void addField(FieldDefinition field) {
@@ -107,23 +107,12 @@ public abstract class DataSource implements DocumentHandler {
   }
 
   /**
-   * Set DataSource elements
-   */
-  public void setDataSources(Vector<DataSource> ds) {
-    this.ds = ds;
-  }
-
-  /**
    * Add DataSource element to vector
    */
   public void addDataSource(DataSource ds) {
     this.getDataSources().add(ds);
   }
 
-  /**
-   * @see de.ilias.services.lucene.index.DocumentHandler#writeDocument(de.ilias.services.lucene.index.CommandQueueElement)
-   */
-  public abstract  void writeDocument(CommandQueueElement el) throws DocumentHandlerException, IOException;
 
   /**
    * @see java.lang.Object#toString()

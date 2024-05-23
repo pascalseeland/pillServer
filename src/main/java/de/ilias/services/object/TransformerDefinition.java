@@ -28,20 +28,13 @@ package de.ilias.services.object;
  */
 public class TransformerDefinition {
 
-  private String name;
+  private final String name;
 
   /**
    *
    */
   public TransformerDefinition(String name) {
 
-    this.name = name;
-  }
-
-  /**
-   * @param name the name to set
-   */
-  public void setName(String name) {
     this.name = name;
   }
 

@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class IndexDirectoryFactory {
 
-  private static Logger logger = LogManager.getLogger(IndexDirectoryFactory.class);
+  private static final Logger logger = LogManager.getLogger(IndexDirectoryFactory.class);
 
   /**
    * Get fs directory
@@ -33,7 +33,7 @@ public class IndexDirectoryFactory {
       // think about requirements of a singleton per
       return NIOFSDirectory.open(indexPath.toPath());
     } catch (IOException e) {
-      logger.warn("Cannot create path for file: " + indexPath.toString());
+      logger.warn("Cannot create path for file: " + indexPath);
       throw e;
     }
   }

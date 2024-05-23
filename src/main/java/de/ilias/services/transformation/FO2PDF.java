@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -45,7 +46,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 public class FO2PDF {
 
-  private static Logger logger = LogManager.getLogger(FO2PDF.class);
+  private static final Logger logger = LogManager.getLogger(FO2PDF.class);
   private String foString = null;
   private byte[] pdfByteArray = null;
   private FopFactory fopFactory = null;
@@ -88,7 +89,7 @@ public class FO2PDF {
       saxParserFactory.setNamespaceAware(true);
       saxParserFactory.setValidating(false);
       SAXParser sp = saxParserFactory.newSAXParser();
-      InputStream is = new ByteArrayInputStream(foString.getBytes("utf8"));
+      InputStream is = new ByteArrayInputStream(foString.getBytes(StandardCharsets.UTF_8));
       sp.parse(is, new ILIASFopDhAdapter(fop.getDefaultHandler()));
 
       FormattingResults foResults = fop.getResults();
@@ -96,7 +97,7 @@ public class FO2PDF {
         java.util.List pageSequences = foResults.getPageSequences();
         for (Object pageSequence : pageSequences) {
           PageSequenceResults pageSequenceResults = (PageSequenceResults) pageSequence;
-          logger.debug("PageSequenze " + (String.valueOf(pageSequenceResults.getID()).length() > 0
+          logger.debug("PageSequenze " + (!String.valueOf(pageSequenceResults.getID()).isEmpty()
               ? pageSequenceResults.getID()
               : "<no id>") + " generated " + pageSequenceResults.getPageCount() + " pages.");
         }
@@ -105,21 +106,12 @@ public class FO2PDF {
 
       this.setPdf(out.toByteArray());
 
-    } catch (SAXException ex) {
-      logger.error("Cannot load fop configuration", ex);
-    } catch (IOException ex) {
+    } catch (SAXException | IOException ex) {
       logger.error("Cannot load fop configuration", ex);
     } catch (ParserConfigurationException e) {
       logger.error("Cannot configure Sax parser", e);
       throw new TransformationException(e);
     }
-  }
-
-  /**
-   * @return Returns the foString.
-   */
-  public String getFoString() {
-    return foString;
   }
 
   /**

@@ -32,6 +32,6 @@ package de.ilias.services.lucene.index.transform;
 public class TagSanitizer implements ContentTransformer {
   public String transform(String content) {
 
-    return content.toString().replaceAll("\\<.*?>", "");
+    return content.replaceAll("\\<.*?>", "");
   }
 }

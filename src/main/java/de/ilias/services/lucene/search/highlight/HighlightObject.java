@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * @version $Id$
  */
 public class HighlightObject implements ResultExport, Comparator<Integer> {
-  private TreeMap<Integer, HighlightItem> items = new TreeMap<Integer, HighlightItem>();
+  private final TreeMap<Integer, HighlightItem> items = new TreeMap<>();
 
   private int objId;
 
@@ -50,13 +50,6 @@ public class HighlightObject implements ResultExport, Comparator<Integer> {
     }
     items.put(subId, new HighlightItem(subId));
     return items.get(subId);
-  }
-
-  /**
-   * @return the items
-   */
-  public TreeMap<Integer, HighlightItem> getItems() {
-    return items;
   }
 
   /**
@@ -83,7 +76,7 @@ public class HighlightObject implements ResultExport, Comparator<Integer> {
     Element obj = new Element("Object");
     obj.setAttribute("id", String.valueOf(getObjId()));
 
-    TreeMap<Integer, HighlightItem> sortedItems = new TreeMap<Integer, HighlightItem>(this);
+    TreeMap<Integer, HighlightItem> sortedItems = new TreeMap<>(this);
     sortedItems.putAll(items);
 
     for (ResultExport item : sortedItems.values()) {
@@ -110,12 +103,6 @@ public class HighlightObject implements ResultExport, Comparator<Integer> {
     // returning zero, does not add a new element to TreeMap since its assumed to be equal
     //return 0;
     // ... sort by subitem
-    if (items.get(index1).getSubId() < items.get(index2).getSubId()) {
-      return 1;
-    }
-    if (items.get(index1).getSubId() > items.get(index2).getSubId()) {
-      return -1;
-    }
-    return 0;
+    return Integer.compare(items.get(index2).getSubId(), items.get(index1).getSubId());
   }
 }

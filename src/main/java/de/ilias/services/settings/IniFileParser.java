@@ -34,6 +34,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.nio.file.FileSystems;
 import java.util.prefs.Preferences;
 
 /**
@@ -44,17 +45,13 @@ import java.util.prefs.Preferences;
  */
 public class IniFileParser {
 
-  private static Logger logger = LogManager.getLogger(IniFileParser.class);
+  private static final Logger logger = LogManager.getLogger(IniFileParser.class);
 
   public void parseServerSettings(String path, boolean parseClientSettings) throws ConfigurationException {
-
-    Ini prefs;
     ServerSettings serverSettings = ServerSettings.getInstance();
     ClientSettings clientSettings;
     try {
-
-      prefs = new Ini(new FileReader(path));
-      for (Ini.Section section : prefs.values()) {
+      for (Ini.Section section : new Ini(new FileReader(path)).values()) {
 
         if (section.getName().equals("Server")) {
           if (section.containsKey("IpAddress")) {
@@ -102,10 +99,7 @@ public class IniFileParser {
         }
       }
 
-    } catch (ConfigurationException e) {
-      logger.error("Cannot parse server settings: " + e.getMessage());
-      throw new ConfigurationException(e);
-    } catch (IOException e) {
+    } catch (ConfigurationException | IOException e) {
       logger.error("Cannot parse server settings: " + e.getMessage());
       throw new ConfigurationException(e);
     }
@@ -124,10 +118,10 @@ public class IniFileParser {
       String iniFileName = purgeString(prefs.node("clients").get("inifile", ""), true);
 
       clientSettings.setClientIniFile(
-          clientSettings.getAbsolutePath().getCanonicalPath() + System.getProperty("file.separator") + dataName
-              + System.getProperty("file.separator") + clientSettings.getClient() + System.getProperty("file.separator")
+          clientSettings.getAbsolutePath().getCanonicalPath() + FileSystems.getDefault().getSeparator() + dataName
+              + FileSystems.getDefault().getSeparator() + clientSettings.getClient() + FileSystems.getDefault().getSeparator()
               + iniFileName);
-      clientSettings.setIndexPath(ServerSettings.getInstance().getIndexPath() + System.getProperty("file.separator")
+      clientSettings.setIndexPath(ServerSettings.getInstance().getIndexPath() + FileSystems.getDefault().getSeparator()
           + clientSettings.getClientKey());
       // now parse client.ini.php
       prefs = new IniPreferences(convertIniFile(clientSettings.getClientIniFile()));

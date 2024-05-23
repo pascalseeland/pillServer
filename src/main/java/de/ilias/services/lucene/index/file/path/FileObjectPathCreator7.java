@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -22,14 +23,6 @@ public class FileObjectPathCreator7 implements PathCreator {
 
   protected String basePath = "storage";
   protected static final String BIN_NAME = "data";
-
-  /**
-   * Set base path
-   */
-  public void setBasePath(String bp) {
-
-    this.basePath = bp;
-  }
 
   /**
    * Get base path
@@ -59,27 +52,27 @@ public class FileObjectPathCreator7 implements PathCreator {
       }
 
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(getBasePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(res.getString("resource_path"));
       versionPath.append(fullPath);
-      versionPath.append(System.getProperty("file.separator"));
-      versionPath.append(String.valueOf(versionCode));
-      versionPath.append(System.getProperty("file.separator"));
+      versionPath.append(FileSystems.getDefault().getSeparator());
+      versionPath.append(versionCode);
+      versionPath.append(FileSystems.getDefault().getSeparator());
       versionPath.append(BIN_NAME);
 
-      logger.info("Detected file object path is: " + versionPath.toString());
+      logger.info("Detected file object path is: " + versionPath);
 
       file = new File(versionPath.toString());
       if (!file.exists()) {
-        throw new PathCreatorException("Cannot find file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot find file: " + fullPath);
       }
 
       if (!file.canRead()) {
-        throw new PathCreatorException("Cannot read file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot read file: " + fullPath);
       }
 
       return file;
@@ -99,13 +92,13 @@ public class FileObjectPathCreator7 implements PathCreator {
         throw new PathCreatorException("Cannot split NULL filename for objId: " + el.getObjId());
       }
       int dotIndex = fileName.lastIndexOf(".");
-      if ((dotIndex > 0) && (dotIndex < fileName.length())) {
-        extension.append(fileName.substring(dotIndex + 1, fileName.length()));
+      if (dotIndex > 0) {
+        extension.append(fileName.substring(dotIndex + 1));
       }
-      logger.info("Extraced extension: " + extension.toString() + " from file name: " + fileName);
+      logger.info("Extracted extension: " + extension + " from file name: " + fileName);
 
     } catch (SQLException ex) {
-      logger.error(ex.toString());
+      logger.error(ex.getMessage(), ex);
     }
     return extension.toString();
   }

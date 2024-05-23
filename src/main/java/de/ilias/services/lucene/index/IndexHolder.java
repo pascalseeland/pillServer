@@ -39,9 +39,10 @@ import org.apache.lucene.index.Term;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
- * Capsulates the interaction between IndexReader and IndexWriter
+ * Capsules the interaction between IndexReader and IndexWriter
  * This class is a singleton for each index path.
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
@@ -50,12 +51,12 @@ import java.util.HashMap;
  */
 public class IndexHolder implements AutoCloseable {
 
-  private static Logger logger = LogManager.getLogger(IndexHolder.class);
+  private static final Logger logger = LogManager.getLogger(IndexHolder.class);
 
   private static final int MAX_NUM_SEGMENTS = 100;
 
-  private static HashMap<String, IndexHolder> instances = new HashMap<String, IndexHolder>();
-  private ClientSettings settings;
+  private static final HashMap<String, IndexHolder> instances = new HashMap<>();
+  private final ClientSettings settings;
   private IndexWriter writer;
 
   private IndexHolder(String clientKey) throws IOException {
@@ -70,13 +71,11 @@ public class IndexHolder implements AutoCloseable {
 
   public static synchronized IndexHolder getInstance(String clientKey) throws IOException {
 
-    String hash = clientKey;
-
-    if (instances.containsKey(hash)) {
-      return instances.get(hash);
+    if (instances.containsKey(clientKey)) {
+      return instances.get(clientKey);
     }
-    instances.put(hash, new IndexHolder(clientKey));
-    return instances.get(hash);
+    instances.put(clientKey, new IndexHolder(clientKey));
+    return instances.get(clientKey);
   }
 
   public static synchronized IndexHolder getInstance() throws IOException {
@@ -94,12 +93,12 @@ public class IndexHolder implements AutoCloseable {
   /**
    * Delete directory recursive
    */
-  private static boolean deleteTree(File path) {
+  private static void deleteTree(File path) {
 
     if (!path.exists() || !path.isDirectory()) {
-      return false;
+      return;
     }
-    for (File del : path.listFiles()) {
+    for (File del : Objects.requireNonNull(path.listFiles())) {
 
       if (del.isDirectory()) {
         deleteTree(del);
@@ -108,7 +107,6 @@ public class IndexHolder implements AutoCloseable {
       }
     }
     path.delete();
-    return true;
   }
 
   /**
@@ -118,11 +116,11 @@ public class IndexHolder implements AutoCloseable {
 
     logger.info("Closing document writers...");
 
-    for (Object key : instances.keySet()) {
+    for (String key : instances.keySet()) {
       try {
-        logger.info("Closing writer: " + (String) key);
-        IndexHolder holder = instances.get((String) key);
-        IndexDirectoryFactory.getDirectory(ClientSettings.getInstance((String) key).getIndexPath()).close();
+        logger.info("Closing writer: " + key);
+        IndexHolder holder = instances.get(key);
+        IndexDirectoryFactory.getDirectory(ClientSettings.getInstance(key).getIndexPath()).close();
         holder.close();
       } catch (ConfigurationException | IOException ex) {
         logger.error("Cannot close fs directory: " + ex.getMessage());
@@ -136,18 +134,14 @@ public class IndexHolder implements AutoCloseable {
   /**
    * TODO obtain lock for index writer
    */
-  public void init() throws IOException, ConfigurationException {
+  public void init() throws IOException {
 
-    try {
-      logger.debug("Adding new separated index for " + LocalSettings.getClientKey());
+    logger.debug("Adding new separated index for " + LocalSettings.getClientKey());
 
-      IndexWriterConfig writerConfig = new IndexWriterConfig(new StandardAnalyzer());
-      writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
-          .setRAMBufferSizeMB(ServerSettings.getInstance().getRAMSize());
-      writer = new IndexWriter(IndexDirectoryFactory.getDirectory(settings.getIndexPath()), writerConfig);
-    } catch (IOException | ConfigurationException e) {
-      throw e;
-    }
+    IndexWriterConfig writerConfig = new IndexWriterConfig(new StandardAnalyzer());
+    writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
+        .setRAMBufferSizeMB(ServerSettings.getInstance().getRAMSize());
+    writer = new IndexWriter(IndexDirectoryFactory.getDirectory(settings.getIndexPath()), writerConfig);
 
   }
 

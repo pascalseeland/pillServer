@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -21,7 +22,7 @@ import java.sql.SQLException;
  */
 public class MailAttachmentPathCreator implements PathCreator {
 
-  public static Logger logger = LogManager.getLogger(MailAttachmentPathCreator.class);
+  public static final Logger logger = LogManager.getLogger(MailAttachmentPathCreator.class);
 
   public File buildFile(CommandQueueElement el, ResultSet res) throws PathCreatorException {
 
@@ -31,26 +32,22 @@ public class MailAttachmentPathCreator implements PathCreator {
 
     try {
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append("mail");
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
 
-      fullPath.append(String.valueOf(DBFactory.getString(res, "path")));
+      fullPath.append(DBFactory.getString(res, "path"));
 
-      logger.info("Try to read from path: " + fullPath.toString());
+      logger.info("Try to read from path: " + fullPath);
 
       file = new File(fullPath.toString());
       if (file.exists() && file.canRead()) {
         return file;
       }
-      throw new PathCreatorException("Cannot access directory: " + fullPath.toString());
-    } catch (ConfigurationException e) {
-      throw new PathCreatorException(e);
-    } catch (SQLException e) {
-      throw new PathCreatorException(e);
-    } catch (NullPointerException e) {
+      throw new PathCreatorException("Cannot access directory: " + fullPath);
+    } catch (ConfigurationException | SQLException | NullPointerException e) {
       throw new PathCreatorException(e);
     }
 

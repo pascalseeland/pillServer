@@ -22,7 +22,6 @@
 
 package de.ilias.services.lucene.index;
 
-import de.ilias.ILServerStatus;
 import de.ilias.services.db.DBFactory;
 import de.ilias.services.object.ObjectDefinitionParser;
 import de.ilias.services.object.ObjectDefinitionReader;
@@ -32,92 +31,28 @@ import de.ilias.services.settings.ServerSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
 
 import java.util.Vector;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
-public class RPCIndexHandler {
+@DisallowConcurrentExecution
+public class UpdateIndexJob implements Job {
 
-  private static Logger logger = LogManager.getLogger(RPCIndexHandler.class);
+  private static final Logger logger = LogManager.getLogger(UpdateIndexJob.class);
 
-  /**
-   * Update index for a vector of obj ids
-   */
-  public boolean indexObjects(String clientKey, Vector<Integer> objIds) {
 
-    // Set client key
-    LocalSettings.setClientKey(clientKey);
-    DBFactory.init();
-    ClientSettings client;
-    ServerSettings server;
-    ObjectDefinitionReader properties;
-    ObjectDefinitionParser parser;
+  public void execute(JobExecutionContext context) {
 
-    CommandController controller;
+    JobDataMap dataMap = context.getJobDetail().getJobDataMap();
 
-    try {
-      long s_start = new java.util.Date().getTime();
-
-      logger.info("Checking if indexer is running for client: " + clientKey);
-      // Return if indexer is already running for this clientKey
-      if (ILServerStatus.isIndexerActive(clientKey)) {
-        logger.error("An Indexer is already running for this client. Aborting!");
-        return false;
-      }
-
-      // Set status
-      //ilServerStatus.addIndexer(clientKey);
-
-      client = ClientSettings.getInstance(LocalSettings.getClientKey());
-      server = ServerSettings.getInstance();
-
-      properties = ObjectDefinitionReader.getInstance(client.getAbsolutePath());
-      parser = new ObjectDefinitionParser(properties.getObjectPropertyFiles());
-      parser.parse();
-
-      //controller = CommandController.getInstance();
-      controller = new CommandController();
-      controller.initObjects(objIds);
-
-      // Start threads
-      Vector<CommandControllerThread> threads = new Vector<CommandControllerThread>();
-      for (int i = 0; i < server.getNumThreads(); i++) {
-
-        CommandControllerThread t = new CommandControllerThread(clientKey, controller);
-        t.start();
-        threads.add(t);
-      }
-      // Join threads
-      for (int i = 0; i < server.getNumThreads(); i++) {
-        threads.get(i).join();
-      }
-      controller.writeToIndex();
-      controller.closeIndex();
-
-      long s_end = new java.util.Date().getTime();
-      logger.info("Index time: " + ((s_end - s_start) / (1000)) + " seconds");
-      logger.debug(client.getIndexPath());
-      return true;
-
-    } catch (Exception e) {
-      logger.error("Unknown error", e);
-    } finally {
-      // Purge resources
-      DBFactory.closeAll();
-    }
-
-    return false;
-  }
-
-  /**
-   * Refresh index
-   */
-  public boolean index(String clientKey, boolean incremental) {
-
-    Boolean doPurge = true;
+    String clientKey = dataMap.getString("clientKey");
+    boolean incremental = dataMap.getBoolean("incremental");
 
     // Set client key
     LocalSettings.setClientKey(clientKey);
@@ -132,16 +67,7 @@ public class RPCIndexHandler {
     try {
       long s_start = new java.util.Date().getTime();
 
-      logger.info("Checking if indexer is running for client: " + clientKey);
-      // Return if indexer is already running for this clientKey
-      if (ILServerStatus.isIndexerActive(clientKey)) {
-        logger.error("An Indexer is already running for this client. Aborting!");
-        doPurge = false;
-        return false;
-      }
-
-      // Set status
-      ILServerStatus.addIndexer(clientKey);
+      logger.info("Start running index run for client: " + clientKey);
 
       client = ClientSettings.getInstance(LocalSettings.getClientKey());
       server = ServerSettings.getInstance();
@@ -154,7 +80,6 @@ public class RPCIndexHandler {
       parser = new ObjectDefinitionParser(properties.getObjectPropertyFiles());
       parser.parse();
 
-      //controller = CommandController.getInstance();
       controller = new CommandController();
       if (incremental) {
         controller.initRefresh();
@@ -162,7 +87,7 @@ public class RPCIndexHandler {
         controller.initCreate();
       }
       // Start threads
-      Vector<CommandControllerThread> threads = new Vector<CommandControllerThread>();
+      Vector<CommandControllerThread> threads = new Vector<>();
       for (int i = 0; i < server.getNumThreads(); i++) {
 
         CommandControllerThread t = new CommandControllerThread(clientKey, controller);
@@ -179,19 +104,12 @@ public class RPCIndexHandler {
       long s_end = new java.util.Date().getTime();
       logger.info("Index time: " + ((s_end - s_start) / (1000)) + " seconds");
       logger.debug(client.getIndexPath());
-      return true;
 
     } catch (Exception e) {
       logger.error("Unknown error", e);
     } finally {
-      // Purge resources
-      if (doPurge) {
-        ILServerStatus.removeIndexer(clientKey);
-        DBFactory.closeAll();
-      }
+      DBFactory.closeAll();
     }
-
-    return false;
   }
 
 }

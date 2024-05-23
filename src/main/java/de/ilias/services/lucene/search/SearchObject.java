@@ -31,7 +31,6 @@ import org.jdom2.Element;
 public class SearchObject implements ResultExport {
 
   private double absoluteScore = 0;
-  private String relativeScore = "100%";
   private int id;
 
   /**
@@ -46,20 +45,6 @@ public class SearchObject implements ResultExport {
    */
   public double getAbsoluteScore() {
     return absoluteScore;
-  }
-
-  /**
-   * @param relativeScore the relativeScore to set
-   */
-  public void setRelativeScore(String relativeScore) {
-    this.relativeScore = relativeScore;
-  }
-
-  /**
-   * @return the relativeScore
-   */
-  public String getRelativeScore() {
-    return relativeScore;
   }
 
   /**

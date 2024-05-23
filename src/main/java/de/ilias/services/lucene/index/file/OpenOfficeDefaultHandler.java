@@ -34,12 +34,12 @@ import java.io.InputStream;
  */
 public class OpenOfficeDefaultHandler extends ZipBasedOfficeHandler implements FileHandler {
 
-  private static Logger logger = LogManager.getLogger(OpenOfficeDefaultHandler.class);
+  private static final Logger logger = LogManager.getLogger(OpenOfficeDefaultHandler.class);
 
   /**
    * @see de.ilias.services.lucene.index.file.FileHandler#getContent(java.io.InputStream)
    */
-  public String getContent(InputStream is) throws FileHandlerException, IOException {
+  public String getContent(InputStream is) throws FileHandlerException {
 
     InputStream contentStream = extractContentStream(is);
     StringBuilder content = new StringBuilder();

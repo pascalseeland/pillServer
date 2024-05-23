@@ -32,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -84,17 +85,16 @@ public class FileListPathCreator implements PathCreator {
       int objId = Integer.parseInt(DBFactory.getInt(res, "file_id"));
 
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(getBasePath());
-
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(PathUtils.buildSplittedPathFromId(objId, "file"));
 
       versionPath.append(fullPath);
       versionPath.append(PathUtils.buildVersionDirectory(res.getInt("version")));
-      versionPath.append(System.getProperty("file.separator"));
+      versionPath.append(FileSystems.getDefault().getSeparator());
       versionPath.append(DBFactory.getString(res, "file_name"));
 
       file = new File(versionPath.toString());
@@ -109,17 +109,13 @@ public class FileListPathCreator implements PathCreator {
         return file;
       }
       if (!file.exists()) {
-        throw new PathCreatorException("Cannot find file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot find file: " + fullPath);
       }
       if (!file.canRead()) {
-        throw new PathCreatorException("Cannot read file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot read file: " + fullPath);
       }
       return null;
-    } catch (ConfigurationException e) {
-      throw new PathCreatorException(e);
-    } catch (SQLException e) {
-      throw new PathCreatorException(e);
-    } catch (NullPointerException e) {
+    } catch (ConfigurationException | SQLException | NullPointerException e) {
       throw new PathCreatorException(e);
     }
   }
@@ -131,8 +127,8 @@ public class FileListPathCreator implements PathCreator {
     try {
       String fileName = res.getString("file_name");
       int dotIndex = fileName.lastIndexOf(".");
-      if ((dotIndex > 0) && (dotIndex < fileName.length())) {
-        extension.append(fileName.substring(dotIndex + 1, fileName.length()));
+      if (dotIndex > 0) {
+        extension.append(fileName.substring(dotIndex + 1));
       }
 
     } catch (SQLException ex) {

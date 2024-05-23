@@ -29,7 +29,6 @@ import de.ilias.services.settings.LocalSettings;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
@@ -42,9 +41,9 @@ import java.util.HashMap;
  */
 public class SearchHolder {
 
-  public static int SEARCH_LIMIT = 100;
+  public static final int SEARCH_LIMIT = 100;
 
-  private static HashMap<String, SearchHolder> instances = new HashMap<String, SearchHolder>();
+  private static final HashMap<String, SearchHolder> instances = new HashMap<>();
 
   private IndexSearcher searcher = null;
 
@@ -65,26 +64,13 @@ public class SearchHolder {
     searcher = new IndexSearcher(reader);
   }
 
-  /**
-   * Reinit searcher with new indexReader to load new index entries.
-   * Normally called after Index write
-   * We use DirectoryReader.open(IndexWriter) in this case
-   */
-  public void reInit(IndexWriter writer) throws ConfigurationException, IOException {
-
-    IndexReader reader = DirectoryReader.open(writer);
-    searcher = new IndexSearcher(reader);
-  }
-
   public static synchronized SearchHolder getInstance(String clientKey) throws IOException, ConfigurationException {
 
-    String hash = clientKey;
-
-    if (instances.containsKey(hash)) {
-      return instances.get(hash);
+    if (instances.containsKey(clientKey)) {
+      return instances.get(clientKey);
     }
-    instances.put(hash, new SearchHolder());
-    return instances.get(hash);
+    instances.put(clientKey, new SearchHolder());
+    return instances.get(clientKey);
   }
 
   public static synchronized SearchHolder getInstance() throws IOException, ConfigurationException {

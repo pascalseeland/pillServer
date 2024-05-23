@@ -10,7 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jdom2.Element;
 import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,11 +19,9 @@ import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -37,14 +34,13 @@ import javax.xml.transform.stream.StreamResult;
  */
 public class ObjectDefinitionParser {
 
-  private Logger logger = LogManager.getLogger(ObjectDefinitionParser.class);
-  private Vector<File> objectPropertyFiles = new Vector<File>();
-  private ClientSettings settings;
-  private ObjectDefinitions definitions;
+  private static final Logger logger = LogManager.getLogger(ObjectDefinitionParser.class);
+  private Vector<File> objectPropertyFiles = new Vector<>();
+  private final ObjectDefinitions definitions;
 
   public ObjectDefinitionParser() throws ConfigurationException {
 
-    settings = ClientSettings.getInstance(LocalSettings.getClientKey());
+    ClientSettings settings = ClientSettings.getInstance(LocalSettings.getClientKey());
     // reset definitions to avoíd duplicate entries
     definitions = ObjectDefinitions.getInstance(settings.getAbsolutePath());
     definitions.reset();
@@ -58,15 +54,14 @@ public class ObjectDefinitionParser {
 
   }
 
-  public boolean parse() throws ObjectDefinitionException {
+  public void parse() throws ObjectDefinitionException {
 
     logger.debug("Start parsing object definitions");
     for (int i = 0; i < objectPropertyFiles.size(); i++) {
 
-      logger.debug("File nr. " + i);
+      logger.debug("File nr. " + i + ":" + objectPropertyFiles.get(i).getAbsolutePath());
       parseFile(objectPropertyFiles.get(i));
     }
-    return true;
   }
 
   public static String xmlToString(Node node) {
@@ -78,10 +73,8 @@ public class ObjectDefinitionParser {
       Transformer transformer = factory.newTransformer();
       transformer.transform(source, result);
       return stringWriter.getBuffer().toString();
-    } catch (TransformerConfigurationException e) {
-      e.printStackTrace();
     } catch (TransformerException e) {
-      e.printStackTrace();
+      logger.error(e.getStackTrace());
     }
     return null;
   }
@@ -98,31 +91,18 @@ public class ObjectDefinitionParser {
       DocumentBuilder builder = builderFactory.newDocumentBuilder();
       org.w3c.dom.Document document = builder.parse(file);
 
-      //logger.info(ObjectDefinitionParser.xmlToString(document));
+      logger.debug(ObjectDefinitionParser.xmlToString(document));
 
       // JDOM does not understand x:include but has a more comfortable API.
       org.jdom2.Document jdocument = convertToJDOM(document);
 
       definitions.addDefinition(parseObjectDefinition(jdocument));
 
-      logger.debug("Start logging");
-      //logger.info(definitions.toString());
+      logger.debug(definitions.toString());
 
     } catch (IOException e) {
       logger.error("Cannot handle file: " + file.getAbsolutePath());
       throw new ObjectDefinitionException(e);
-    } catch (ParserConfigurationException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.error(writer.toString());
-    } catch (SAXException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.error(writer.toString());
-    } catch (ClassCastException e) {
-      StringWriter writer = new StringWriter();
-      e.printStackTrace(new PrintWriter(writer));
-      logger.error(writer.toString());
     } catch (Exception e) {
       StringWriter writer = new StringWriter();
       e.printStackTrace(new PrintWriter(writer));
@@ -147,15 +127,15 @@ public class ObjectDefinitionParser {
     }
 
     if (root.getAttributeValue("indexType") != null) {
-      definition = new ObjectDefinition(root.getAttributeValue("type"), root.getAttributeValue("indexType"));
+      definition = new ObjectDefinition(root.getAttributeValue("type"), ObjectDefinition.INDEX_TYPE.valueOf(root.getAttributeValue("indexType")));
     } else {
       definition = new ObjectDefinition(root.getAttributeValue("type"));
     }
 
     // parse documents
-    for (Object element : root.getChildren()) {
+    for (Element element : root.getChildren()) {
 
-      definition.addDocumentDefinition(parseDocument((Element) element));
+      definition.addDocumentDefinition(parseDocument(element));
     }
 
     return definition;
@@ -169,20 +149,20 @@ public class ObjectDefinitionParser {
 
     DocumentDefinition definition = new DocumentDefinition(element.getAttributeValue("type"));
 
-    // Workaround xi:include of metaData)
-    for (Object dataSources : element.getChildren("DataSources")) {
+    // Workaround xi:include of metaData
+    for (Element dataSources : element.getChildren("DataSources")) {
 
       logger.info("Adding DataSources...");
-      for (Object source : ((Element) dataSources).getChildren("DataSource")) {
+      for (Element source : dataSources.getChildren("DataSource")) {
 
-        definition.addDataSource(parseDataSource((Element) source));
+        definition.addDataSource(parseDataSource(source));
       }
 
     }
 
-    for (Object source : element.getChildren("DataSource")) {
+    for (Element source : element.getChildren("DataSource")) {
 
-      definition.addDataSource(parseDataSource((Element) source));
+      definition.addDataSource(parseDataSource(source));
     }
     return definition;
   }
@@ -197,22 +177,22 @@ public class ObjectDefinitionParser {
 
     if (source.getAttributeValue("type").equalsIgnoreCase("JDBC")) {
 
-      ds = new JDBCDataSource(DataSource.TYPE_JDBC);
-      ds.setAction(source.getAttributeValue("action"));
+      ds = new JDBCDataSource();
+      ds.setAction(DataSource.ACTION.valueOfLabel(source.getAttributeValue("action").toLowerCase()));
       ((JDBCDataSource) ds).setQuery(source.getChildText("Query").trim());
 
       // Set parameters
-      for (Object param : source.getChildren("Param")) {
+      for (Element param : source.getChildren("Param")) {
 
-        ParameterDefinition parameter = new ParameterDefinition(((Element) param).getAttributeValue("format"),
-            ((Element) param).getAttributeValue("type"), ((Element) param).getAttributeValue("value"));
+        ParameterDefinition parameter = new ParameterDefinition(param.getAttributeValue("format"),
+            param.getAttributeValue("type"), param.getAttributeValue("value"));
         ((JDBCDataSource) ds).addParameter(parameter);
       }
 
     } else if (source.getAttributeValue("type").equalsIgnoreCase("File")) {
 
-      ds = new FileDataSource(DataSource.TYPE_FILE);
-      ds.setAction(source.getAttributeValue("action"));
+      ds = new FileDataSource(DataSource.TYPE.FILE);
+      ds.setAction(DataSource.ACTION.valueOfLabel(source.getAttributeValue("action").toLowerCase()));
 
       Element pathCreator = source.getChild("PathCreator");
       if (pathCreator != null) {
@@ -220,8 +200,8 @@ public class ObjectDefinitionParser {
       }
     } else if (source.getAttributeValue("type").equalsIgnoreCase("Directory")) {
 
-      ds = new DirectoryDataSource(DataSource.TYPE_DIRECTORY);
-      ds.setAction(source.getAttributeValue("action"));
+      ds = new DirectoryDataSource(DataSource.TYPE.DIRECTORY);
+      ds.setAction(DataSource.ACTION.valueOfLabel(source.getAttributeValue("action").toLowerCase()));
 
       Element pathCreator = source.getChild("PathCreator");
       if (pathCreator != null) {
@@ -233,41 +213,41 @@ public class ObjectDefinitionParser {
     }
 
     // Now add nested data source element
-    for (Object nestedDS : source.getChildren("DataSource")) {
+    for (Element nestedDS : source.getChildren("DataSource")) {
 
       // Recursion
-      ds.addDataSource(parseDataSource((Element) nestedDS));
+      ds.addDataSource(parseDataSource(nestedDS));
     }
 
     // workaround for nested xi:include (e.g meta data)
-    for (Object dataSources : source.getChildren("DataSources")) {
+    for (Element dataSources : source.getChildren("DataSources")) {
 
       logger.info("Adding nested dataSources...");
-      for (Object xiDS : ((Element) dataSources).getChildren("DataSource")) {
+      for (Element xiDS : dataSources.getChildren("DataSource")) {
 
-        ds.addDataSource(parseDataSource((Element) xiDS));
+        ds.addDataSource(parseDataSource(xiDS));
       }
 
     }
 
     // Add fields
-    for (Object field : source.getChildren("Field")) {
+    for (Element field : source.getChildren("Field")) {
 
-      FieldDefinition fieldDef = new FieldDefinition(((Element) field).getAttributeValue("store"),
-          ((Element) field).getAttributeValue("index"), ((Element) field).getAttributeValue("name"),
-          ((Element) field).getAttributeValue("column"), ((Element) field).getAttributeValue("type"),
-          ((Element) field).getAttributeValue("global"), ((Element) field).getAttributeValue("dynamicName"));
+      FieldDefinition fieldDef = new FieldDefinition(field.getAttributeValue("store"),
+          field.getAttributeValue("index"), field.getAttributeValue("name"),
+          field.getAttributeValue("column"), field.getAttributeValue("type"),
+          field.getAttributeValue("global"), field.getAttributeValue("dynamicName"));
       /*
-       * Currentliy diabled.
+       * Currently disabled.
       if(fieldDef.getIndex() != Field.Index.NO) {
         fieldInfo.addField(fieldDef.getName());
       }
       */
 
       // Add transformers to field definitions
-      for (Object transformer : ((Element) field).getChildren("Transformer")) {
+      for (Element transformer : field.getChildren("Transformer")) {
 
-        TransformerDefinition transDef = new TransformerDefinition(((Element) transformer).getAttributeValue("name"));
+        TransformerDefinition transDef = new TransformerDefinition(transformer.getAttributeValue("name"));
 
         fieldDef.addTransformer(transDef);
       }

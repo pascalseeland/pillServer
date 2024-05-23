@@ -24,17 +24,13 @@ package de.ilias.services.settings;
 
 /**
  * Class that stores thread local settings
- * E.g the clientKey
+ * E.g. the clientKey
  *
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  */
 public final class LocalSettings {
 
-  private static ThreadLocal<String> clientKey = new ThreadLocal<String>() {
-    public String initialValue() {
-      return "";
-    }
-  };
+  private static final ThreadLocal<String> clientKey = ThreadLocal.withInitial(() -> "");
 
   private LocalSettings() {
   }
@@ -44,6 +40,6 @@ public final class LocalSettings {
   }
 
   public static String getClientKey() {
-    return (String) clientKey.get();
+    return clientKey.get();
   }
 }

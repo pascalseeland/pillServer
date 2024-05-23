@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class MimeTypeExtractor implements ContentTransformer {
 
-  private static Logger logger = LogManager.getLogger(MimeTypeExtractor.class);
+  private static final Logger logger = LogManager.getLogger(MimeTypeExtractor.class);
 
   private static final String MIME_DEFAULT = "other";
   private static final String MIME_DOC = "word";
@@ -39,7 +39,7 @@ public class MimeTypeExtractor implements ContentTransformer {
   private static final List<String> MIME_IMAGE_LIST = Arrays.asList("jpg", "jpeg", "gif", "xcf", "ico", "png", "psd",
       "tif", "tiff", "bmp", "bitmap", "ico");
 
-  private static final List<String> MIME_PDF_LIST = Arrays.asList("pdf");
+  private static final List<String> MIME_PDF_LIST = List.of("pdf");
 
   /**
    * Default contructor

@@ -27,20 +27,22 @@ import org.apache.logging.log4j.Logger;
 
 public class RPCTransformationHandler {
 
-  private static Logger logger = LogManager.getLogger(RPCTransformationHandler.class);
+  private static final Logger logger = LogManager.getLogger(RPCTransformationHandler.class);
 
   public RPCTransformationHandler() {
 
   }
 
+  @SuppressWarnings({"unused", "SameReturnValue"})
   public boolean ping() {
 
     return true;
   }
 
+  @SuppressWarnings("unused")
   public byte[] ilFO2PDF(String foString) {
 
-    FO2PDF fo = null;
+    FO2PDF fo;
 
     try {
 

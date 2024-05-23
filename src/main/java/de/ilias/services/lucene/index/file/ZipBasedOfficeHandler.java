@@ -45,7 +45,7 @@ import java.util.zip.ZipInputStream;
  */
 public abstract class ZipBasedOfficeHandler {
 
-  private static Logger logger = LogManager.getLogger(ZipBasedOfficeHandler.class);
+  private static final Logger logger = LogManager.getLogger(ZipBasedOfficeHandler.class);
   protected static final int BUFFER = 2048;
 
   /**

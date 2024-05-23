@@ -41,12 +41,12 @@ public class QueryRewriter {
 
   public static final int MODE_USER_HIGHLIGHT = 4;
 
-  private static Logger logger = LogManager.getLogger(QueryRewriter.class);
+  private static final Logger logger = LogManager.getLogger(QueryRewriter.class);
 
-  private String query;
-  private StringBuffer rewritten;
-  private int mode;
-  private Vector<Integer> objIds = new Vector<Integer>();
+  private final String query;
+  private final StringBuffer rewritten;
+  private final int mode;
+  private Vector<Integer> objIds = new Vector<>();
 
   public QueryRewriter(int mode, String query) {
 
@@ -96,7 +96,7 @@ public class QueryRewriter {
     }
     rewritten.append(" ) AND docType:separated)");
 
-    logger.debug("Searching for: " + rewritten.toString());
+    logger.debug("Searching for: " + rewritten);
     return rewritten.toString();
   }
 
@@ -117,7 +117,7 @@ public class QueryRewriter {
     }
     rewritten.append(") AND docType:separated) ");
 
-    logger.debug("Searching for: " + rewritten.toString());
+    logger.debug("Searching for: " + rewritten);
     return rewritten.toString();
   }
 
@@ -128,7 +128,7 @@ public class QueryRewriter {
     rewritten.append(")");
     rewritten.append(" AND +docType:combined");
 
-    logger.debug("Searching for: " + rewritten.toString());
+    logger.debug("Searching for: " + rewritten);
     return rewritten.toString();
   }
 
@@ -142,7 +142,7 @@ public class QueryRewriter {
     rewritten.append(")");
     rewritten.append(" AND type:usr");
 
-    logger.info("Searching for:" + rewritten.toString());
+    logger.info("Searching for:" + rewritten);
     return rewritten.toString();
   }
 
@@ -151,34 +151,6 @@ public class QueryRewriter {
    */
   public String getQuery() {
     return query;
-  }
-
-  /**
-   * @param query the query to set
-   */
-  public void setQuery(String query) {
-    this.query = query;
-  }
-
-  /**
-   * @return the mode
-   */
-  public int getMode() {
-    return mode;
-  }
-
-  /**
-   * @param mode the mode to set
-   */
-  public void setMode(int mode) {
-    this.mode = mode;
-  }
-
-  /**
-   * @return the objIds
-   */
-  public Vector<Integer> getObjIds() {
-    return objIds;
   }
 
   /**

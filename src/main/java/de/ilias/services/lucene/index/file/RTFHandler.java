@@ -41,19 +41,16 @@ public class RTFHandler implements FileHandler {
    *
    * @see de.ilias.services.lucene.index.file.FileHandler#getContent(InputStream)
    */
-  public String getContent(InputStream is) throws FileHandlerException, IOException {
+  public String getContent(InputStream is) throws FileHandlerException {
 
-    String bodyText = null;
+    String bodyText;
     DefaultStyledDocument styledDoc = new DefaultStyledDocument();
 
     try {
 
       new RTFEditorKit().read(is, styledDoc, 0);
       bodyText = styledDoc.getText(0, styledDoc.getLength());
-    } catch (IOException e) {
-      throw new FileHandlerException("Cannot extract text from a RTF document", e);
-
-    } catch (BadLocationException e) {
+    } catch (IOException | BadLocationException e) {
       throw new FileHandlerException("Cannot extract text from a RTF document", e);
     }
 

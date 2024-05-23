@@ -33,7 +33,6 @@ import de.ilias.services.settings.LocalSettings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.lucene.index.CorruptIndexException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -50,13 +49,13 @@ public class CommandController {
 
   private static final int MAX_ELEMENTS = 100;
 
-  private static Logger logger = LogManager.getLogger(CommandController.class);
+  private static final Logger logger = LogManager.getLogger(CommandController.class);
 
-  private CommandQueue queue;
-  private ObjectDefinitions objDefinitions;
-  private IndexHolder holder;
+  private final CommandQueue queue;
+  private final ObjectDefinitions objDefinitions;
+  private final IndexHolder holder;
 
-  private CommandController(ObjectDefinitions objDefinitions) throws SQLException, IOException, ConfigurationException {
+  private CommandController(ObjectDefinitions objDefinitions) throws SQLException, IOException {
 
     queue = new CommandQueue();
 
@@ -102,62 +101,58 @@ public class CommandController {
   }
 
   /**
-   * Load queue elements from given obj ids list
-   */
-  public void initObjects(Vector<Integer> objIds) throws SQLException {
-
-    queue.loadFromObjectList(objIds);
-  }
-
-  /**
    * handle command queue.
    */
   public void start() {
 
-    CommandQueueElement currentElement = null;
+    CommandQueueElement currentElement;
     Vector<Integer> finished = new Vector<>();
     try {
       while ((currentElement = queue.nextElement()) != null) {
 
         logger.info("Current element id: " + currentElement.getObjId() + " " + currentElement.getObjType());
-        String command = currentElement.getCommand();
+        CommandQueueElement.Command command = currentElement.getCommand();
 
         logger.debug("Handling command: " + command + "!");
 
-        if (command.equals("reset")) {
+        switch (command) {
+          case RESET:
 
-          // Delete document
-          deleteDocument(currentElement);
-          try {
-            addDocument(currentElement);
-          } catch (ObjectDefinitionException e) {
-            logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
-            getQueue().deleteCommandsByType(currentElement.getObjType());
-          }
-        } else if (command.equals("create")) {
+            // Delete document
+            deleteDocument(currentElement);
+            try {
+              addDocument(currentElement);
+            } catch (ObjectDefinitionException e) {
+              logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
+              getQueue().deleteCommandsByType(currentElement.getObjType());
+            }
+            break;
+          case CREATE:
 
-          // Create a new document
-          // Called for new objects or objects restored from trash
-          try {
-            addDocument(currentElement);
-          } catch (ObjectDefinitionException e) {
-            logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
-            getQueue().deleteCommandsByType(currentElement.getObjType());
-          }
-        } else if (command.equals("update")) {
+            // Create a new document
+            // Called for new objects or objects restored from trash
+            try {
+              addDocument(currentElement);
+            } catch (ObjectDefinitionException e) {
+              logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
+              getQueue().deleteCommandsByType(currentElement.getObjType());
+            }
+            break;
+          case UPDATE:
 
-          // content changed
-          deleteDocument(currentElement);
-          try {
-            addDocument(currentElement);
-          } catch (ObjectDefinitionException e) {
-            logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
-            getQueue().deleteCommandsByType(currentElement.getObjType());
-          }
-        } else if (command.equals("delete")) {
-
-          // only delete it
-          deleteDocument(currentElement);
+            // content changed
+            deleteDocument(currentElement);
+            try {
+              addDocument(currentElement);
+            } catch (ObjectDefinitionException e) {
+              logger.warn("Ignoring deprecated object type " + currentElement.getObjType());
+              getQueue().deleteCommandsByType(currentElement.getObjType());
+            }
+            break;
+          case DELETE:
+            // only delete it
+            deleteDocument(currentElement);
+            break;
         }
         finished.add(currentElement.getObjId());
 
@@ -190,8 +185,6 @@ public class CommandController {
       SearchHolder.getInstance().init();
     } catch (ConfigurationException e) {
       logger.error("Cannot refresh index reader: " + e, e);
-    } catch (CorruptIndexException e) {
-      logger.fatal("Index Corrupted. Aborting!" + e, e);
     } catch (IOException e) {
       logger.fatal("Index Corrupted. Aborting!" + e, e);
     } catch (SQLException e) {
@@ -223,30 +216,29 @@ public class CommandController {
     }
   }
 
-  private void addDocument(CommandQueueElement el) throws CorruptIndexException, ObjectDefinitionException {
+  private void addDocument(CommandQueueElement el) throws ObjectDefinitionException {
 
     ObjectDefinition definition;
 
     try {
       logger.debug("Adding new document!");
       definition = objDefinitions.getDefinitionByType(el.getObjType());
-      definition.writeDocument(el);
-    } catch (DocumentHandlerException | IOException e) {
+      DocumentHolder docHolder = new DocumentHolder();
+      definition.extractDocument(el, docHolder);
+      logger.debug(docHolder.getGlobalDocument());
+      logger.debug(docHolder.getDocument());
+      holder.addDocument(docHolder.getGlobalDocument());
+      holder.addDocument(docHolder.getDocument());
+
+    } catch (IOException e) {
       logger.warn(e);
     }
   }
 
   private void deleteDocument(CommandQueueElement el) throws IOException {
 
-    logger.debug("Deleteing document with objId: " + String.valueOf(el.getObjId()));
+    logger.debug("Deleting document with objId: " + el.getObjId());
     holder.deleteDocument(String.valueOf(el.getObjId()));
-  }
-
-  /**
-   * @param queue the queue to set
-   */
-  public void setQueue(CommandQueue queue) {
-    this.queue = queue;
   }
 
   /**

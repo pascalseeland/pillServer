@@ -51,21 +51,20 @@ import java.sql.SQLException;
 
 /**
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
- * @version $Id$
  */
 public class HitHighlighter {
 
-  private static int FRAGMENT_TITLE_SIZE = 10000;
-  private static String HIGHLIGHT_SEPARATOR = "...";
+  private static final int FRAGMENT_TITLE_SIZE = 10000;
+  private static final String HIGHLIGHT_SEPARATOR = "...";
 
-  private static String HIGHLIGHT_BEGIN_TAG = "<span class=\"ilSearchHighlight\">";
-  private static String HIGHLIGHT_END_TAG = "</span>";
+  private static final String HIGHLIGHT_BEGIN_TAG = "<span class=\"ilSearchHighlight\">";
+  private static final String HIGHLIGHT_END_TAG = "</span>";
 
-  private static Logger logger = LogManager.getLogger(HitHighlighter.class);
+  private static final Logger logger = LogManager.getLogger(HitHighlighter.class);
 
   private IndexSearcher searcher;
-  private Query query;
-  private ScoreDoc[] hits;
+  private final Query query;
+  private final ScoreDoc[] hits;
 
   private Highlighter highlighter;
   private Highlighter titleHighlighter;
@@ -126,7 +125,7 @@ public class HitHighlighter {
         token = sa.tokenStream("title", new StringReader(hitDoc.get("title")));
         fragment = titleHighlighter.getBestFragments(token, hitDoc.get("title"), luceneSettings.getNumFragments(),
             HIGHLIGHT_SEPARATOR);
-        if (fragment.length() != 0) {
+        if (!fragment.isEmpty()) {
           resItem.addField(new HighlightField("title", fragment));
         }
 
@@ -137,7 +136,7 @@ public class HitHighlighter {
         token = sa.tokenStream("description", new StringReader(hitDoc.get("description")));
         fragment = titleHighlighter.getBestFragments(token, hitDoc.get("description"), luceneSettings.getNumFragments(),
             HIGHLIGHT_SEPARATOR);
-        if (fragment.length() != 0) {
+        if (!fragment.isEmpty()) {
           resItem.addField(new HighlightField("description", fragment));
         }
       }
@@ -165,7 +164,7 @@ public class HitHighlighter {
           HIGHLIGHT_SEPARATOR);
       //logger.debug("Fragmented: " + fragment);
 
-      if (fragment.length() != 0) {
+      if (!fragment.isEmpty()) {
         //logger.debug("Found fragment: " + fragment);
         resItem.addField(new HighlightField("content", fragment));
       }
@@ -198,8 +197,6 @@ public class HitHighlighter {
 
     // init searcher
     searcher = SearchHolder.getInstance().getSearcher();
-
-    return;
   }
 
   public String toXML() {

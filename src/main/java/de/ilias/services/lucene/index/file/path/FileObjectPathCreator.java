@@ -29,6 +29,7 @@ import de.ilias.services.settings.ConfigurationException;
 import de.ilias.services.settings.LocalSettings;
 
 import java.io.File;
+import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -79,16 +80,16 @@ public class FileObjectPathCreator implements PathCreator {
       }
 
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getDataDirectory().getAbsolutePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(ClientSettings.getInstance(LocalSettings.getClientKey()).getClient());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(getBasePath());
-      fullPath.append(System.getProperty("file.separator"));
+      fullPath.append(FileSystems.getDefault().getSeparator());
       fullPath.append(PathUtils.buildSplittedPathFromId(objId, "file"));
 
       versionPath.append(fullPath);
       versionPath.append(PathUtils.buildVersionDirectory(versionCode));
-      versionPath.append(System.getProperty("file.separator"));
+      versionPath.append(FileSystems.getDefault().getSeparator());
       versionPath.append(DBFactory.getString(res, "file_name"));
 
       file = new File(versionPath.toString());
@@ -103,17 +104,13 @@ public class FileObjectPathCreator implements PathCreator {
         return file;
       }
       if (!file.exists()) {
-        throw new PathCreatorException("Cannot find file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot find file: " + fullPath);
       }
       if (!file.canRead()) {
-        throw new PathCreatorException("Cannot read file: " + fullPath.toString());
+        throw new PathCreatorException("Cannot read file: " + fullPath);
       }
       return null;
-    } catch (ConfigurationException e) {
-      throw new PathCreatorException(e);
-    } catch (SQLException e) {
-      throw new PathCreatorException(e);
-    } catch (NullPointerException e) {
+    } catch (ConfigurationException | SQLException | NullPointerException e) {
       throw new PathCreatorException(e);
     }
   }

@@ -35,7 +35,7 @@ public class SearchHits implements ResultExport {
   private int totalHits = 0;
   private int limit = 0;
   private double maxScore = 0.0;
-  private Vector<SearchObject> objects = new Vector<>();
+  private final Vector<SearchObject> objects = new Vector<>();
 
   public void addObject(SearchObject object) {
 
@@ -80,8 +80,8 @@ public class SearchHits implements ResultExport {
     hits.setAttribute("maxScore", String.valueOf(getMaxScore()));
     hits.setAttribute("limit", String.valueOf(getLimit()));
 
-    for (Object obj : objects) {
-      hits.addContent(((ResultExport) obj).addXML());
+    for (ResultExport obj : objects) {
+      hits.addContent(obj.addXML());
     }
     return hits;
   }

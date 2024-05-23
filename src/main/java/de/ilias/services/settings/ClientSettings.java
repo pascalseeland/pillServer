@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
  * A singleton for each client configuration
@@ -38,8 +38,8 @@ import java.util.Map;
  */
 public class ClientSettings {
 
-  private static Logger logger = LogManager.getLogger(ClientSettings.class);
-  private static HashMap<String, ClientSettings> instances = new HashMap<>();
+  private static final Logger logger = LogManager.getLogger(ClientSettings.class);
+  private static final HashMap<String, ClientSettings> instances = new HashMap<>();
 
   private String client;
   private String nic;
@@ -92,14 +92,8 @@ public class ClientSettings {
     return instances.containsKey(clientKey);
   }
 
-  public static ArrayList<String> getClients() {
-
-    ArrayList<String> clients = new ArrayList<>();
-
-    for (Map.Entry<String, ClientSettings> entry : instances.entrySet()) {
-      clients.add(entry.getKey());
-    }
-    return clients;
+  public static List<String> getClients() {
+    return new ArrayList<>(instances.keySet());
   }
 
   /**
@@ -248,23 +242,10 @@ public class ClientSettings {
    * get db url
    */
   public String getDbUrl() {
-
-    if (getDbType().equalsIgnoreCase("mysql") || getDbType().equalsIgnoreCase("innodb")) {
-
-      if (getDbPort().length() > 0) {
-        return getDbHost() + ":" + getDbPort() + "/" + getDbName();
-      } else {
-        return getDbHost() + "/" + getDbName();
-      }
+    if (!getDbPort().isEmpty()) {
+      return getDbHost() + ":" + getDbPort() + "/" + getDbName();
     } else {
-
-      StringBuilder url = new StringBuilder();
-      url.append("jdbc:oracle:thin:" + getDbUser() + "/" + getDbPass() + "@//" + getDbHost());
-      if (getDbPort().length() > 0) {
-        url.append(":" + getDbPort());
-      }
-      url.append("/" + getDbName());
-      return url.toString();
+      return getDbHost() + "/" + getDbName();
     }
   }
 

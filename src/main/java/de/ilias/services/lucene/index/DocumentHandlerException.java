@@ -27,8 +27,6 @@ package de.ilias.services.lucene.index;
  */
 public class DocumentHandlerException extends Exception {
 
-  private static final long serialVersionUID = 1L;
-
   public DocumentHandlerException(String message) {
     super(message);
   }
@@ -37,8 +35,5 @@ public class DocumentHandlerException extends Exception {
     super(cause);
   }
 
-  public DocumentHandlerException(String message, Throwable cause) {
-    super(message, cause);
-  }
 
 }

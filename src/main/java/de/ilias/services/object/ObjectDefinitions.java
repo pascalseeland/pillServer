@@ -32,15 +32,15 @@ import java.util.Vector;
  */
 public class ObjectDefinitions {
 
-  private static HashMap<File, ObjectDefinitions> instances = new HashMap<>();
+  private static final HashMap<File, ObjectDefinitions> instances = new HashMap<>();
 
   private File absolutePath;
-  private Vector<ObjectDefinition> definitions = new Vector<ObjectDefinition>();
+  private Vector<ObjectDefinition> definitions = new Vector<>();
 
   /**
    * Singleton
    */
-  public ObjectDefinitions(File absolutePath) {
+  private ObjectDefinitions(File absolutePath) {
 
     this.setAbsolutePath(absolutePath);
   }
@@ -59,7 +59,7 @@ public class ObjectDefinitions {
    */
   public void reset() {
 
-    this.definitions = new Vector<ObjectDefinition>();
+    this.definitions = new Vector<>();
   }
 
   /**
@@ -110,7 +110,7 @@ public class ObjectDefinitions {
 
     for (Object defs : this.getDefinitions()) {
 
-      out.append("Object definitions for: " + getAbsolutePath().getAbsolutePath());
+      out.append("Object definitions for: ").append(getAbsolutePath().getAbsolutePath());
       out.append("\n");
       out.append(defs);
     }

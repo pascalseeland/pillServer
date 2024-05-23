@@ -34,10 +34,10 @@ import org.apache.logging.log4j.Logger;
  */
 public class CommandControllerThread extends Thread {
 
-  private Logger logger = LogManager.getLogger(CommandControllerThread.class);
-  protected String clientKey = null;
+  private static final Logger logger = LogManager.getLogger(CommandControllerThread.class);
+  protected final String clientKey;
 
-  protected CommandController controller = null;
+  protected final CommandController controller;
 
   /**
    * Constructor
@@ -50,7 +50,7 @@ public class CommandControllerThread extends Thread {
     this.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 
       /**
-       * Overwrite uncuaght exception handler
+       * Overwrite uncaught exception handler
        */
       public void uncaughtException(Thread t, Throwable e) {
 
@@ -84,7 +84,6 @@ public class CommandControllerThread extends Thread {
       controller.start();
     } catch (Exception e) {
       logger.error("Cannot start indexer thread: " + e, e);
-      e.printStackTrace();
       this.interrupt();
     } finally {
       DBFactory.closeAll();

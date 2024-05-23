@@ -35,9 +35,9 @@ import java.util.HashMap;
  */
 public class TransformerFactory {
 
-  private static Logger logger = LogManager.getLogger(TransformerFactory.class);
+  private static final Logger logger = LogManager.getLogger(TransformerFactory.class);
 
-  private static HashMap<String, ContentTransformer> map = new HashMap<String, ContentTransformer>();
+  private static final HashMap<String, ContentTransformer> map = new HashMap<>();
 
   public static ContentTransformer factory(String name) {
 

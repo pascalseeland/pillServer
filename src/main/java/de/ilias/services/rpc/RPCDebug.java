@@ -30,6 +30,7 @@ public final class RPCDebug {
   public RPCDebug() {
   }
 
+  @SuppressWarnings("unused")
   public String echo(String text) {
 
     return text;
